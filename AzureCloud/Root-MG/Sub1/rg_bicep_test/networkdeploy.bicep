@@ -10,17 +10,28 @@ param vnetSubnets array = [
   {
     name: 'mysub'
     addressPrefix: '10.0.0.0/27'
-    networkSecurityGroup: 'NSG_mysub_${resourceGroup().location}'
+    networkSecurityGroup: []
+    routeTable: 'testRT'
+  }
+  {
+    name: 'mysub2'
+    addressPrefix: '10.0.0.32/27'
+    networkSecurityGroup: []
     routeTable: 'testRT'
   }
 ]
 
-module nsg '../../../../Modules/Microsoft.Network/networkSecurityGroups/networkSecurityGroups.bicep' = [for subnet in vnetSubnets: {
+var nsgArray = [for subnet in vnetSubnets: {
+  name: 'NSG_${subnet.name}'
+  rules: subnet.networkSecurityGroup
+}]
+
+module nsg '../../../../Modules/Microsoft.Network/networkSecurityGroups/networkSecurityGroups.bicep' = {
    name: 'NSG_Deploy'
    params:{
-     nsgName: 'NSG_${subnet.name}_${resourceGroup().location}' 
+     nsgs: nsgArray
    } 
-}]
+}
 
 module vnet '../../../../Modules/Microsoft.Network/virtualNetworks/virtualNetworks.bicep' = {
   name: 'VNET_Deploy'

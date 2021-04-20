@@ -1,14 +1,10 @@
-param nsgName string
+param nsgs array
 param location string = resourceGroup().location
 
-resource nsg 'Microsoft.Network/networkSecurityGroups@2020-11-01' = {
-  name: nsgName
+resource nsg 'Microsoft.Network/networkSecurityGroups@2020-11-01' = [for securityGroup in nsgs: {
+  name: securityGroup.name
   location: location
   properties: {
-    securityRules:[
-      
-    ] 
+    securityRules: securityGroup.rules
   } 
-}
-
-output nsgId string = nsg.id
+}]

@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.3.255.40792",
-      "templateHash": "13086074643970570070"
+      "templateHash": "13484202000975832652"
     }
   },
   "parameters": {
@@ -32,19 +32,33 @@
         {
           "name": "mysub",
           "addressPrefix": "10.0.0.0/27",
-          "networkSecurityGroup": "[format('NSG_mysub_{0}', resourceGroup().location)]",
+          "networkSecurityGroup": [],
+          "routeTable": "testRT"
+        },
+        {
+          "name": "mysub2",
+          "addressPrefix": "10.0.0.32/27",
+          "networkSecurityGroup": [],
           "routeTable": "testRT"
         }
       ]
     }
   },
   "functions": [],
+  "variables": {
+    "copy": [
+      {
+        "name": "nsgArray",
+        "count": "[length(parameters('vnetSubnets'))]",
+        "input": {
+          "name": "[format('NSG_{0}', parameters('vnetSubnets')[copyIndex('nsgArray')].name)]",
+          "rules": "[parameters('vnetSubnets')[copyIndex('nsgArray')].networkSecurityGroup]"
+        }
+      }
+    ]
+  },
   "resources": [
     {
-      "copy": {
-        "name": "nsg",
-        "count": "[length(parameters('vnetSubnets'))]"
-      },
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2019-10-01",
       "name": "NSG_Deploy",
@@ -54,8 +68,8 @@
         },
         "mode": "Incremental",
         "parameters": {
-          "nsgName": {
-            "value": "[format('NSG_{0}_{1}', parameters('vnetSubnets')[copyIndex()].name, resourceGroup().location)]"
+          "nsgs": {
+            "value": "[variables('nsgArray')]"
           }
         },
         "template": {
@@ -65,12 +79,12 @@
             "_generator": {
               "name": "bicep",
               "version": "0.3.255.40792",
-              "templateHash": "17867726582523163084"
+              "templateHash": "1524802416621921539"
             }
           },
           "parameters": {
-            "nsgName": {
-              "type": "string"
+            "nsgs": {
+              "type": "array"
             },
             "location": {
               "type": "string",
@@ -80,21 +94,19 @@
           "functions": [],
           "resources": [
             {
+              "copy": {
+                "name": "nsg",
+                "count": "[length(parameters('nsgs'))]"
+              },
               "type": "Microsoft.Network/networkSecurityGroups",
               "apiVersion": "2020-11-01",
-              "name": "[parameters('nsgName')]",
+              "name": "[parameters('nsgs')[copyIndex()].name]",
               "location": "[parameters('location')]",
               "properties": {
-                "securityRules": []
+                "securityRules": "[parameters('nsgs')[copyIndex()].rules]"
               }
             }
-          ],
-          "outputs": {
-            "nsgId": {
-              "type": "string",
-              "value": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('nsgName'))]"
-            }
-          }
+          ]
         }
       }
     },
@@ -128,7 +140,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.3.255.40792",
-              "templateHash": "4360272445728066621"
+              "templateHash": "5380685219429586420"
             }
           },
           "parameters": {
@@ -166,7 +178,7 @@
                       "properties": {
                         "addressPrefix": "[parameters('vnetSubnets')[copyIndex('subnets')].addressPrefix]",
                         "networkSecurityGroup": {
-                          "id": "[format('{0}/providers/Microsoft.Network/networkSecurityGroups/{1}', resourceGroup().id, parameters('vnetSubnets')[copyIndex('subnets')].networkSecurityGroup)]"
+                          "id": "[format('{0}/providers/Microsoft.Network/networkSecurityGroups/NSG_{1}', resourceGroup().id, parameters('vnetSubnets')[copyIndex('subnets')].name)]"
                         },
                         "routeTable": {
                           "id": "[format('{0}/providers/Microsoft.Network/routeTables/{1}', resourceGroup().id, parameters('vnetSubnets')[copyIndex('subnets')].routeTable)]"
@@ -187,7 +199,7 @@
         }
       },
       "dependsOn": [
-        "nsg"
+        "[resourceId('Microsoft.Resources/deployments', 'NSG_Deploy')]"
       ]
     }
   ]

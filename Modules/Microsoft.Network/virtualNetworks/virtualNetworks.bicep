@@ -17,9 +17,9 @@ resource vnet 'Microsoft.Network/virtualNetworks@2020-11-01' = {
     subnets: [for subnet in vnetSubnets: {
        name: subnet.name
        properties:{
-         addressPrefix: subnet.addressPrefix
-         networkSecurityGroup:{
-           id: '${resourceGroup().id}/providers/Microsoft.Network/networkSecurityGroups/${subnet.networkSecurityGroup}' 
+         addressPrefix: subnet.addressPrefix         
+         networkSecurityGroup: {
+           id: '${resourceGroup().id}/providers/Microsoft.Network/networkSecurityGroups/NSG_${subnet.name}' 
          }
          routeTable: {
             id: '${resourceGroup().id}/providers/Microsoft.Network/routeTables/${subnet.routeTable}'  
