@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.3.255.40792",
-      "templateHash": "13484202000975832652"
+      "templateHash": "15683760347953027663"
     }
   },
   "parameters": {
@@ -31,15 +31,11 @@
       "defaultValue": [
         {
           "name": "mysub",
-          "addressPrefix": "10.0.0.0/27",
-          "networkSecurityGroup": [],
-          "routeTable": "testRT"
+          "addressPrefix": "10.0.0.0/27"
         },
         {
           "name": "mysub2",
-          "addressPrefix": "10.0.0.32/27",
-          "networkSecurityGroup": [],
-          "routeTable": "testRT"
+          "addressPrefix": "10.0.0.32/27"
         }
       ]
     }
@@ -51,8 +47,7 @@
         "name": "nsgArray",
         "count": "[length(parameters('vnetSubnets'))]",
         "input": {
-          "name": "[format('NSG_{0}', parameters('vnetSubnets')[copyIndex('nsgArray')].name)]",
-          "rules": "[parameters('vnetSubnets')[copyIndex('nsgArray')].networkSecurityGroup]"
+          "name": "[format('NSG_{0}', parameters('vnetSubnets')[copyIndex('nsgArray')].name)]"
         }
       }
     ]
@@ -79,7 +74,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.3.255.40792",
-              "templateHash": "1524802416621921539"
+              "templateHash": "6572613447197002730"
             }
           },
           "parameters": {
@@ -103,10 +98,21 @@
               "name": "[parameters('nsgs')[copyIndex()].name]",
               "location": "[parameters('location')]",
               "properties": {
-                "securityRules": "[parameters('nsgs')[copyIndex()].rules]"
+                "securityRules": []
               }
             }
-          ]
+          ],
+          "outputs": {
+            "nsgId": {
+              "type": "array",
+              "copy": {
+                "count": "[length(parameters('nsgs'))]",
+                "input": {
+                  "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('nsgs')[copyIndex()].name)]"
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -131,6 +137,9 @@
           },
           "vnetSubnets": {
             "value": "[parameters('vnetSubnets')]"
+          },
+          "networkSecurityGroups": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'NSG_Deploy'), '2019-10-01').outputs.nsgId.value]"
           }
         },
         "template": {
@@ -140,7 +149,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.3.255.40792",
-              "templateHash": "5380685219429586420"
+              "templateHash": "15546841755527573615"
             }
           },
           "parameters": {
@@ -156,12 +165,24 @@
             "vnetSubnets": {
               "type": "array"
             },
+            "networkSecurityGroups": {
+              "type": "array"
+            },
             "location": {
               "type": "string",
               "defaultValue": "[resourceGroup().location]"
             }
           },
           "functions": [],
+          "variables": {
+            "copy": [
+              {
+                "name": "subnets",
+                "count": "[length(parameters('vnetSubnets'))]",
+                "input": "[if(contains(parameters('networkSecurityGroups'), parameters('vnetSubnets')[copyIndex('subnets')].name), createObject('name', parameters('vnetSubnets')[copyIndex('subnets')].name, 'properties', createObject('addressPrefix', parameters('vnetSubnets')[copyIndex('subnets')].addressPrefix, 'networkSecurityGroup', createObject('id', parameters('networkSecurityGroups')[copyIndex('subnets')]))), createObject('name', parameters('vnetSubnets')[copyIndex('subnets')].name, 'properties', createObject('addressPrefix', parameters('vnetSubnets')[copyIndex('subnets')].addressPrefix)))]"
+              }
+            ]
+          },
           "resources": [
             {
               "type": "Microsoft.Network/virtualNetworks",
@@ -169,30 +190,13 @@
               "name": "[parameters('vnetName')]",
               "location": "[parameters('location')]",
               "properties": {
-                "copy": [
-                  {
-                    "name": "subnets",
-                    "count": "[length(parameters('vnetSubnets'))]",
-                    "input": {
-                      "name": "[parameters('vnetSubnets')[copyIndex('subnets')].name]",
-                      "properties": {
-                        "addressPrefix": "[parameters('vnetSubnets')[copyIndex('subnets')].addressPrefix]",
-                        "networkSecurityGroup": {
-                          "id": "[format('{0}/providers/Microsoft.Network/networkSecurityGroups/NSG_{1}', resourceGroup().id, parameters('vnetSubnets')[copyIndex('subnets')].name)]"
-                        },
-                        "routeTable": {
-                          "id": "[format('{0}/providers/Microsoft.Network/routeTables/{1}', resourceGroup().id, parameters('vnetSubnets')[copyIndex('subnets')].routeTable)]"
-                        }
-                      }
-                    }
-                  }
-                ],
                 "addressSpace": {
                   "addressPrefixes": "[parameters('vnetAddressSpaces')]"
                 },
                 "dhcpOptions": {
                   "dnsServers": "[parameters('vnetDnsServers')]"
-                }
+                },
+                "subnets": "[variables('subnets')]"
               }
             }
           ]
