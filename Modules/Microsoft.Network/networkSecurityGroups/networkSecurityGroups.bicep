@@ -9,6 +9,6 @@ resource nsg 'Microsoft.Network/networkSecurityGroups@2020-11-01' = [for securit
   } 
 }]
 
-output nsgId array = [for (securityGroup, i) in nsgs: {
+output nsgIds array = [for (securityGroup, i) in nsgs: {
   id: nsg[i].id
 }]

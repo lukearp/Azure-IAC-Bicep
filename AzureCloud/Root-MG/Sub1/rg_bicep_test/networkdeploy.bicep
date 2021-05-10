@@ -35,6 +35,6 @@ module vnet '../../../../Modules/Microsoft.Network/virtualNetworks/virtualNetwor
     vnetAddressSpaces: vnetAddressSpaces
     vnetDnsServers: vnetDnsServers
     vnetSubnets: vnetSubnets  
-    networkSecurityGroups: nsg.outputs.nsgId
+    networkSecurityGroups: nsg.outputs.nsgIds
   } 
 }
