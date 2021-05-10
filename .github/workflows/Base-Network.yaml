@@ -20,7 +20,7 @@ jobs:
 
     -  name: Build ARM
        run: |
-         az bicep build --files ../../AzureCloud/Root-MG/Sub1/rg_bicep_test/networkdeploy.bicep
+         az bicep build --file ../../AzureCloud/Root-MG/Sub1/rg_bicep_test/networkdeploy.bicep
 
     -  name: Azure Login
        uses: azure/login@v1
