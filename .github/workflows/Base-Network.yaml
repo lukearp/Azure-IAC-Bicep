@@ -32,5 +32,5 @@ jobs:
        with:
          inlineScript: |
            az account show
-           az deployment group create -f ./networkdeploy.json -g ${{ env.AZURE_RESOURCE_GROUP }}
+           az deployment group create -f AzureCloud/Root-MG/Sub1/rg_bicep_test/networkdeploy.json -g ${{ env.AZURE_RESOURCE_GROUP }}
    
