@@ -1,16 +1,72 @@
 param gatewayName string
-param targetVnetName string
-param targetVnetRg string
+param targetVnetId string
 param active_active bool
 param asn int
+@allowed([
+  'Vpn'
+  'ExpressRoute'
+])
+param gatewayType string
+@allowed([
+  'Basic'
+  'ErGw1AZ'
+  'ErGw2AZ'
+  'ErGw3AZ'
+  'HighPerformance'
+  'Standard'
+  'UltraPerformance'
+  'VpnGw1'
+  'VpnGw1AZ'
+  'VpnGw2'
+  'VpnGw2AZ'
+  'VpnGw3'
+  'VpnGw3AZ'
+  'VpnGw4'
+  'VpnGw4AZ'
+  'VpnGw5'
+  'VpnGw5AZ'
+])
+param gatewaySku string
+@allowed([
+  'RouteBased'
+  'PolicyBased'
+])
+param vpnType string
 param location string = resourceGroup().location
+
+var gatewayProperties = gatewayType == 'Vpn' ? {
+  activeActive: active_active
+  enableBgp: true 
+  bgpSettings: {
+    asn: asn
+  }
+  ipConfigurations: ipConfigs 
+  gatewayType: gatewayType
+  sku:{
+     name: gatewaySku
+     tier: gatewaySku 
+  }
+  vpnType: vpnType       
+} : {
+  activeActive: active_active
+  enableBgp: true 
+  bgpSettings: {
+    asn: asn
+  }
+  ipConfigurations: ipConfigs 
+  gatewayType: gatewayType
+  sku:{
+     name: gatewaySku
+     tier: gatewaySku 
+  }
+}
 
 var ipConfigs = active_active == true ? [
   {
     name: 'ipconfig1'
     properties:{
       subnet:{
-        id: '${subscription().id}/resourceGroups/${targetVnetRg}/providers/Microsoft.Network/virtualNetworks/${targetVnetName}/subnets/GatewaySubnet' 
+        id: '${targetVnetId}/subnets/GatewaySubnet' 
       }
       publicIPAddress:{
         id: '${resourceGroup().id}/providers/Microsoft.Network/publicIpAddresses/${gatewayName}1-pip'
@@ -21,7 +77,7 @@ var ipConfigs = active_active == true ? [
     name: 'ipconfig2'
     properties:{
       subnet:{
-        id: '${subscription().id}/resourceGroups/${targetVnetRg}/providers/Microsoft.Network/virtualNetworks/${targetVnetName}/subnets/GatewaySubnet' 
+        id: '${targetVnetId}/subnets/GatewaySubnet' 
       }
       publicIPAddress:{
         id: '${resourceGroup().id}/providers/Microsoft.Network/publicIpAddresses/${gatewayName}2-pip'
@@ -33,7 +89,7 @@ var ipConfigs = active_active == true ? [
     name: 'ipconfig1'
     properties:{
       subnet:{
-        id: '${subscription().id}/resourceGroups/${targetVnetRg}/providers/Microsoft.Network/virtualNetworks/${targetVnetName}/subnets/GatewaySubnet' 
+        id: '${targetVnetId}/subnets/GatewaySubnet' 
       }
       publicIPAddress:{
         id: '${resourceGroup().id}/providers/Microsoft.Network/publicIpAddresses/${gatewayName}1-pip'
@@ -42,8 +98,8 @@ var ipConfigs = active_active == true ? [
   }
 ]
 
-var pipSku = active_active == true ? 'Standard': 'Basic'
-var pipAllocationMethod = active_active == true ? 'Static' : 'Dynamic'
+var pipSku = active_active == true && contains(gatewaySku, 'AZ') ? 'Standard': 'Basic'
+var pipAllocationMethod = active_active == true && contains(gatewaySku, 'AZ') ? 'Static' : 'Dynamic'
 
 module pip '../publicIpAddresses/publicIpAddresses.bicep' = [for (ip, i) in ipConfigs :{
   name: 'pip-${i + 1}'
@@ -59,12 +115,8 @@ module pip '../publicIpAddresses/publicIpAddresses.bicep' = [for (ip, i) in ipCo
 resource vnetGateway 'Microsoft.Network/virtualNetworkGateways@2020-11-01' = {
  name: gatewayName
  location: location
- properties:{
-   activeActive: active_active
-   enableBgp: true 
-   bgpSettings: {
-     asn: asn
-   }
-   ipConfigurations: ipConfigs 
- } 
+ properties: gatewayProperties 
+ dependsOn: [
+   pip
+ ]
 }

@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.3.255.40792",
-      "templateHash": "15683760347953027663"
+      "templateHash": "18267786792390687593"
     }
   },
   "parameters": {
@@ -26,7 +26,7 @@
         "192.168.1.2"
       ]
     },
-    "vnetSubnets": {
+    "vmSubnets": {
       "type": "array",
       "defaultValue": [
         {
@@ -38,6 +38,26 @@
           "addressPrefix": "10.0.0.32/27"
         }
       ]
+    },
+    "serviceSubnets": {
+      "type": "array",
+      "defaultValue": [
+        {
+          "name": "GatewaySubnet",
+          "addressPrefix": "10.0.0.224/27"
+        }
+      ]
+    },
+    "gatewayObject": {
+      "type": "object",
+      "defaultValue": {
+        "gatewayName": "myGateway",
+        "active_active": true,
+        "asn": 64513,
+        "vpnType": "RouteBased",
+        "gatewaySku": "VpnGw1",
+        "gatewayType": "Vpn"
+      }
     }
   },
   "functions": [],
@@ -45,12 +65,13 @@
     "copy": [
       {
         "name": "nsgArray",
-        "count": "[length(parameters('vnetSubnets'))]",
+        "count": "[length(parameters('vmSubnets'))]",
         "input": {
-          "name": "[format('NSG_{0}', parameters('vnetSubnets')[copyIndex('nsgArray')].name)]"
+          "name": "[format('NSG_{0}', parameters('vmSubnets')[copyIndex('nsgArray')].name)]"
         }
       }
-    ]
+    ],
+    "vnetSubnets": "[concat(parameters('vmSubnets'), parameters('serviceSubnets'))]"
   },
   "resources": [
     {
@@ -74,7 +95,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.3.255.40792",
-              "templateHash": "6572613447197002730"
+              "templateHash": "5016379445825954624"
             }
           },
           "parameters": {
@@ -103,7 +124,7 @@
             }
           ],
           "outputs": {
-            "nsgId": {
+            "nsgIds": {
               "type": "array",
               "copy": {
                 "count": "[length(parameters('nsgs'))]",
@@ -136,10 +157,10 @@
             "value": "[parameters('vnetDnsServers')]"
           },
           "vnetSubnets": {
-            "value": "[parameters('vnetSubnets')]"
+            "value": "[variables('vnetSubnets')]"
           },
           "networkSecurityGroups": {
-            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'NSG_Deploy'), '2019-10-01').outputs.nsgId.value]"
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'NSG_Deploy'), '2019-10-01').outputs.nsgIds.value]"
           }
         },
         "template": {
@@ -149,7 +170,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.3.255.40792",
-              "templateHash": "15546841755527573615"
+              "templateHash": "3187644422756528058"
             }
           },
           "parameters": {
@@ -199,11 +220,236 @@
                 "subnets": "[variables('subnets')]"
               }
             }
-          ]
+          ],
+          "outputs": {
+            "resourceId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]"
+            }
+          }
         }
       },
       "dependsOn": [
         "[resourceId('Microsoft.Resources/deployments', 'NSG_Deploy')]"
+      ]
+    },
+    {
+      "condition": "[not(equals(parameters('gatewayObject'), null()))]",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2019-10-01",
+      "name": "GatewayDeploy",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "gatewayName": {
+            "value": "[parameters('gatewayObject').gatewayName]"
+          },
+          "active_active": {
+            "value": "[parameters('gatewayObject').active_active]"
+          },
+          "asn": {
+            "value": "[parameters('gatewayObject').asn]"
+          },
+          "targetVnetId": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'VNET_Deploy'), '2019-10-01').outputs.resourceId.value]"
+          },
+          "vpnType": {
+            "value": "[parameters('gatewayObject').vpnType]"
+          },
+          "gatewaySku": {
+            "value": "[parameters('gatewayObject').gatewaySku]"
+          },
+          "gatewayType": {
+            "value": "[parameters('gatewayObject').gatewayType]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.3.255.40792",
+              "templateHash": "12282370502927846067"
+            }
+          },
+          "parameters": {
+            "gatewayName": {
+              "type": "string"
+            },
+            "targetVnetId": {
+              "type": "string"
+            },
+            "active_active": {
+              "type": "bool"
+            },
+            "asn": {
+              "type": "int"
+            },
+            "gatewayType": {
+              "type": "string",
+              "allowedValues": [
+                "Vpn",
+                "ExpressRoute"
+              ]
+            },
+            "gatewaySku": {
+              "type": "string",
+              "allowedValues": [
+                "Basic",
+                "ErGw1AZ",
+                "ErGw2AZ",
+                "ErGw3AZ",
+                "HighPerformance",
+                "Standard",
+                "UltraPerformance",
+                "VpnGw1",
+                "VpnGw1AZ",
+                "VpnGw2",
+                "VpnGw2AZ",
+                "VpnGw3",
+                "VpnGw3AZ",
+                "VpnGw4",
+                "VpnGw4AZ",
+                "VpnGw5",
+                "VpnGw5AZ"
+              ]
+            },
+            "vpnType": {
+              "type": "string",
+              "allowedValues": [
+                "RouteBased",
+                "PolicyBased"
+              ]
+            },
+            "location": {
+              "type": "string",
+              "defaultValue": "[resourceGroup().location]"
+            }
+          },
+          "functions": [],
+          "variables": {
+            "gatewayProperties": "[if(equals(parameters('gatewayType'), 'Vpn'), createObject('activeActive', parameters('active_active'), 'enableBgp', true(), 'bgpSettings', createObject('asn', parameters('asn')), 'ipConfigurations', variables('ipConfigs'), 'gatewayType', parameters('gatewayType'), 'sku', createObject('name', parameters('gatewaySku'), 'tier', parameters('gatewaySku')), 'vpnType', parameters('vpnType')), createObject('activeActive', parameters('active_active'), 'enableBgp', true(), 'bgpSettings', createObject('asn', parameters('asn')), 'ipConfigurations', variables('ipConfigs'), 'gatewayType', parameters('gatewayType'), 'sku', createObject('name', parameters('gatewaySku'), 'tier', parameters('gatewaySku'))))]",
+            "ipConfigs": "[if(equals(parameters('active_active'), true()), createArray(createObject('name', 'ipconfig1', 'properties', createObject('subnet', createObject('id', format('{0}/subnets/GatewaySubnet', parameters('targetVnetId'))), 'publicIPAddress', createObject('id', format('{0}/providers/Microsoft.Network/publicIpAddresses/{1}1-pip', resourceGroup().id, parameters('gatewayName'))))), createObject('name', 'ipconfig2', 'properties', createObject('subnet', createObject('id', format('{0}/subnets/GatewaySubnet', parameters('targetVnetId'))), 'publicIPAddress', createObject('id', format('{0}/providers/Microsoft.Network/publicIpAddresses/{1}2-pip', resourceGroup().id, parameters('gatewayName')))))), createArray(createObject('name', 'ipconfig1', 'properties', createObject('subnet', createObject('id', format('{0}/subnets/GatewaySubnet', parameters('targetVnetId'))), 'publicIPAddress', createObject('id', format('{0}/providers/Microsoft.Network/publicIpAddresses/{1}1-pip', resourceGroup().id, parameters('gatewayName')))))))]",
+            "pipSku": "[if(and(equals(parameters('active_active'), true()), contains(parameters('gatewaySku'), 'AZ')), 'Standard', 'Basic')]",
+            "pipAllocationMethod": "[if(and(equals(parameters('active_active'), true()), contains(parameters('gatewaySku'), 'AZ')), 'Static', 'Dynamic')]"
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Network/virtualNetworkGateways",
+              "apiVersion": "2020-11-01",
+              "name": "[parameters('gatewayName')]",
+              "location": "[parameters('location')]",
+              "properties": "[variables('gatewayProperties')]",
+              "dependsOn": [
+                "pip"
+              ]
+            },
+            {
+              "copy": {
+                "name": "pip",
+                "count": "[length(variables('ipConfigs'))]"
+              },
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2019-10-01",
+              "name": "[format('pip-{0}', add(copyIndex(), 1))]",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "name": {
+                    "value": "[format('{0}{1}-pip', parameters('gatewayName'), add(copyIndex(), 1))]"
+                  },
+                  "publicIpAddressVersion": {
+                    "value": "IPv4"
+                  },
+                  "publicIpAllocationMethod": {
+                    "value": "[variables('pipAllocationMethod')]"
+                  },
+                  "sku": {
+                    "value": "[variables('pipSku')]"
+                  },
+                  "tier": {
+                    "value": "Regional"
+                  }
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.3.255.40792",
+                      "templateHash": "18024804643899982439"
+                    }
+                  },
+                  "parameters": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "sku": {
+                      "type": "string",
+                      "allowedValues": [
+                        "Basic",
+                        "Standard"
+                      ]
+                    },
+                    "tier": {
+                      "type": "string",
+                      "allowedValues": [
+                        "Regional",
+                        "Global"
+                      ]
+                    },
+                    "publicIpAddressVersion": {
+                      "type": "string",
+                      "allowedValues": [
+                        "IPv4",
+                        "IPv6"
+                      ]
+                    },
+                    "publicIpAllocationMethod": {
+                      "type": "string",
+                      "allowedValues": [
+                        "Static",
+                        "Dynamic"
+                      ]
+                    },
+                    "location": {
+                      "type": "string",
+                      "defaultValue": "[resourceGroup().location]"
+                    }
+                  },
+                  "functions": [],
+                  "resources": [
+                    {
+                      "type": "Microsoft.Network/publicIPAddresses",
+                      "apiVersion": "2020-11-01",
+                      "name": "[parameters('name')]",
+                      "location": "[parameters('location')]",
+                      "sku": {
+                        "name": "[parameters('sku')]",
+                        "tier": "[parameters('tier')]"
+                      },
+                      "properties": {
+                        "publicIPAddressVersion": "[parameters('publicIpAddressVersion')]",
+                        "publicIPAllocationMethod": "[parameters('publicIpAllocationMethod')]"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'VNET_Deploy')]"
       ]
     }
   ]
