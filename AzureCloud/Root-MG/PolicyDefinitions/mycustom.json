@@ -1,0 +1,107 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-08-01/managementGroupDeploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.3.539.46024",
+      "templateHash": "8132600369510732438"
+    }
+  },
+  "functions": [],
+  "resources": [
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2019-10-01",
+      "name": "MyCustomPolicy",
+      "location": "[deployment().location]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "dispalyName": {
+            "value": "This is my Custom Policy"
+          },
+          "mode": {
+            "value": "All"
+          },
+          "name": {
+            "value": "TheCustomPolicyBicep"
+          },
+          "parameters": {
+            "value": {
+              "myParam": {
+                "type": "string",
+                "metadata": {
+                  "description": "Test"
+                }
+              }
+            }
+          },
+          "policyRule": {
+            "value": {
+              "if": {
+                "not": {
+                  "field": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings/remoteVirtualNetwork.id",
+                  "equals": "[[parameters('myParam')]"
+                }
+              },
+              "then": {
+                "effect": "deny"
+              }
+            }
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-08-01/managementGroupDeploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.3.539.46024",
+              "templateHash": "1288811888578771134"
+            }
+          },
+          "parameters": {
+            "name": {
+              "type": "string"
+            },
+            "mode": {
+              "type": "string",
+              "allowedValues": [
+                "All",
+                "Indexed"
+              ]
+            },
+            "dispalyName": {
+              "type": "string"
+            },
+            "policyRule": {
+              "type": "object"
+            },
+            "parameters": {
+              "type": "object"
+            }
+          },
+          "functions": [],
+          "resources": [
+            {
+              "type": "Microsoft.Authorization/policyDefinitions",
+              "apiVersion": "2020-09-01",
+              "name": "[parameters('name')]",
+              "properties": {
+                "displayName": "[parameters('dispalyName')]",
+                "mode": "[parameters('mode')]",
+                "policyRule": "[parameters('policyRule')]",
+                "policyType": "Custom",
+                "parameters": "[parameters('parameters')]"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
