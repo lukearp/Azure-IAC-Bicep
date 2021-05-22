@@ -1,0 +1,34 @@
+name: ManagementGroups
+
+on:
+  push:
+    branches:
+      - "ManagementGroups"
+
+env:
+  location: 'eastus'
+  rootMg: 'LukeInternal'
+
+jobs:
+  AzureBicepDeploy:
+    name: 'AzureBicepDeploy'
+    runs-on: ubuntu-latest
+ 
+    steps:
+    -  name: Checkout Code
+       uses: actions/checkout@v2
+
+    -  name: Build ARM
+       run: |
+         az bicep build --file AzureCloud/Root-MG/RBAC/rbacAssignments.bicep
+    -  name: Azure Login
+       uses: azure/login@v1
+       with:
+         creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    -  name: Deploy template
+       uses: azure/CLI@v1
+       with:
+         inlineScript: |
+           az account show
+           az deployment mg create -f AzureCloud/Root-MG/RBAC/rbacAssignments.json -l ${{ env.location }} -m ${{ env.rootMg }}
