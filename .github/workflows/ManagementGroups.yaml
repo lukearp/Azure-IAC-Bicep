@@ -20,7 +20,7 @@ jobs:
 
     -  name: Build ARM
        run: |
-         az bicep build --file AzureCloud/Root-MG/RoleAssignments/rbacAssignments.bicep
+         az bicep build --file AzureCloud/Root-MG/RoleAssignments/rbacAssginments.bicep
     -  name: Azure Login
        uses: azure/login@v1
        with:
@@ -31,4 +31,4 @@ jobs:
        with:
          inlineScript: |
            az account show
-           az deployment mg create -f AzureCloud/Root-MG/RoleAssignments/rbacAssignments.json -l ${{ env.location }} -m ${{ env.rootMg }}
+           az deployment mg create -f AzureCloud/Root-MG/RoleAssignments/rbacAssginments.json -l ${{ env.location }} -m ${{ env.rootMg }}
