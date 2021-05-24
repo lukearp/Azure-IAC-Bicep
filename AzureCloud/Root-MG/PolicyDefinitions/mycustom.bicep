@@ -1,5 +1,5 @@
 targetScope = 'managementGroup'
-module policy '../../../Modules/Microsoft.Authorization/policyDefinitions/policyDefinitions.bicep' = {
+module policy '../../../Modules/Microsoft.Authorization/policyDefinitions/policyDefinitions-mg.bicep' = {
   name: 'MyCustomPolicy'
   params: {
     dispalyName: 'This is my Custom Policy'

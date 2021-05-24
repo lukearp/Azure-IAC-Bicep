@@ -1,0 +1,113 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-08-01/managementGroupDeploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.3.539.46024",
+      "templateHash": "13353526336013808880"
+    }
+  },
+  "functions": [],
+  "resources": [
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2019-10-01",
+      "name": "PolicySet-def",
+      "location": "[deployment().location]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "displayName": {
+            "value": "This Test Bicep"
+          },
+          "name": {
+            "value": "BicepTest-Def"
+          },
+          "parameters": {
+            "value": {
+              "starting": {
+                "type": "integer"
+              },
+              "ending": {
+                "type": "integer"
+              }
+            }
+          },
+          "policyDefinitionGroups": {
+            "value": [
+              {
+                "name": "MyGroup",
+                "displayName": "This Bicep Group",
+                "category": "Test"
+              }
+            ]
+          },
+          "policyDefinitions": {
+            "value": [
+              {
+                "policyDefinitionId": "/providers/Microsoft.Management/managementGroups/LukeInternal/providers/Microsoft.Authorization/policyDefinitions/3d4214c5-1dbe-401a-9fc1-50c395978c21",
+                "groupNames": [
+                  "MyGroup"
+                ],
+                "parameters": {
+                  "startingPriority": {
+                    "value": "[[parameters('starting')]"
+                  },
+                  "endingPriority": {
+                    "value": "[[parameters('ending')]"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-08-01/managementGroupDeploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.3.539.46024",
+              "templateHash": "14664226011497313753"
+            }
+          },
+          "parameters": {
+            "name": {
+              "type": "string"
+            },
+            "displayName": {
+              "type": "string"
+            },
+            "policyDefinitions": {
+              "type": "array"
+            },
+            "policyDefinitionGroups": {
+              "type": "array"
+            },
+            "parameters": {
+              "type": "object"
+            }
+          },
+          "functions": [],
+          "resources": [
+            {
+              "type": "Microsoft.Authorization/policySetDefinitions",
+              "apiVersion": "2020-09-01",
+              "name": "[parameters('name')]",
+              "properties": {
+                "displayName": "[parameters('displayName')]",
+                "policyDefinitionGroups": "[parameters('policyDefinitionGroups')]",
+                "policyDefinitions": "[parameters('policyDefinitions')]",
+                "parameters": "[parameters('parameters')]"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
