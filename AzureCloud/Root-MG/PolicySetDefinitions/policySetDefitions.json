@@ -1,0 +1,328 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-08-01/managementGroupDeploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.3.539.46024",
+      "templateHash": "12188282385296792227"
+    }
+  },
+  "functions": [],
+  "variables": {
+    "definedDefinitionGroups": [
+      {
+        "name": "MyGroup",
+        "displayName": "This Bicep Group",
+        "category": "Test"
+      }
+    ],
+    "policyDefinitionGroups": [
+      {
+        "name": "Tags",
+        "displayName": "Tag Policies",
+        "category": "Tags"
+      },
+      {
+        "name": "BicepTest",
+        "displayName": "Bicep Test Policies",
+        "category": "BicepTest"
+      }
+    ]
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2019-10-01",
+      "name": "CustomPolicies",
+      "location": "[deployment().location]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-08-01/managementGroupDeploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.3.539.46024",
+              "templateHash": "9850034504753342723"
+            }
+          },
+          "functions": [],
+          "variables": {
+            "policies": [
+              {
+                "name": "VNET-to-Hub-Peering-Enforcement",
+                "displayName": "Restricts VNET peering to HUB VNET Only",
+                "mode": "All",
+                "category": "BicepTest",
+                "parameters": {
+                  "hubVNETId": {
+                    "type": "string",
+                    "metadata": {
+                      "description": "/subscriptions/XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXX/resourceGroups/RESOURCEGROUP/providers/Microsoft.Network/virtualNetworks/VNET"
+                    }
+                  }
+                },
+                "policyRule": {
+                  "if": {
+                    "not": {
+                      "field": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings/remoteVirtualNetwork.id",
+                      "equals": "[[parameters('hubVNETId')]"
+                    }
+                  },
+                  "then": {
+                    "effect": "deny"
+                  }
+                }
+              },
+              {
+                "name": "Append-Standard-NSG-Rules",
+                "mode": "All",
+                "displayName": "Append Standard NSG Rules",
+                "category": "BicepTest",
+                "policyRule": {
+                  "if": {
+                    "allOf": [
+                      {
+                        "field": "type",
+                        "equals": "Microsoft.Network/networkSecurityGroups"
+                      },
+                      {
+                        "not": {
+                          "field": "Microsoft.Network/networkSecurityGroups/subnets[*].delegations[*].type",
+                          "equals": "Microsoft.Sql/managedInstances"
+                        }
+                      }
+                    ]
+                  },
+                  "then": {
+                    "effect": "append",
+                    "details": [
+                      {
+                        "field": "Microsoft.Network/networkSecurityGroups/securityRules",
+                        "value": "[[parameters('defaultSecurityRules')]"
+                      }
+                    ]
+                  }
+                },
+                "parameters": {
+                  "defaultSecurityRules": {
+                    "type": "Array",
+                    "metadata": {
+                      "description": "Default Security Rules"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2019-10-01",
+              "name": "PolicyDefinitions-Deploy",
+              "location": "[deployment().location]",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "policies": {
+                    "value": "[variables('policies')]"
+                  }
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-08-01/managementGroupDeploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.3.539.46024",
+                      "templateHash": "16927078154120953131"
+                    }
+                  },
+                  "parameters": {
+                    "policies": {
+                      "type": "array"
+                    }
+                  },
+                  "functions": [],
+                  "resources": [
+                    {
+                      "copy": {
+                        "name": "policyArrary",
+                        "count": "[length(parameters('policies'))]"
+                      },
+                      "type": "Microsoft.Authorization/policyDefinitions",
+                      "apiVersion": "2020-09-01",
+                      "name": "[parameters('policies')[copyIndex()].name]",
+                      "properties": {
+                        "displayName": "[parameters('policies')[copyIndex()].displayName]",
+                        "mode": "[parameters('policies')[copyIndex()].mode]",
+                        "policyRule": "[parameters('policies')[copyIndex()].policyRule]",
+                        "policyType": "Custom",
+                        "parameters": "[parameters('policies')[copyIndex()].parameters]",
+                        "metadata": {
+                          "category": "[parameters('policies')[copyIndex()].category]"
+                        }
+                      }
+                    }
+                  ],
+                  "outputs": {
+                    "policyIds": {
+                      "type": "array",
+                      "copy": {
+                        "count": "[length(parameters('policies'))]",
+                        "input": {
+                          "id": "[format('Microsoft.Authorization/policyDefinitions/{0}', parameters('policies')[copyIndex()].name)]",
+                          "category": "[parameters('policies')[copyIndex()].category]"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ],
+          "outputs": {
+            "policyOutputs": {
+              "type": "array",
+              "value": "[reference(format('Microsoft.Resources/deployments/{0}', 'PolicyDefinitions-Deploy'), '2019-10-01').outputs.policyIds.value]"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2019-10-01",
+      "name": "PolicySet-def",
+      "location": "[deployment().location]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "displayName": {
+            "value": "This Test Bicep"
+          },
+          "name": {
+            "value": "BicepTest-Def"
+          },
+          "parameters": {
+            "value": {
+              "starting": {
+                "type": "integer"
+              },
+              "ending": {
+                "type": "integer"
+              },
+              "hubVnetResourceId": {
+                "type": "string",
+                "defaultValue": ""
+              },
+              "standardNsgRules": {
+                "type": "array",
+                "defaultValue": []
+              }
+            }
+          },
+          "policyDefinitionGroups": {
+            "value": "[variables('policyDefinitionGroups')]"
+          },
+          "policyDefinitions": {
+            "value": [
+              {
+                "policyDefinitionId": "/providers/Microsoft.Management/managementGroups/LukeInternal/providers/Microsoft.Authorization/policyDefinitions/3d4214c5-1dbe-401a-9fc1-50c395978c21",
+                "groupNames": [
+                  "BicepTest"
+                ],
+                "parameters": {
+                  "startingPriority": {
+                    "value": "[[parameters('starting')]"
+                  },
+                  "endingPriority": {
+                    "value": "[[parameters('ending')]"
+                  }
+                }
+              },
+              {
+                "policyDefinitionId": "/providers/Microsoft.Management/managementGroups/LukeInternal/providers/Microsoft.Authorization/policyDefinitions/Append-Standard-NSG-Rules",
+                "groupNames": [
+                  "BicepTest"
+                ],
+                "parameters": {
+                  "defaultSecurityRules": {
+                    "value": "[[parameters('standardNsgRules')]"
+                  }
+                }
+              },
+              {
+                "policyDefinitionId": "/providers/Microsoft.Management/managementGroups/LukeInternal/providers/Microsoft.Authorization/policyDefinitions/VNET-to-Hub-Peering-Enforcement",
+                "groupNames": [
+                  "BicepTest"
+                ],
+                "parameters": {
+                  "hubVNETId": {
+                    "value": "[[parameters('hubVnetResourceId')]"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-08-01/managementGroupDeploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.3.539.46024",
+              "templateHash": "14664226011497313753"
+            }
+          },
+          "parameters": {
+            "name": {
+              "type": "string"
+            },
+            "displayName": {
+              "type": "string"
+            },
+            "policyDefinitions": {
+              "type": "array"
+            },
+            "policyDefinitionGroups": {
+              "type": "array"
+            },
+            "parameters": {
+              "type": "object"
+            }
+          },
+          "functions": [],
+          "resources": [
+            {
+              "type": "Microsoft.Authorization/policySetDefinitions",
+              "apiVersion": "2020-09-01",
+              "name": "[parameters('name')]",
+              "properties": {
+                "displayName": "[parameters('displayName')]",
+                "policyDefinitionGroups": "[parameters('policyDefinitionGroups')]",
+                "policyDefinitions": "[parameters('policyDefinitions')]",
+                "parameters": "[parameters('parameters')]"
+              }
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[format('Microsoft.Resources/deployments/{0}', 'CustomPolicies')]"
+      ]
+    }
+  ]
+}

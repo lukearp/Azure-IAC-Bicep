@@ -1,0 +1,148 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-08-01/managementGroupDeploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.3.539.46024",
+      "templateHash": "5201517316719152855"
+    }
+  },
+  "functions": [],
+  "variables": {
+    "policies": [
+      {
+        "name": "VNET-to-Hub-Peering-Enforcement",
+        "displayName": "Restricts VNET peering to HUB VNET Only",
+        "mode": "All",
+        "category": "BicepTest",
+        "parameters": {
+          "hubVNETId": {
+            "type": "string",
+            "metadata": {
+              "description": "/subscriptions/XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXX/resourceGroups/RESOURCEGROUP/providers/Microsoft.Network/virtualNetworks/VNET"
+            }
+          }
+        },
+        "policyRule": {
+          "if": {
+            "not": {
+              "field": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings/remoteVirtualNetwork.id",
+              "equals": "[[parameters('hubVNETId')]"
+            }
+          },
+          "then": {
+            "effect": "deny"
+          }
+        }
+      },
+      {
+        "name": "Append-Standard-NSG-Rules",
+        "mode": "All",
+        "displayName": "Append Standard NSG Rules",
+        "category": "BicepTest",
+        "policyRule": {
+          "if": {
+            "allOf": [
+              {
+                "field": "type",
+                "equals": "Microsoft.Network/networkSecurityGroups"
+              },
+              {
+                "not": {
+                  "field": "Microsoft.Network/networkSecurityGroups/subnets[*].delegations[*].type",
+                  "equals": "Microsoft.Sql/managedInstances"
+                }
+              }
+            ]
+          },
+          "then": {
+            "effect": "append",
+            "details": [
+              {
+                "field": "Microsoft.Network/networkSecurityGroups/securityRules",
+                "value": "[[parameters('defaultSecurityRules')]"
+              }
+            ]
+          }
+        },
+        "parameters": {
+          "defaultSecurityRules": {
+            "type": "Array",
+            "metadata": {
+              "description": "Default Security Rules"
+            }
+          }
+        }
+      }
+    ]
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2019-10-01",
+      "name": "PolicyDefinitions-Deploy",
+      "location": "[deployment().location]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "policies": {
+            "value": "[variables('policies')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-08-01/managementGroupDeploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.3.539.46024",
+              "templateHash": "13424259056042012255"
+            }
+          },
+          "parameters": {
+            "policies": {
+              "type": "array"
+            }
+          },
+          "functions": [],
+          "resources": [
+            {
+              "copy": {
+                "name": "policyArrary",
+                "count": "[length(parameters('policies'))]"
+              },
+              "type": "Microsoft.Authorization/policyDefinitions",
+              "apiVersion": "2020-09-01",
+              "name": "[parameters('policies')[copyIndex()].name]",
+              "properties": {
+                "displayName": "[parameters('policies')[copyIndex()].displayName]",
+                "mode": "[parameters('policies')[copyIndex()].mode]",
+                "policyRule": "[parameters('policies')[copyIndex()].policyRule]",
+                "policyType": "Custom",
+                "parameters": "[parameters('policies')[copyIndex()].parameters]",
+                "metadata": {
+                  "category": "[parameters('policies')[copyIndex()].category]"
+                }
+              }
+            }
+          ],
+          "outputs": {
+            "policyIds": {
+              "type": "array",
+              "copy": {
+                "count": "[length(parameters('policies'))]",
+                "input": {
+                  "id": "[format('Microsoft.Authorization/policyDefinitions/{0}', parameters('policies')[copyIndex()].name)]"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
