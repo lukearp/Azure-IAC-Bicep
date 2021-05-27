@@ -36,7 +36,7 @@ Modules folder houses the standard resource deployments to be consumed by the '.
 
     Modules/Microsoft.Network/networkSecurityGroups/networkSecurityGroups.bicep
 
-That standard resource deployment would be referenced within a '.bicep' file within the cloud folder to hand Network Security Group Deployments.  You can manage multiple version of these within the same folder for different deployment scenarios.  Example:
+That standard resource deployment would be referenced within a '.bicep' file within the cloud folder to handle Network Security Group Deployments.  You can manage multiple version of these within the same folder for different deployment scenarios.  Example:
 
     Modules/Microsoft.Network/networkSecurityGroups/networkSecurityGroups.bicep = Standard NSG Deploy
     Modules/Microsoft.Network/networkSecurityGroups/networkSecurityGroups-array.bicep = Standard NSG Deploy with an Array Parameter
