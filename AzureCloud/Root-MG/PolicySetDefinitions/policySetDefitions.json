@@ -5,18 +5,11 @@
     "_generator": {
       "name": "bicep",
       "version": "0.3.539.46024",
-      "templateHash": "12188282385296792227"
+      "templateHash": "13192876238546676290"
     }
   },
   "functions": [],
   "variables": {
-    "definedDefinitionGroups": [
-      {
-        "name": "MyGroup",
-        "displayName": "This Bicep Group",
-        "category": "Test"
-      }
-    ],
     "policyDefinitionGroups": [
       {
         "name": "Tags",
@@ -24,180 +17,18 @@
         "category": "Tags"
       },
       {
-        "name": "BicepTest",
-        "displayName": "Bicep Test Policies",
-        "category": "BicepTest"
+        "name": "Network",
+        "displayName": "Network Policy",
+        "category": "Network"
+      },
+      {
+        "name": "Location",
+        "displayName": "Allowed Locations",
+        "category": "Location"
       }
     ]
   },
   "resources": [
-    {
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2019-10-01",
-      "name": "CustomPolicies",
-      "location": "[deployment().location]",
-      "properties": {
-        "expressionEvaluationOptions": {
-          "scope": "inner"
-        },
-        "mode": "Incremental",
-        "template": {
-          "$schema": "https://schema.management.azure.com/schemas/2019-08-01/managementGroupDeploymentTemplate.json#",
-          "contentVersion": "1.0.0.0",
-          "metadata": {
-            "_generator": {
-              "name": "bicep",
-              "version": "0.3.539.46024",
-              "templateHash": "9850034504753342723"
-            }
-          },
-          "functions": [],
-          "variables": {
-            "policies": [
-              {
-                "name": "VNET-to-Hub-Peering-Enforcement",
-                "displayName": "Restricts VNET peering to HUB VNET Only",
-                "mode": "All",
-                "category": "BicepTest",
-                "parameters": {
-                  "hubVNETId": {
-                    "type": "string",
-                    "metadata": {
-                      "description": "/subscriptions/XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXX/resourceGroups/RESOURCEGROUP/providers/Microsoft.Network/virtualNetworks/VNET"
-                    }
-                  }
-                },
-                "policyRule": {
-                  "if": {
-                    "not": {
-                      "field": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings/remoteVirtualNetwork.id",
-                      "equals": "[[parameters('hubVNETId')]"
-                    }
-                  },
-                  "then": {
-                    "effect": "deny"
-                  }
-                }
-              },
-              {
-                "name": "Append-Standard-NSG-Rules",
-                "mode": "All",
-                "displayName": "Append Standard NSG Rules",
-                "category": "BicepTest",
-                "policyRule": {
-                  "if": {
-                    "allOf": [
-                      {
-                        "field": "type",
-                        "equals": "Microsoft.Network/networkSecurityGroups"
-                      },
-                      {
-                        "not": {
-                          "field": "Microsoft.Network/networkSecurityGroups/subnets[*].delegations[*].type",
-                          "equals": "Microsoft.Sql/managedInstances"
-                        }
-                      }
-                    ]
-                  },
-                  "then": {
-                    "effect": "append",
-                    "details": [
-                      {
-                        "field": "Microsoft.Network/networkSecurityGroups/securityRules",
-                        "value": "[[parameters('defaultSecurityRules')]"
-                      }
-                    ]
-                  }
-                },
-                "parameters": {
-                  "defaultSecurityRules": {
-                    "type": "Array",
-                    "metadata": {
-                      "description": "Default Security Rules"
-                    }
-                  }
-                }
-              }
-            ]
-          },
-          "resources": [
-            {
-              "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2019-10-01",
-              "name": "PolicyDefinitions-Deploy",
-              "location": "[deployment().location]",
-              "properties": {
-                "expressionEvaluationOptions": {
-                  "scope": "inner"
-                },
-                "mode": "Incremental",
-                "parameters": {
-                  "policies": {
-                    "value": "[variables('policies')]"
-                  }
-                },
-                "template": {
-                  "$schema": "https://schema.management.azure.com/schemas/2019-08-01/managementGroupDeploymentTemplate.json#",
-                  "contentVersion": "1.0.0.0",
-                  "metadata": {
-                    "_generator": {
-                      "name": "bicep",
-                      "version": "0.3.539.46024",
-                      "templateHash": "16927078154120953131"
-                    }
-                  },
-                  "parameters": {
-                    "policies": {
-                      "type": "array"
-                    }
-                  },
-                  "functions": [],
-                  "resources": [
-                    {
-                      "copy": {
-                        "name": "policyArrary",
-                        "count": "[length(parameters('policies'))]"
-                      },
-                      "type": "Microsoft.Authorization/policyDefinitions",
-                      "apiVersion": "2020-09-01",
-                      "name": "[parameters('policies')[copyIndex()].name]",
-                      "properties": {
-                        "displayName": "[parameters('policies')[copyIndex()].displayName]",
-                        "mode": "[parameters('policies')[copyIndex()].mode]",
-                        "policyRule": "[parameters('policies')[copyIndex()].policyRule]",
-                        "policyType": "Custom",
-                        "parameters": "[parameters('policies')[copyIndex()].parameters]",
-                        "metadata": {
-                          "category": "[parameters('policies')[copyIndex()].category]"
-                        }
-                      }
-                    }
-                  ],
-                  "outputs": {
-                    "policyIds": {
-                      "type": "array",
-                      "copy": {
-                        "count": "[length(parameters('policies'))]",
-                        "input": {
-                          "id": "[format('Microsoft.Authorization/policyDefinitions/{0}', parameters('policies')[copyIndex()].name)]",
-                          "category": "[parameters('policies')[copyIndex()].category]"
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          ],
-          "outputs": {
-            "policyOutputs": {
-              "type": "array",
-              "value": "[reference(format('Microsoft.Resources/deployments/{0}', 'PolicyDefinitions-Deploy'), '2019-10-01').outputs.policyIds.value]"
-            }
-          }
-        }
-      }
-    },
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2019-10-01",
@@ -218,10 +49,12 @@
           "parameters": {
             "value": {
               "starting": {
-                "type": "integer"
+                "type": "integer",
+                "defaultValue": 4000
               },
               "ending": {
-                "type": "integer"
+                "type": "integer",
+                "defaultValue": 4096
               },
               "hubVnetResourceId": {
                 "type": "string",
@@ -230,6 +63,50 @@
               "standardNsgRules": {
                 "type": "array",
                 "defaultValue": []
+              },
+              "tag1": {
+                "type": "string",
+                "defaultValue": "agency"
+              },
+              "tag2": {
+                "type": "string",
+                "defaultValue": "environment"
+              },
+              "tag3": {
+                "type": "string",
+                "defaultValue": "application"
+              },
+              "tag4": {
+                "type": "string",
+                "defaultValue": "Name"
+              },
+              "tag5": {
+                "type": "string",
+                "defaultValue": "createdby"
+              },
+              "tag6": {
+                "type": "string",
+                "defaultValue": "businessowner"
+              },
+              "tag7": {
+                "type": "string",
+                "defaultValue": "itowner"
+              },
+              "tag8": {
+                "type": "string",
+                "defaultValue": "backup"
+              },
+              "listOfAllowedLocations": {
+                "type": "Array",
+                "metadata": {
+                  "description": "The list of locations that resource groups can be created in.",
+                  "strongType": "location",
+                  "displayName": "Allowed locations"
+                },
+                "defaultValue": [
+                  "eastus2",
+                  "global"
+                ]
               }
             }
           },
@@ -241,7 +118,7 @@
               {
                 "policyDefinitionId": "/providers/Microsoft.Management/managementGroups/LukeInternal/providers/Microsoft.Authorization/policyDefinitions/3d4214c5-1dbe-401a-9fc1-50c395978c21",
                 "groupNames": [
-                  "BicepTest"
+                  "Network"
                 ],
                 "parameters": {
                   "startingPriority": {
@@ -253,9 +130,192 @@
                 }
               },
               {
+                "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/96670d01-0a4d-4649-9c89-2d3abc0a5025",
+                "groupNames": [
+                  "Tags"
+                ],
+                "parameters": {
+                  "tagName": {
+                    "value": "[[parameters('tag1')]"
+                  }
+                }
+              },
+              {
+                "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/96670d01-0a4d-4649-9c89-2d3abc0a5025",
+                "groupNames": [
+                  "Tags"
+                ],
+                "parameters": {
+                  "tagName": {
+                    "value": "[[parameters('tag2')]"
+                  }
+                }
+              },
+              {
+                "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/96670d01-0a4d-4649-9c89-2d3abc0a5025",
+                "groupNames": [
+                  "Tags"
+                ],
+                "parameters": {
+                  "tagName": {
+                    "value": "[[parameters('tag3')]"
+                  }
+                }
+              },
+              {
+                "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/96670d01-0a4d-4649-9c89-2d3abc0a5025",
+                "groupNames": [
+                  "Tags"
+                ],
+                "parameters": {
+                  "tagName": {
+                    "value": "[[parameters('tag4')]"
+                  }
+                }
+              },
+              {
+                "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/96670d01-0a4d-4649-9c89-2d3abc0a5025",
+                "groupNames": [
+                  "Tags"
+                ],
+                "parameters": {
+                  "tagName": {
+                    "value": "[[parameters('tag5')]"
+                  }
+                }
+              },
+              {
+                "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/96670d01-0a4d-4649-9c89-2d3abc0a5025",
+                "groupNames": [
+                  "Tags"
+                ],
+                "parameters": {
+                  "tagName": {
+                    "value": "[[parameters('tag6')]"
+                  }
+                }
+              },
+              {
+                "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/96670d01-0a4d-4649-9c89-2d3abc0a5025",
+                "groupNames": [
+                  "Tags"
+                ],
+                "parameters": {
+                  "tagName": {
+                    "value": "[[parameters('tag7')]"
+                  }
+                }
+              },
+              {
+                "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/96670d01-0a4d-4649-9c89-2d3abc0a5025",
+                "groupNames": [
+                  "Tags"
+                ],
+                "parameters": {
+                  "tagName": {
+                    "value": "[[parameters('tag8')]"
+                  }
+                }
+              },
+              {
+                "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/cd3aa116-8754-49c9-a813-ad46512ece54",
+                "groupNames": [
+                  "Tags"
+                ],
+                "parameters": {
+                  "tagName": {
+                    "value": "[[parameters('tag1')]"
+                  }
+                }
+              },
+              {
+                "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/cd3aa116-8754-49c9-a813-ad46512ece54",
+                "groupNames": [
+                  "Tags"
+                ],
+                "parameters": {
+                  "tagName": {
+                    "value": "[[parameters('tag2')]"
+                  }
+                }
+              },
+              {
+                "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/cd3aa116-8754-49c9-a813-ad46512ece54",
+                "groupNames": [
+                  "Tags"
+                ],
+                "parameters": {
+                  "tagName": {
+                    "value": "[[parameters('tag3')]"
+                  }
+                }
+              },
+              {
+                "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/cd3aa116-8754-49c9-a813-ad46512ece54",
+                "groupNames": [
+                  "Tags"
+                ],
+                "parameters": {
+                  "tagName": {
+                    "value": "[[parameters('tag4')]"
+                  }
+                }
+              },
+              {
+                "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/cd3aa116-8754-49c9-a813-ad46512ece54",
+                "groupNames": [
+                  "Tags"
+                ],
+                "parameters": {
+                  "tagName": {
+                    "value": "[[parameters('tag5')]"
+                  }
+                }
+              },
+              {
+                "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/cd3aa116-8754-49c9-a813-ad46512ece54",
+                "groupNames": [
+                  "Tags"
+                ],
+                "parameters": {
+                  "tagName": {
+                    "value": "[[parameters('tag6')]"
+                  }
+                }
+              },
+              {
+                "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/cd3aa116-8754-49c9-a813-ad46512ece54",
+                "groupNames": [
+                  "Tags"
+                ],
+                "parameters": {
+                  "tagName": {
+                    "value": "[[parameters('tag7')]"
+                  }
+                }
+              },
+              {
+                "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/cd3aa116-8754-49c9-a813-ad46512ece54",
+                "groupNames": [
+                  "Tags"
+                ],
+                "parameters": {
+                  "tagName": {
+                    "value": "[[parameters('tag8')]"
+                  }
+                }
+              },
+              {
+                "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/83a86a26-fd1f-447c-b59d-e51f44264114",
+                "groupNames": [
+                  "Network"
+                ],
+                "parameters": {}
+              },
+              {
                 "policyDefinitionId": "/providers/Microsoft.Management/managementGroups/LukeInternal/providers/Microsoft.Authorization/policyDefinitions/Append-Standard-NSG-Rules",
                 "groupNames": [
-                  "BicepTest"
+                  "Network"
                 ],
                 "parameters": {
                   "defaultSecurityRules": {
@@ -266,11 +326,33 @@
               {
                 "policyDefinitionId": "/providers/Microsoft.Management/managementGroups/LukeInternal/providers/Microsoft.Authorization/policyDefinitions/VNET-to-Hub-Peering-Enforcement",
                 "groupNames": [
-                  "BicepTest"
+                  "Network"
                 ],
                 "parameters": {
                   "hubVNETId": {
                     "value": "[[parameters('hubVnetResourceId')]"
+                  }
+                }
+              },
+              {
+                "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/e765b5de-1225-4ba3-bd56-1ac6695af988",
+                "groupNames": [
+                  "Location"
+                ],
+                "parameters": {
+                  "listOfAllowedLocations": {
+                    "value": "[[parameters('listOfAllowedLocations')]"
+                  }
+                }
+              },
+              {
+                "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/e56962a6-4747-49cd-b67b-bf8b01975c4c",
+                "groupNames": [
+                  "Location"
+                ],
+                "parameters": {
+                  "listOfAllowedLocations": {
+                    "value": "[[parameters('listOfAllowedLocations')]"
                   }
                 }
               }
@@ -319,10 +401,7 @@
             }
           ]
         }
-      },
-      "dependsOn": [
-        "[format('Microsoft.Resources/deployments/{0}', 'CustomPolicies')]"
-      ]
+      }
     }
   ]
 }

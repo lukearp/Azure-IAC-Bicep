@@ -4,7 +4,7 @@ var policies = [
     name: 'VNET-to-Hub-Peering-Enforcement'
     displayName: 'Restricts VNET peering to HUB VNET Only'
     mode: 'All'
-    category: 'BicepTest'
+    category: 'Network'
     parameters: {
       hubVNETId: {
         type: 'string'
@@ -29,7 +29,7 @@ var policies = [
     name: 'Append-Standard-NSG-Rules'
     mode: 'All'
     displayName: 'Append Standard NSG Rules'
-    category: 'BicepTest'
+    category: 'Network'
     policyRule: {
       if: {
         allOf: [
@@ -60,6 +60,47 @@ var policies = [
         type: 'Array'
         metadata: {
           description: 'Default Security Rules'
+        }
+      }
+    }
+  }
+  {
+    name: 'Protect-Standard-NSG-Rules'
+    mode: 'All'
+    displayName: 'Protect Standard NSG Rules'
+    category: 'Network'
+    policyRule: {
+      if: {
+        allOf: [
+          {
+            field: 'type'
+            equals: 'Microsoft.Network/networkSecurityGroups/securityRules'
+          }
+          {
+            field: 'Microsoft.Network/networkSecurityGroups/securityRules/priority'
+            greaterOrEquals: '[parameters(\'startingPriority\')]'
+          }
+          {
+            field: 'Microsoft.Network/networkSecurityGroups/securityRules/priority'
+            lessOrEquals: '[parameters(\'endingPriority\')]'
+          }
+        ]
+      }
+      then: {
+        effect: 'deny'
+      }
+    }
+    parameters: {
+      startingPriority: {
+        type: 'integer'
+        metadata: {
+          description: 'Starting Priority'
+        }
+      }
+      endingPriority: {
+        type: 'integer'
+        metadata: {
+          description: 'Ending Priority'
         }
       }
     }
