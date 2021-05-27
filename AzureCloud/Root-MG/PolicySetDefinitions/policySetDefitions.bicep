@@ -1,4 +1,7 @@
 targetScope = 'managementGroup'
+module customPolicies '../PolicyDefinitions/policyDefintions.bicep' = {
+  name: 'customPolicies'
+}
 
 var policyDefinitionGroups = [
   {
