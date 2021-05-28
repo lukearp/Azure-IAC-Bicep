@@ -69,6 +69,11 @@ resource trust 'Microsoft.Network/networkInterfaces@2020-11-01' = [for i in rang
           subnet: {
             id: concat(vnet.id, '/subnets/', trustSubnetName)
           }
+          loadBalancerBackendAddressPools: [
+            {
+              id: concat(trustLb.id,'/backendAddressPools/trust') 
+            } 
+          ] 
         }
       }
     ]
@@ -86,6 +91,11 @@ resource untrust 'Microsoft.Network/networkInterfaces@2020-11-01' = [for i in ra
           subnet: {
             id: concat(vnet.id, '/subnets/', untrustSubnetName)
           }
+          loadBalancerBackendAddressPools: [
+            {
+              id: concat(untrustLb.id,'/backendAddressPools/untrust') 
+            } 
+          ]
         }
       }
     ]
@@ -204,4 +214,122 @@ resource paloAlto 'Microsoft.Compute/virtualMachines@2020-12-01' = [for i in ran
   }  
 }]
 
-output data string = customData
+resource publicIp 'Microsoft.Network/publicIPAddresses@2020-11-01' = {
+  name: 'palo-wan'
+  location: resourceGroup().location
+  sku: {
+    name: 'Standard'
+    tier: 'Regional'  
+  }
+  zones: [
+    '1'
+    '2'
+    '3'
+  ]
+  properties: {
+    publicIPAddressVersion: 'IPv4' 
+    publicIPAllocationMethod: 'Static' 
+  }   
+}
+
+resource untrustLb 'Microsoft.Network/loadBalancers@2020-11-01' = {
+  name: 'Palo-Untrust'
+  location: resourceGroup().location 
+  sku: {
+    name: 'Standard'
+    tier: 'Regional'   
+  }
+  properties: {
+    frontendIPConfigurations: [
+      {
+        name: 'Internet'
+        properties: {
+          publicIPAddress: {
+            id: publicIp.id 
+          } 
+        }  
+      }
+    ]
+    backendAddressPools: [
+      {
+        name: 'untrust'
+        properties: {}
+      }
+    ]
+    outboundRules: [
+      {
+        name: 'InternetNat'
+        properties: {
+          backendAddressPool: {
+            id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', 'Palo-Untrust', 'untrust') 
+          }
+          frontendIPConfigurations: [
+            {
+              id: resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', 'Palo-Untrust', 'Internet')  
+            }
+          ]
+          protocol: 'All'
+          enableTcpReset: true     
+        }  
+      } 
+    ]    
+  }    
+}
+
+resource trustLb 'Microsoft.Network/loadBalancers@2020-11-01' = {
+  name: 'Palo-Trust'
+  location: resourceGroup().location
+  sku: {
+    name: 'Standard'
+    tier: 'Regional'   
+  }
+  properties: {
+    frontendIPConfigurations: [
+      {
+        name: 'Trust'
+        properties: {
+          subnet: {
+            id: concat(vnetId,'/subnets/',trustSubnetName) 
+          } 
+        }  
+      }
+    ]
+    backendAddressPools: [
+      {
+        name: 'trust' 
+        properties: {}  
+      }
+    ]
+    outboundRules: []
+    probes: [
+      {
+        name: 'trust'
+        properties: {
+          intervalInSeconds: 5
+          numberOfProbes: 3
+          port: 22
+          protocol: 'Tcp'     
+        }  
+      }
+    ]
+    loadBalancingRules: [
+      {
+        name: 'HA'
+        properties: {
+          backendAddressPool: {
+            id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', 'Palo-Trust', 'trust') 
+          }
+          frontendPort: 0
+          backendPort: 0
+          protocol: 'All'
+          frontendIPConfiguration: {
+            id: resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', 'Palo-Trust', 'Trust')   
+          }
+          probe: {
+            id: resourceId('Microsoft.Network/loadBalancers/probes', 'Palo-Trust', 'trust') 
+          }     
+        }  
+      } 
+    ]     
+  }    
+}

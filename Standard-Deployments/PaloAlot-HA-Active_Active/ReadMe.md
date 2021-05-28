@@ -3,10 +3,10 @@
 Deploys a Palo Alto HA Pair in an Active Active configuration.  Deploys:    
     Azure Storage Account with File Share configured for Palo Boot Strapping
     Up to 9 Palo Alto Appliances across 3 Availability Zones
-
-Soon it will also deploy the Azure Load Balancers for Trust and Untrust:
     Azure Public Load Balancer for Untrust
     Azure Private Load Balancer for Trust
+
+Soon it will request a init file to do some base Palo Configurations
 
 # What does this module require?
 
