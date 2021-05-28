@@ -15,7 +15,7 @@ An existing Virtual Network with 3 subnets:
 2. Untrust
 3. Trust
 
-A User Assigned Managed Identity that has rights Contributor rights to the Resource Group Scope
+A User Assigned Managed Identity that has Contributor rights to the Resource Group Scope
 
 Key Vault with a secret for Admin Password.  The Users deploying the template will need an Access Policy to Get Secrets.
 
