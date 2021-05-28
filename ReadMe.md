@@ -42,6 +42,12 @@ That standard resource deployment would be referenced within a '.bicep' file wit
     Modules/Microsoft.Network/networkSecurityGroups/networkSecurityGroups-array.bicep = Standard NSG Deploy with an Array Parameter
     Modules/Microsoft.Network/networkSecurityGroups/networkSecurityGroups-sqlMi.bicep = Standard NSG Deploy to support a SQL Managed Instance Deployment
 
+## Standard-Deployments Folder
+This is a place for multi-resource deployments.  An Example would be a standard NVA Deployment.  These standard deployments would then be consumed as modules in the Cloud Folders '.bicep' files.  
+
+## Test-Functions
+This is a folder for testing bicep files and modules.  This folder is ignored when it comes to version control.
+
 # How are deployments managed?
 This can be handled multiple ways.  In my environment, since I am the only contributor, I am tying my Pipelines to specific Branches.  Once I have my Pipeline configured with all the .bicep files I want it to deploy, I commit and push to my Branch that triggers my workflow.  When the workflow completes successfully, I do a merge request to get the changed added to the master branch.  
 
