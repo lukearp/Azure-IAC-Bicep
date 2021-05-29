@@ -130,6 +130,19 @@ resource fileShare 'Microsoft.Storage/storageAccounts/fileServices/shares@2021-0
   }  
 }
 
+module init 'init-cfg.bicep' = {
+  name: 'Build-Init-cfg'
+}
+
+var trustSubnetAddress = split(split(reference(concat(vnet.id, '/subnets/', trustSubnetName),'2020-11-01', 'Full').properties.addressPrefix,'/')[0],'.')
+var trustDefaultGateway = concat(trustSubnetAddress[0],'.',trustSubnetAddress[1],'.',trustSubnetAddress[2],'.',string(int(trustSubnetAddress[3])+1))
+module bootstrapXml 'bootstrapxml.bicep' = {
+  name: 'Build-BootstrapConfig'
+  params: {
+    trustGateway: trustDefaultGateway 
+  }  
+}
+
 resource folderStructure 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
   kind: 'AzurePowerShell'
   location: resourceGroup().location
@@ -141,8 +154,8 @@ resource folderStructure 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
     }  
   } 
   properties: {
-    arguments: concat(bootstrapStorage.name,' ', resourceGroup().name, ' ', subscription().subscriptionId)
-    scriptContent: 'Connect-AzAccount -Identity -Subscription $args[2];$storageAccount = Get-AzStorageAccount -Name $args[0] -ResourceGroupName $args[1];$context = $storageAccount.Context;get-AzStorageShare -Context $context -Name palo | New-AzStorageDirectory -Path "config" -ErrorAction SilentlyContinue;get-AzStorageShare -Context $context -Name palo | New-AzStorageDirectory -Path "content" -ErrorAction SilentlyContinue;get-AzStorageShare -Context $context -Name palo | New-AzStorageDirectory -Path "license" -ErrorAction SilentlyContinue;get-AzStorageShare -Context $context -Name palo | New-AzStorageDirectory -Path "software" -ErrorAction SilentlyContinue;$DeploymentScriptOutputs = @{};$DeploymentScriptOutputs[\'key\']=$storageAccount.Context.ConnectionString.Split(\';\')[5].Split(\'AccountKey=\')[1];'
+    arguments: concat(bootstrapStorage.name,' ', resourceGroup().name, ' ', subscription().subscriptionId, ' @\'\n', bootstrapXml.outputs.bootstrapXml,'\n\'@', ' @\'\n', init.outputs.cfg,'\n\'@')
+    scriptContent: 'Connect-AzAccount -Identity -Subscription $args[2];$storageAccount = Get-AzStorageAccount -Name $args[0] -ResourceGroupName $args[1];$context = $storageAccount.Context;get-AzStorageShare -Context $context -Name palo | New-AzStorageDirectory -Path "config" -ErrorAction SilentlyContinue;get-AzStorageShare -Context $context -Name palo | New-AzStorageDirectory -Path "content" -ErrorAction SilentlyContinue;get-AzStorageShare -Context $context -Name palo | New-AzStorageDirectory -Path "license" -ErrorAction SilentlyContinue;get-AzStorageShare -Context $context -Name palo | New-AzStorageDirectory -Path "software" -ErrorAction SilentlyContinue;$args[4] |Out-File -Path init-cfg.txt;$args[3] | Out-File -Path bootstrap.xml;get-AzStorageShare -Context $context -Name palo | Set-AzStorageFileContent -Path /config -Source .\\init-cfg.txt -Force -Confirm:$false;get-AzStorageShare -Context $context -Name palo | Set-AzStorageFileContent -Path /config -Source .\\bootstrap.xml -Force -Confirm:$false;$DeploymentScriptOutputs = @{};$DeploymentScriptOutputs[\'key\']=$storageAccount.Context.ConnectionString.Split(\';\')[5].Split(\'AccountKey=\')[1];'
     azPowerShellVersion: '5.9'
     retentionInterval: 'P1D'    
   } 
@@ -210,6 +223,12 @@ resource paloAlto 'Microsoft.Compute/virtualMachines@2020-12-01' = [for i in ran
       osDisk: {
         createOption: 'FromImage' 
       }  
+    } 
+    diagnosticsProfile: {
+      bootDiagnostics: {
+        enabled: true
+        storageUri: bootstrapStorage.properties.primaryEndpoints.blob 
+      } 
     }   
   }  
 }]

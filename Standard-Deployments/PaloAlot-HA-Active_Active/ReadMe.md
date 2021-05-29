@@ -6,7 +6,7 @@ Deploys a Palo Alto HA Pair in an Active Active configuration.  Deploys:
     Azure Public Load Balancer for Untrust
     Azure Private Load Balancer for Trust
 
-Soon it will request a init file to do some base Palo Configurations
+All palos will pull their default configuration from the bootstrap.xml and init-cfg.txt files within the 'config' directory of the Azure Storage Account deployed.  These default settings can be configured within the init-cfg.bicep and bootstrapxm.bicep files.
 
 # What does this module require?
 
