@@ -1,10 +1,10 @@
 # What does this module do?
 
 Deploys a Palo Alto HA Pair in an Active Active configuration.  Deploys:    
-    1. Azure Storage Account with File Share configured for Palo Boot Strapping
-    2. Up to 9 Palo Alto Appliances across 3 Availability Zones
-    3. Azure Public Load Balancer for Untrust
-    4. Azure Private Load Balancer for Trust
+1. Azure Storage Account with File Share configured for Palo Boot Strapping
+2. Up to 9 Palo Alto Appliances across 3 Availability Zones
+3. Azure Public Load Balancer for Untrust
+4. Azure Private Load Balancer for Trust
 
 All palos will pull their default configuration from the bootstrap.xml and init-cfg.txt files within the 'config' directory of the Azure Storage Account deployed.  These default settings can be configured within the init-cfg.bicep and bootstrapxm.bicep files.
 
