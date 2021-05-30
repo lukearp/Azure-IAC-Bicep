@@ -8,6 +8,16 @@ Deploys a Palo Alto HA Pair in an Active Active configuration.  Deploys:
 
 All palos will pull their default configuration from the bootstrap.xml and init-cfg.txt files within the 'config' directory of the Azure Storage Account deployed.  These default settings can be configured within the init-cfg.bicep and bootstrapxm.bicep files.
 
+Once deployment is complete using the default bootstrapxml.bicep and init-cfg.bicep:
+1. Count of appliances deployed across 3 Availability zones
+2. Trust Interfaces connected to Palo-Trust Azure Standardard LB with HA ports enabled
+3. Untrust Interfaces connected to Palo-Untrust with only an Outbound Rule associated for Internet NAT
+4. Each Palo appliance will have the following config
+    a. Two Virtual Routers named Untrust and Trust
+    b. Two zones named Untrust and Trust
+    c. Default security policy allowing Trust to reach Untrust
+    d. NAT Rule to allow outbound access to the internet.    
+
 # What does this module require?
 
 An existing Virtual Network with 3 subnets:
