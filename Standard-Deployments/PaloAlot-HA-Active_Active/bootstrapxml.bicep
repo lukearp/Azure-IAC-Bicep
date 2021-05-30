@@ -1,4 +1,5 @@
 param trustGateway string
+param untrustGateway string
 
 var config = '''
 <?xml version=\"1.0\"?>
@@ -97,10 +98,12 @@ var config = '''
                 <ndp-proxy>
                   <enabled>no</enabled>
                 </ndp-proxy>
+                <dhcp-client>
+                  <create-default-route>no</create-default-route>
+                </dhcp-client>
                 <lldp>
                   <enable>no</enable>
                 </lldp>
-                <dhcp-client/>
                 <interface-management-profile>Health-Probe</interface-management-profile>
               </layer3>
             </entry>
@@ -365,6 +368,25 @@ var config = '''
                     <interface>ethernet1/1</interface>
                     <metric>10</metric>
                     <destination>RFC-1918-192.168</destination>
+                    <route-table>
+                      <unicast/>
+                    </route-table>
+                  </entry>
+                  <entry name=\"Default-Route\">
+                    <path-monitor>
+                      <enable>no</enable>
+                      <failure-condition>any</failure-condition>
+                      <hold-time>2</hold-time>
+                    </path-monitor>
+                    <nexthop>
+                      <ip-address>Untrust-Default-Gateway</ip-address>
+                    </nexthop>
+                    <bfd>
+                      <profile>None</profile>
+                    </bfd>
+                    <interface>ethernet1/1</interface>
+                    <metric>10</metric>
+                    <destination>0.0.0.0/0</destination>
                     <route-table>
                       <unicast/>
                     </route-table>
@@ -657,6 +679,9 @@ var config = '''
             <entry name=\"Trust-Default-Gateway\">
               <ip-netmask>{0}</ip-netmask>
             </entry>
+            <entry name=\"Untrust-Default-Gateway\">
+              <ip-netmask>{1}</ip-netmask>
+            </entry>
           </address>
           <import>
             <network>
@@ -672,4 +697,4 @@ var config = '''
   </devices>
 </config>
 '''
-output bootstrapXml string = format(config,trustGateway)
+output bootstrapXml string = format(config,trustGateway,untrustGateway)

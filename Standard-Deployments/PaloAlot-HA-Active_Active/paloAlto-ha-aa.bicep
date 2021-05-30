@@ -62,6 +62,7 @@ resource trust 'Microsoft.Network/networkInterfaces@2020-11-01' = [for i in rang
   location: resourceGroup().location
   name: concat(paloNamePrefix, '-trust-nic-', i + 1)
   properties: {
+    enableIPForwarding: true 
     ipConfigurations: [
       {
         name: 'trust'
@@ -84,6 +85,7 @@ resource untrust 'Microsoft.Network/networkInterfaces@2020-11-01' = [for i in ra
   location: resourceGroup().location
   name: concat(paloNamePrefix, '-untrust-nic-', i + 1)
   properties: {
+    enableIPForwarding: true 
     ipConfigurations: [
       {
         name: 'trust'
@@ -136,10 +138,14 @@ module init 'init-cfg.bicep' = {
 
 var trustSubnetAddress = split(split(reference(concat(vnet.id, '/subnets/', trustSubnetName),'2020-11-01', 'Full').properties.addressPrefix,'/')[0],'.')
 var trustDefaultGateway = concat(trustSubnetAddress[0],'.',trustSubnetAddress[1],'.',trustSubnetAddress[2],'.',string(int(trustSubnetAddress[3])+1))
+
+var untrustSubnetAddress = split(split(reference(concat(vnet.id, '/subnets/', untrustSubnetName),'2020-11-01', 'Full').properties.addressPrefix,'/')[0],'.')
+var untrustDefaultGateway = concat(untrustSubnetAddress[0],'.',untrustSubnetAddress[1],'.',untrustSubnetAddress[2],'.',string(int(untrustSubnetAddress[3])+1))
 module bootstrapXml 'bootstrapxml.bicep' = {
   name: 'Build-BootstrapConfig'
   params: {
-    trustGateway: trustDefaultGateway 
+    trustGateway: trustDefaultGateway
+    untrustGateway: untrustDefaultGateway 
   }  
 }
 
