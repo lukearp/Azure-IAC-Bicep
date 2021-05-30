@@ -13,10 +13,10 @@ Once deployment is complete using the default bootstrapxml.bicep and init-cfg.bi
 2. Trust Interfaces connected to Palo-Trust Azure Standardard LB with HA ports enabled
 3. Untrust Interfaces connected to Palo-Untrust with only an Outbound Rule associated for Internet NAT
 4. Each Palo appliance will have the following config
-    a. Two Virtual Routers named Untrust and Trust
-    b. Two zones named Untrust and Trust
-    c. Default security policy allowing Trust to reach Untrust
-    d. NAT Rule to allow outbound access to the internet.    
+    * Two Virtual Routers named Untrust and Trust
+    * Two zones named Untrust and Trust
+    * Default security policy allowing Trust to reach Untrust
+    * NAT Rule to allow outbound access to the internet.    
 
 # What does this module require?
 
