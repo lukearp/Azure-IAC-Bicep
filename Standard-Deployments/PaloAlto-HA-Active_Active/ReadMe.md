@@ -1,7 +1,7 @@
 # What does this module do?
 There are two options of this deployment:
-    paloAlto-ha-aa.bicep - VM Deployment
-    paloAlto-ha-vmss.bicep - Virtual Machine Scale Set Deployment
+  paloAlto-ha-aa.bicep - VM Deployment
+  paloAlto-ha-vmss.bicep - Virtual Machine Scale Set Deployment
 
 Deploys a Palo Alto HA Pair in an Active Active configuration.  Deploys:    
 1. Azure Storage Account with File Share configured for Palo Boot Strapping
