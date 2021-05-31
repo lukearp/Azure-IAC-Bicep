@@ -41,71 +41,6 @@ resource vnet 'Microsoft.Network/virtualNetworks@2020-11-01' existing = {
   scope: resourceGroup(vnetIdSplit[4])
 }
 
-resource mgmtNic 'Microsoft.Network/networkInterfaces@2020-11-01' = [for i in range(0, count): {
-  location: resourceGroup().location
-  name: concat(paloNamePrefix, '-mgmt-nic-', i + 1)
-  properties: {
-    ipConfigurations: [
-      {
-        name: 'mgmt'
-        properties: {
-          subnet: {
-            id: concat(vnet.id, '/subnets/', managementSubnetName)
-          }
-        }
-      }
-    ]
-  }
-}]
-
-resource trust 'Microsoft.Network/networkInterfaces@2020-11-01' = [for i in range(0, count): {
-  location: resourceGroup().location
-  name: concat(paloNamePrefix, '-trust-nic-', i + 1)
-  properties: {
-    enableIPForwarding: true
-    enableAcceleratedNetworking: true 
-    ipConfigurations: [
-      {
-        name: 'trust'
-        properties: {
-          subnet: {
-            id: concat(vnet.id, '/subnets/', trustSubnetName)
-          }
-          loadBalancerBackendAddressPools: [
-            {
-              id: concat(trustLb.id,'/backendAddressPools/trust') 
-            } 
-          ] 
-        }
-      }
-    ]
-  }
-}]
-
-resource untrust 'Microsoft.Network/networkInterfaces@2020-11-01' = [for i in range(0, count): {
-  location: resourceGroup().location
-  name: concat(paloNamePrefix, '-untrust-nic-', i + 1)
-  properties: {
-    enableIPForwarding: true
-    enableAcceleratedNetworking: true 
-    ipConfigurations: [
-      {
-        name: 'trust'
-        properties: {
-          subnet: {
-            id: concat(vnet.id, '/subnets/', untrustSubnetName)
-          }
-          loadBalancerBackendAddressPools: [
-            {
-              id: concat(untrustLb.id,'/backendAddressPools/untrust') 
-            } 
-          ]
-        }
-      }
-    ]
-  }
-}]
-
 resource bootstrapStorage 'Microsoft.Storage/storageAccounts@2021-02-01' = {
   name: substring(concat('palo',replace(guid(paloNamePrefix,subscription().subscriptionId),'-','')),0,23)
   kind: 'StorageV2'
@@ -173,88 +108,152 @@ resource folderStructure 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
 }
 
 var customData = concat('storage-account=',bootstrapStorage.name,',access-key=',folderStructure.properties.outputs.key,',file-share=palo,share-directory=')
-var zones = [for i in range(0,count): resourceGroup().location == 'eastus' || resourceGroup().location == 'eastus2' || resourceGroup().location == 'centralus' || resourceGroup().location == 'southcentralus' || resourceGroup().location == 'westus2' || resourceGroup().location == 'usgovvirginia' ? [
-  string(i == 0 || i == 3 || i == 6 ? 1 : i == 1 || i == 4 || i == 7 ? 2 : 3)
-] : []]
+var zones = resourceGroup().location == 'eastus' || resourceGroup().location == 'eastus2' || resourceGroup().location == 'centralus' || resourceGroup().location == 'southcentralus' || resourceGroup().location == 'westus2' || resourceGroup().location == 'usgovvirginia' ? [
+  '1'
+  '2'
+  '3'
+] : []
 
-resource paloAlto 'Microsoft.Compute/virtualMachines@2020-12-01' = [for i in range(0, count): {
-  name: concat(paloNamePrefix, '-', i + 1)
+var zoneLb = zones == [] ? false : true
+
+resource paloAltoSet 'Microsoft.Compute/virtualMachineScaleSets@2020-12-01' = {
+  name: paloNamePrefix
   location: resourceGroup().location
-  dependsOn: [
-    folderStructure 
-  ]
   plan: {
     publisher: 'paloaltonetworks'
     product: planOffer
     name: plan
   }
-  zones: zones[i]
-  
+  dependsOn: [
+    folderStructure
+  ]
+  sku: {
+     capacity: count
+     tier: 'Standard'
+     name: vmSize    
+  }
+  zones: zones 
   properties: {
-    hardwareProfile: {
-      vmSize: vmSize 
-    }
-    networkProfile: {
-      networkInterfaces: [
-        {
-          id: mgmtNic[i].id 
-          properties: {
-            primary: true 
-          }
-        }
-        {
-          id: untrust[i].id 
-          properties: {
-            primary: false 
-          }
-        }
-        {
-          id: trust[i].id 
-          properties: {
-            primary: false 
-          }
-        }  
-      ] 
-    }
-    osProfile: {
-      computerName: concat(paloNamePrefix, '-', i + 1)
-      adminUsername: adminUserName
-      adminPassword: adminPasswordSecret 
-      linuxConfiguration: {}
-      customData: base64(customData)  
-    }
-    storageProfile: {
-      imageReference: {
-        publisher: 'paloaltonetworks'
-        offer: planOffer
-        sku: plan
-        version: imageVersion     
-      }
-      osDisk: {
-        createOption: 'FromImage' 
+    upgradePolicy: {
+      mode: 'Rolling'
+      automaticOSUpgradePolicy: {
+        enableAutomaticOSUpgrade: false 
+      } 
+      rollingUpgradePolicy: {
+        prioritizeUnhealthyInstances: true
+        enableCrossZoneUpgrade: true  
       }  
     } 
-    diagnosticsProfile: {
-      bootDiagnostics: {
-        enabled: true
-        storageUri: bootstrapStorage.properties.primaryEndpoints.blob 
-      } 
-    }   
-  }  
-}]
+    zoneBalance: zoneLb
+    virtualMachineProfile: { 
+      osProfile: {
+        computerNamePrefix: paloNamePrefix 
+        adminUsername: adminUserName
+        adminPassword: adminPasswordSecret 
+        linuxConfiguration: {}
+        customData: base64(customData)  
+      }
+      networkProfile: {
+        healthProbe: {
+          id: resourceId('Microsoft.Network/loadBalancers/probes', concat('Palo-Trust-',paloNamePrefix), 'trust') 
+        } 
+        networkInterfaceConfigurations: [
+          {
+            name: 'mgmt-nic'
+            properties: {
+              ipConfigurations: [
+                {
+                  name: 'mgmt'
+                  properties: {
+                    subnet: {
+                      id: concat(vnet.id, '/subnets/', managementSubnetName)
+                    }
+                    loadBalancerBackendAddressPools: [
+                      {
+                        id: concat(trustLb.id,'/backendAddressPools/mgmt') 
+                      } 
+                    ] 
+                  }
+                }
+              ]              
+              primary: true 
+            } 
+          }
+          {
+            name: 'untrust-nic'
+            properties: {
+              enableIPForwarding: true 
+              enableAcceleratedNetworking: true 
+              ipConfigurations: [
+                {
+                  name: 'trust'
+                  properties: {
+                    subnet: {
+                      id: concat(vnet.id, '/subnets/', untrustSubnetName)
+                    }
+                    loadBalancerBackendAddressPools: [
+                      {
+                        id: concat(untrustLb.id,'/backendAddressPools/untrust') 
+                      } 
+                    ]  
+                  }
+                }
+              ]
+            }
+          }
+          {
+            name: 'trust-nic'
+            properties: {
+              enableIPForwarding: true
+              enableAcceleratedNetworking: true 
+              ipConfigurations: [
+                {
+                  name: 'trust'
+                  properties: {
+                    subnet: {
+                      id: concat(vnet.id, '/subnets/', trustSubnetName)
+                    }
+                    loadBalancerBackendAddressPools: [
+                      {
+                        id: concat(trustLb.id,'/backendAddressPools/trust') 
+                      } 
+                    ] 
+                  }
+                }
+              ]
+            }
+          }
+        ]   
+      }
+      storageProfile: {
+        imageReference: {
+          publisher: 'paloaltonetworks'
+          offer: planOffer
+          sku: plan
+          version: imageVersion     
+        }
+        osDisk: {
+          createOption: 'FromImage' 
+        }  
+      }
+      diagnosticsProfile: {
+        bootDiagnostics: {
+          enabled: true
+          storageUri: bootstrapStorage.properties.primaryEndpoints.blob  
+        } 
+      }       
+    }    
+  }   
+}
 
 resource publicIp 'Microsoft.Network/publicIPAddresses@2020-11-01' = {
-  name: concat('palo-wan-', paloNamePrefix)
+  name: 'palo-wan'
   location: resourceGroup().location
   sku: {
     name: 'Standard'
     tier: 'Regional'  
   }
-  zones: zones == [] ? [] : [
-    '1'
-    '2'
-    '3'
-  ]
+  zones: zones
   properties: {
     publicIPAddressVersion: 'IPv4' 
     publicIPAllocationMethod: 'Static' 
@@ -322,10 +321,22 @@ resource trustLb 'Microsoft.Network/loadBalancers@2020-11-01' = {
           } 
         }  
       }
+      {
+        name: 'Mgmt'
+        properties: {
+          subnet: {
+            id: concat(vnetId,'/subnets/',managementSubnetName) 
+          } 
+        }  
+      }
     ]
     backendAddressPools: [
       {
         name: 'trust' 
+        properties: {}  
+      }
+      {
+        name: 'mgmt' 
         properties: {}  
       }
     ]
@@ -358,7 +369,82 @@ resource trustLb 'Microsoft.Network/loadBalancers@2020-11-01' = {
             id: resourceId('Microsoft.Network/loadBalancers/probes', concat('Palo-Trust-',paloNamePrefix), 'trust') 
           }     
         }  
-      } 
+      }
+      {
+        name: 'Mgmt'
+        properties: {
+          backendAddressPool: {
+            id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', concat('Palo-Trust-',paloNamePrefix), 'mgmt') 
+          }
+          frontendPort: 22
+          backendPort: 22
+          protocol: 'Tcp'
+          frontendIPConfiguration: {
+            id: resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', concat('Palo-Trust-',paloNamePrefix), 'Mgmt')   
+          }
+          probe: {
+            id: resourceId('Microsoft.Network/loadBalancers/probes', concat('Palo-Trust-',paloNamePrefix), 'trust') 
+          }     
+        }  
+      }  
     ]     
   }    
 }
+/*
+resource mgmtLb 'Microsoft.Network/loadBalancers@2020-11-01' = {
+  name: 'Palo-MgmtHealth'
+  location: resourceGroup().location
+  sku: {
+    name: 'Standard'
+    tier: 'Regional'   
+  } 
+  properties: {
+    frontendIPConfigurations: [
+      {
+        name: 'mgmt'
+        properties: {
+          subnet: {
+            id: concat(vnetId,'/subnets/',managementSubnetName) 
+          } 
+        }  
+      }
+    ]
+    backendAddressPools: [
+      {
+        name: 'mgmt' 
+        properties: {}  
+      }
+    ]
+    outboundRules: []
+    probes: [
+      {
+        name: 'mgmt'
+        properties: {
+          intervalInSeconds: 5
+          numberOfProbes: 3
+          port: 22
+          protocol: 'Tcp'     
+        }  
+      }
+    ]
+    loadBalancingRules: [
+      {
+        name: 'HA'
+        properties: {
+          backendAddressPool: {
+            id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', 'Palo-MgmtHealth', 'mgmt') 
+          }
+          frontendPort: 0
+          backendPort: 0
+          protocol: 'All'
+          frontendIPConfiguration: {
+            id: resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', 'Palo-MgmtHealth', 'mgmt')   
+          }
+          probe: {
+            id: resourceId('Microsoft.Network/loadBalancers/probes', 'Palo-MgmtHealth', 'mgmt') 
+          }     
+        }  
+      }
+    ]     
+  }    
+}*/

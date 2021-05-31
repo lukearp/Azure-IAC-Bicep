@@ -1,8 +1,11 @@
 # What does this module do?
+There are two options of this deployment:
+    paloAlto-ha-aa.bicep - VM Deployment
+    paloAlto-ha-vmss.bicep - Virtual Machine Scale Set Deployment
 
 Deploys a Palo Alto HA Pair in an Active Active configuration.  Deploys:    
 1. Azure Storage Account with File Share configured for Palo Boot Strapping
-2. Up to 9 Palo Alto Appliances across 3 Availability Zones
+2. Up to 9 Palo Alto Appliances across 3 Availability Zones *If AZ Zones are supported in the Region*
 3. Azure Public Load Balancer for Untrust
 4. Azure Private Load Balancer for Trust
 
@@ -37,7 +40,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2021-04-01-preview' existing = {
   scope: resourceGroup('RESOURCEGROUPNAME')   
 }
 
-module palo '../Standard-Deployments/PaloAlot-HA-Active_Active/paloAlto-ha-aa.bicep' = {
+module palo '../Standard-Deployments/PaloAlto-HA-Active_Active/paloAlto-ha-aa.bicep' = {
   name: 'testPalo'
   scope: resourceGroup('bicep_palo')
   params: {
