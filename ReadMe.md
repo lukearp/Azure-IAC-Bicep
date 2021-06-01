@@ -42,6 +42,14 @@ That standard resource deployment would be referenced within a '.bicep' file wit
     Modules/Microsoft.Network/networkSecurityGroups/networkSecurityGroups-array.bicep = Standard NSG Deploy with an Array Parameter
     Modules/Microsoft.Network/networkSecurityGroups/networkSecurityGroups-sqlMi.bicep = Standard NSG Deploy to support a SQL Managed Instance Deployment
 
+## Scripts Folder
+This folder will house any runtime scripts.  An Example would be a DSC script referenced in a deployment.  Or a ps1/cli script that is referenced in a Microsoft.Resources/deploymentScript.
+
+This can also house any other Administrative scripts used to manage the Azure Environment.  
+
+## Custom-Policies Folder
+This folder is for Custom Policy Definitions.  These Definitions can be referenced with the Cloud Folders 'PolicyDefinitions' scope as a Module.
+
 ## Standard-Deployments Folder
 This is a place for multi-resource deployments.  An Example would be a standard NVA Deployment.  These standard deployments would then be consumed as modules in the Cloud Folders '.bicep' files.  
 
