@@ -34,7 +34,7 @@ newForest | bool | Create a new Forest of Join and Existing.
 domainAdminUsername | string | UPN of Domain Admin.  Example: localadmin@test.com
 domainAdminPassword | string | Password for Domain Admin
 site | string | Name of Site in Sites and Services, default is 'Default-First-Site-Name'
-dnsServers | arrary | = DNS Servers to be configured on the DC VMs.  Default is '[]'.
+dnsServers | arrary | = Original DNS Server. DNS Servers to be configured on the DC VMs.  Default is '["168.63.129.16"]'.
 dscConfigScript | string | Location of the DSC Script in a .zip format.  Default: 'https://github.com/lukearp/Azure-IAC-Bicep/releases/download/DSC/DomainControllerConfig.zip'
 timeZoneId | string | Timezone property in Windows Config.  Default: 'Eastern Standard Time' 
 

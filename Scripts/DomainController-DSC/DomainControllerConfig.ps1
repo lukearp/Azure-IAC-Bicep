@@ -14,7 +14,7 @@ configuration DomainControllerConfig
         [string]$site = "Default-First-Site-Name"
     )
     
-    Import-DscResource -ModuleName PsDesiredStateConfiguration
+    Import-DscResource -ModuleName PsDesiredStateConfiguration 
     node localhost
     {
         WindowsFeature ADDSInstall {
@@ -55,7 +55,8 @@ configuration DomainControllerConfig
                     Install-ADDSDomainController -SkipPreChecks -DomainName $using:domain -SafeModeAdministratorPassword $securepassword -SiteName $using:site -Credential $domainCredential -DatabasePath "N:\NTDS" -SysvolPath "S:\SYSVOL" -LogPath "N:\NTDS"  -Confirm:$false -Force;
                 }
                 else {
-                    Install-ADDSForest -SkipPreChecks -DomainName $using:domain -SafeModeAdministratorPassword $securepassword -DatabasePath "N:\NTDS" -SysvolPath "S:\SYSVOL" -LogPath "N:\NTDS" -Confirm:$false -Force;
+                    Install-ADDSForest -SkipPreChecks -DomainName $using:domain -SafeModeAdministratorPassword $securepassword -DatabasePath "N:\NTDS" -SysvolPath "S:\SYSVOL" -LogPath "N:\NTDS" -NoRebootOnCompletion:$false -Confirm:$false -Force;
+                    Restart-Computer -Confirm:$false -Force;
                 }
             }
             TestScript = {
