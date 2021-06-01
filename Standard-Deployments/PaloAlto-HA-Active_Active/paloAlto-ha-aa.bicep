@@ -32,6 +32,7 @@ param imageVersion string = 'latest'
 ])
 param vmSize string
 param managedIdentityId string
+param location string = resourceGroup().location
 
 var plan = planOffer == 'vmseries-forms' ? 'bundle2-for-ms' : planName
 
@@ -42,7 +43,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2020-11-01' existing = {
 }
 
 resource mgmtNic 'Microsoft.Network/networkInterfaces@2020-11-01' = [for i in range(0, count): {
-  location: resourceGroup().location
+  location: location
   name: concat(paloNamePrefix, '-mgmt-nic-', i + 1)
   properties: {
     ipConfigurations: [
@@ -59,7 +60,7 @@ resource mgmtNic 'Microsoft.Network/networkInterfaces@2020-11-01' = [for i in ra
 }]
 
 resource trust 'Microsoft.Network/networkInterfaces@2020-11-01' = [for i in range(0, count): {
-  location: resourceGroup().location
+  location: location
   name: concat(paloNamePrefix, '-trust-nic-', i + 1)
   properties: {
     enableIPForwarding: true
@@ -83,7 +84,7 @@ resource trust 'Microsoft.Network/networkInterfaces@2020-11-01' = [for i in rang
 }]
 
 resource untrust 'Microsoft.Network/networkInterfaces@2020-11-01' = [for i in range(0, count): {
-  location: resourceGroup().location
+  location: location
   name: concat(paloNamePrefix, '-untrust-nic-', i + 1)
   properties: {
     enableIPForwarding: true
@@ -109,7 +110,7 @@ resource untrust 'Microsoft.Network/networkInterfaces@2020-11-01' = [for i in ra
 resource bootstrapStorage 'Microsoft.Storage/storageAccounts@2021-02-01' = {
   name: substring(concat('palo',replace(guid(paloNamePrefix,subscription().subscriptionId),'-','')),0,23)
   kind: 'StorageV2'
-  location: resourceGroup().location
+  location: location
   sku: {
     name: 'Standard_LRS'
     tier: 'Standard'  
@@ -153,7 +154,7 @@ module bootstrapXml 'bootstrapxml.bicep' = {
 
 resource folderStructure 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
   kind: 'AzurePowerShell'
-  location: resourceGroup().location
+  location: location
   name: 'FolderCreate'
   identity: {
     type: 'UserAssigned'
@@ -173,13 +174,13 @@ resource folderStructure 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
 }
 
 var customData = concat('storage-account=',bootstrapStorage.name,',access-key=',folderStructure.properties.outputs.key,',file-share=palo,share-directory=')
-var zones = [for i in range(0,count): resourceGroup().location == 'eastus' || resourceGroup().location == 'eastus2' || resourceGroup().location == 'centralus' || resourceGroup().location == 'southcentralus' || resourceGroup().location == 'westus2' || resourceGroup().location == 'usgovvirginia' ? [
+var zones = [for i in range(0,count): location == 'eastus' || location == 'eastus2' || location == 'centralus' || location == 'southcentralus' || location == 'westus2' || location == 'usgovvirginia' ? [
   string(i == 0 || i == 3 || i == 6 ? 1 : i == 1 || i == 4 || i == 7 ? 2 : 3)
 ] : []]
 
 resource paloAlto 'Microsoft.Compute/virtualMachines@2020-12-01' = [for i in range(0, count): {
   name: concat(paloNamePrefix, '-', i + 1)
-  location: resourceGroup().location
+  location: location
   dependsOn: [
     folderStructure 
   ]
@@ -245,7 +246,7 @@ resource paloAlto 'Microsoft.Compute/virtualMachines@2020-12-01' = [for i in ran
 
 resource publicIp 'Microsoft.Network/publicIPAddresses@2020-11-01' = {
   name: concat('palo-wan-', paloNamePrefix)
-  location: resourceGroup().location
+  location: location
   sku: {
     name: 'Standard'
     tier: 'Regional'  
@@ -263,7 +264,7 @@ resource publicIp 'Microsoft.Network/publicIPAddresses@2020-11-01' = {
 
 resource untrustLb 'Microsoft.Network/loadBalancers@2020-11-01' = {
   name: concat('Palo-Untrust-',paloNamePrefix)
-  location: resourceGroup().location 
+  location: location 
   sku: {
     name: 'Standard'
     tier: 'Regional'   
@@ -307,7 +308,7 @@ resource untrustLb 'Microsoft.Network/loadBalancers@2020-11-01' = {
 
 resource trustLb 'Microsoft.Network/loadBalancers@2020-11-01' = {
   name: concat('Palo-Trust-',paloNamePrefix)
-  location: resourceGroup().location
+  location: location
   sku: {
     name: 'Standard'
     tier: 'Regional'   

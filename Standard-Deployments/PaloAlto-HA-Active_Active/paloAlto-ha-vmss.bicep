@@ -32,6 +32,7 @@ param imageVersion string = 'latest'
 ])
 param vmSize string
 param managedIdentityId string
+param location string = resourceGroup().location
 
 var plan = planOffer == 'vmseries-forms' ? 'bundle2-for-ms' : planName
 
@@ -44,7 +45,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2020-11-01' existing = {
 resource bootstrapStorage 'Microsoft.Storage/storageAccounts@2021-02-01' = {
   name: substring(concat('palo',replace(guid(paloNamePrefix,subscription().subscriptionId),'-','')),0,23)
   kind: 'StorageV2'
-  location: resourceGroup().location
+  location: location
   sku: {
     name: 'Standard_LRS'
     tier: 'Standard'  
@@ -88,7 +89,7 @@ module bootstrapXml 'bootstrapxml.bicep' = {
 
 resource folderStructure 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
   kind: 'AzurePowerShell'
-  location: resourceGroup().location
+  location: location
   name: 'FolderCreate'
   identity: {
     type: 'UserAssigned'
@@ -108,7 +109,7 @@ resource folderStructure 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
 }
 
 var customData = concat('storage-account=',bootstrapStorage.name,',access-key=',folderStructure.properties.outputs.key,',file-share=palo,share-directory=')
-var zones = resourceGroup().location == 'eastus' || resourceGroup().location == 'eastus2' || resourceGroup().location == 'centralus' || resourceGroup().location == 'southcentralus' || resourceGroup().location == 'westus2' || resourceGroup().location == 'usgovvirginia' ? [
+var zones = location == 'eastus' || location == 'eastus2' || location == 'centralus' || location == 'southcentralus' || location == 'westus2' || location == 'usgovvirginia' ? [
   '1'
   '2'
   '3'
@@ -118,7 +119,7 @@ var zoneLb = zones == [] ? false : true
 
 resource paloAltoSet 'Microsoft.Compute/virtualMachineScaleSets@2020-12-01' = {
   name: paloNamePrefix
-  location: resourceGroup().location
+  location: location
   plan: {
     publisher: 'paloaltonetworks'
     product: planOffer
@@ -248,7 +249,7 @@ resource paloAltoSet 'Microsoft.Compute/virtualMachineScaleSets@2020-12-01' = {
 
 resource publicIp 'Microsoft.Network/publicIPAddresses@2020-11-01' = {
   name: 'palo-wan'
-  location: resourceGroup().location
+  location: location
   sku: {
     name: 'Standard'
     tier: 'Regional'  
@@ -262,7 +263,7 @@ resource publicIp 'Microsoft.Network/publicIPAddresses@2020-11-01' = {
 
 resource untrustLb 'Microsoft.Network/loadBalancers@2020-11-01' = {
   name: concat('Palo-Untrust-',paloNamePrefix)
-  location: resourceGroup().location 
+  location: location 
   sku: {
     name: 'Standard'
     tier: 'Regional'   
@@ -306,7 +307,7 @@ resource untrustLb 'Microsoft.Network/loadBalancers@2020-11-01' = {
 
 resource trustLb 'Microsoft.Network/loadBalancers@2020-11-01' = {
   name: concat('Palo-Trust-',paloNamePrefix)
-  location: resourceGroup().location
+  location: location
   sku: {
     name: 'Standard'
     tier: 'Regional'   
@@ -390,61 +391,3 @@ resource trustLb 'Microsoft.Network/loadBalancers@2020-11-01' = {
     ]     
   }    
 }
-/*
-resource mgmtLb 'Microsoft.Network/loadBalancers@2020-11-01' = {
-  name: 'Palo-MgmtHealth'
-  location: resourceGroup().location
-  sku: {
-    name: 'Standard'
-    tier: 'Regional'   
-  } 
-  properties: {
-    frontendIPConfigurations: [
-      {
-        name: 'mgmt'
-        properties: {
-          subnet: {
-            id: concat(vnetId,'/subnets/',managementSubnetName) 
-          } 
-        }  
-      }
-    ]
-    backendAddressPools: [
-      {
-        name: 'mgmt' 
-        properties: {}  
-      }
-    ]
-    outboundRules: []
-    probes: [
-      {
-        name: 'mgmt'
-        properties: {
-          intervalInSeconds: 5
-          numberOfProbes: 3
-          port: 22
-          protocol: 'Tcp'     
-        }  
-      }
-    ]
-    loadBalancingRules: [
-      {
-        name: 'HA'
-        properties: {
-          backendAddressPool: {
-            id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', 'Palo-MgmtHealth', 'mgmt') 
-          }
-          frontendPort: 0
-          backendPort: 0
-          protocol: 'All'
-          frontendIPConfiguration: {
-            id: resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', 'Palo-MgmtHealth', 'mgmt')   
-          }
-          probe: {
-            id: resourceId('Microsoft.Network/loadBalancers/probes', 'Palo-MgmtHealth', 'mgmt') 
-          }     
-        }  
-      }
-    ]     
-  }    
-}*/
