@@ -13,6 +13,7 @@ param localAdminUsername string
 @secure()
 param localAdminPassword string
 param domainFqdn string
+param newForest bool
 param domainAdminUsername string
 @secure()
 param domainAdminPassword string
@@ -96,6 +97,9 @@ resource dc1 'Microsoft.Compute/virtualMachines@2020-12-01' = {
 resource dc1Extension 'Microsoft.Compute/virtualMachines/extensions@2020-12-01' = {
   name: concat(vmNamePrefix,'-1/DC-Creation')
   location: location
+  dependsOn: [
+    dc1
+  ]
   properties: {
      publisher: 'Microsoft.Powershell'
      type: 'DSC'
@@ -108,8 +112,44 @@ resource dc1Extension 'Microsoft.Compute/virtualMachines/extensions@2020-12-01' 
          username: domainAdminUsername
          password: domainAdminPassword
          domain: domainFqdn
-         site: site 
+         site: site
+         newForest: newForest 
        }        
      }  
   }  
 }
+
+resource otherDcs 'Microsoft.Compute/virtualMachines@2020-12-01' = [for i in range(1,count - 1): {
+  dependsOn: [
+    dc1Extension
+  ]
+  location: location
+  name: concat(vmNamePrefix,'-', i + 1)
+  zones: zones[i] 
+  properties: vmProperties.outputs.vmProperties[i]      
+}]
+
+resource otherDcsExtension 'Microsoft.Compute/virtualMachines/extensions@2020-12-01' = [for i in range(1,count - 1):{
+  name: concat(vmNamePrefix,'-',i + 1,'/DC-Creation')
+  location: location
+  dependsOn: [
+    otherDcs
+  ]
+  properties: {
+     publisher: 'Microsoft.Powershell'
+     type: 'DSC'
+     typeHandlerVersion: '2.73'
+     autoUpgradeMinorVersion: true
+     settings: {
+       modulesUrl: dscConfigScript
+       configurationFunction: 'DomainControllerConfig.ps1\\DomainControllerConfig'
+       properties: {         
+         username: domainAdminUsername
+         password: domainAdminPassword
+         domain: domainFqdn
+         site: site
+         newForest: false 
+       }        
+     }  
+  }  
+}]

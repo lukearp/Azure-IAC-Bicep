@@ -8,6 +8,8 @@ configuration DomainControllerConfig
         [string]$password,
         [Parameter(mandatory = $true)]
         [string]$domain,
+        [Parameter(mandatory = $true)]
+        [string]$newForest,
         [Parameter(mandatory = $false)]
         [string]$site = "Default-First-Site-Name"
     )
@@ -48,10 +50,16 @@ configuration DomainControllerConfig
                 New-Item -Path "N:\NTDS" -ItemType Directory;
                 New-Item -Path "S:\SYSVOL" -ItemType Directory;    
                 
-                Install-ADDSDomainController -SkipPreChecks -DomainName $using:domain -SafeModeAdministratorPassword $securepassword -SiteName $using:site -Credential $domainCredential -DatabasePath "N:\NTDS" -SysvolPath "S:\SYSVOL" -Confirm:$false -Force;
+                if($using:newForest -ne $true)
+                {
+                    Install-ADDSDomainController -SkipPreChecks -DomainName $using:domain -SafeModeAdministratorPassword $securepassword -SiteName $using:site -Credential $domainCredential -DatabasePath "N:\NTDS" -SysvolPath "S:\SYSVOL" -LogPath "N:\NTDS"  -Confirm:$false -Force;
+                }
+                else {
+                    Install-ADDSForest -SkipPreChecks -DomainName $using:domain -SafeModeAdministratorPassword $securepassword -DatabasePath "N:\NTDS" -SysvolPath "S:\SYSVOL" -LogPath "N:\NTDS" -Confirm:$false -Force;
+                }
             }
             TestScript = {
-                return ((Get-Item -Path S:\SYSVOL -ErrorAction SilentlyContinue) -ne $null)
+                return ((Get-Item -Path S:\SYSVOL\sysvol -ErrorAction SilentlyContinue) -ne $null)
             }
         } 
     }
