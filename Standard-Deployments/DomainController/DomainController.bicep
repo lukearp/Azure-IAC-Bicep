@@ -53,7 +53,7 @@ module nicsDns 'nicDns.bicep' = {
     dnsServers: dnsServers
     nics: [for i in range(0, count): {
       name: nics[i].name
-      ipConfigurations: nics[i].properties.ipConfigurations      
+      ipConfigurations: nics[i].properties.ipConfigurations
     }]
     count: count
     location: location
@@ -124,12 +124,35 @@ resource dc1Extension 'Microsoft.Compute/virtualMachines/extensions@2020-12-01' 
     settings: {
       modulesUrl: dscConfigScript
       configurationFunction: 'DomainControllerConfig.ps1\\DomainControllerConfig'
-      properties: {
-        username: domainUserName
-        password: domainPassword
-        domain: domainFqdn
-        site: domainSite
-        newForest: newForest
+      properties: [
+        {
+          Name: 'creds'
+          Value: {
+            UserName: domainUserName
+            Password: 'PrivateSettingsRef:domainPassword'
+          }
+          TypeName: 'System.Management.Automation.PSCredential'
+        }
+        {
+          Name: 'domain'
+          Value: domainFqdn
+          TypeName: 'System.String'
+        }
+        {
+          Name: 'site'
+          Value: domainSite
+          TypeName: 'System.String'
+        }
+        {
+          Name: 'newForest'
+          Value: newForest
+          TypeName: 'System.Boolean'
+        }
+      ]
+    }
+    protectedSettings: {
+      Items: {
+        domainPassword: domainPassword
       }
     }
   }
@@ -146,7 +169,7 @@ resource rebootDc1 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
     }  
   } 
   properties: {
-    arguments: '${dc1.name} ${resourceGroup().name} ${subscription().subscriptionId}'
+    arguments: '${array(dc1.name)} ${resourceGroup().name} ${subscription().subscriptionId}'
     primaryScriptUri: psScriptLocation 
     azPowerShellVersion: '5.9'
     retentionInterval: 'PT1H'    
@@ -156,22 +179,21 @@ resource rebootDc1 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
   ]    
 }
 
-
-resource otherDcs 'Microsoft.Compute/virtualMachines@2020-12-01' = [for i in range(1, count - 1): {
+resource otherDc 'Microsoft.Compute/virtualMachines@2020-12-01' = if(count > 1) {
   dependsOn: [
     rebootDc1
   ]
   location: location
-  name: '${vmNamePrefix}-${i + 1}'
-  zones: zones[i]
-  properties: vmProperties.outputs.vmProperties[i]
-}]
+  name: '${vmNamePrefix}-2'
+  zones: zones[1]
+  properties: vmProperties.outputs.vmProperties[1]
+}
 
-resource otherDcsExtension 'Microsoft.Compute/virtualMachines/extensions@2020-12-01' = [for i in range(1, count - 1): {
-  name: '${vmNamePrefix}-${i + 1}/DC-Creation'
+resource otherDcExtension 'Microsoft.Compute/virtualMachines/extensions@2020-12-01' = if(count > 1){
+  name: '${vmNamePrefix}-2/DC-Creation'
   location: location
   dependsOn: [
-    otherDcs
+    otherDc
   ]
   properties: {
     publisher: 'Microsoft.Powershell'
@@ -181,18 +203,39 @@ resource otherDcsExtension 'Microsoft.Compute/virtualMachines/extensions@2020-12
     settings: {
       modulesUrl: dscConfigScript
       configurationFunction: 'DomainControllerConfig.ps1\\DomainControllerConfig'
-      properties: {
-        username: domainUserName
-        password: domainPassword
-        domain: domainFqdn
-        site: domainSite
-        newForest: false
-      }
+      properties: [
+        {
+          Name: 'creds'
+          Value: {
+            UserName: domainUserName
+            Password: 'PrivateSettingsRef:domainPassword'
+          }
+          TypeName: 'System.Management.Automation.PSCredential'
+        }
+        {
+          Name: 'domain'
+          Value: domainFqdn
+          TypeName: 'System.String'
+        }
+        {
+          Name: 'site'
+          Value: domainSite
+          TypeName: 'System.String'
+        }
+        {
+          Name: 'newForest'
+          Value: false
+          TypeName: 'System.Boolean'
+        }
+      ]
     }
+    protectedSettings: {
+      Items: {
+        domainPassword: domainPassword
+      }
+    } 
   }
-}]
-
-var vmNames = [for i in range(0,count -2): '${otherDcs[i].name},']
+}
 
 resource rebootOtherVms 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
   kind: 'AzurePowerShell'
@@ -205,12 +248,14 @@ resource rebootOtherVms 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
     }  
   } 
   properties: {
-    arguments: '${vmNames} ${resourceGroup().name} ${subscription().subscriptionId}'
+    arguments: '${array(otherDc.name)} ${resourceGroup().name} ${subscription().subscriptionId}'
     primaryScriptUri: psScriptLocation 
     azPowerShellVersion: '5.9'
     retentionInterval: 'PT1H'    
   } 
   dependsOn: [
-    dc1Extension 
+    otherDcExtension     
   ]    
 }
+
+output username string = domainUserName

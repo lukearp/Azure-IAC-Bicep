@@ -3,15 +3,13 @@ configuration DomainControllerConfig
     param
     (    
         [Parameter(mandatory = $true)]
-        [string]$username,
-        [Parameter(Mandatory = $true)]
-        [string]$password,
+        [System.Management.Automation.PSCredential]$creds,
         [Parameter(mandatory = $true)]
         [string]$domain,
         [Parameter(mandatory = $true)]
         [string]$newForest,
         [Parameter(mandatory = $false)]
-        [string]$site = "Default-First-Site-Name"
+        [string]$site
     )
     
     Import-DscResource -ModuleName PsDesiredStateConfiguration 
@@ -45,17 +43,24 @@ configuration DomainControllerConfig
             }
             SetScript  = {
                 
-                $securepassword = ConvertTo-SecureString -String $using:password -AsPlainText -Force
-                $domainCredential = New-Object System.Management.Automation.PSCredential ($using:username, $securepassword)
-                New-Item -Path "N:\NTDS" -ItemType Directory;
-                New-Item -Path "S:\SYSVOL" -ItemType Directory;    
-                
+                #$securepassword = ConvertTo-SecureString -String $using:password -AsPlainText -Force
+                $domainCredential = $using:creds
+                if((Get-Item -Path "N:\NTDS" -ErrorAction SilentlyContinue) -eq $null)
+                {
+                    New-Item -Path "N:\NTDS" -ItemType Directory;
+                }
+                if((Get-Item -Path "S:\SYSVOL" -ErrorAction SilentlyContinue) -eq $null)
+                {
+                    New-Item -Path "S:\SYSVOL" -ItemType Directory;
+                }
+                $stringOutput = $using:creds.UserName + " " + $using:domain + " " + $using:site + " " + $using:creds.Password 
+                Add-Content -Path "C:\users.txt" -Value $stringOutput
                 if($using:newForest -ne $true)
                 {
-                    Install-ADDSDomainController -SkipPreChecks -DomainName $using:domain -SafeModeAdministratorPassword $securepassword -SiteName $using:site -Credential $domainCredential -DatabasePath "N:\NTDS" -SysvolPath "S:\SYSVOL" -LogPath "N:\NTDS"  -Confirm:$false -Force;
+                    Install-ADDSDomainController -SkipPreChecks -DomainName $using:domain -SafeModeAdministratorPassword $domainCredential.Password -SiteName $using:site -Credential $domainCredential -DatabasePath "N:\NTDS" -SysvolPath "S:\SYSVOL" -LogPath "N:\NTDS"  -Confirm:$false -Force;
                 }
                 else {
-                    Install-ADDSForest -SkipPreChecks -DomainName $using:domain -SafeModeAdministratorPassword $securepassword -DatabasePath "N:\NTDS" -SysvolPath "S:\SYSVOL" -LogPath "N:\NTDS" -NoRebootOnCompletion:$false -Confirm:$false -Force;
+                    Install-ADDSForest -SkipPreChecks -DomainName $using:domain -SafeModeAdministratorPassword $domainCredential.Password -DatabasePath "N:\NTDS" -SysvolPath "S:\SYSVOL" -LogPath "N:\NTDS" -NoRebootOnCompletion:$false -Confirm:$false -Force;
                 }
             }
             TestScript = {
