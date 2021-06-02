@@ -24,11 +24,12 @@ param dnsServers array = [
 param dscConfigScript string = 'https://github.com/lukearp/Azure-IAC-Bicep/releases/download/DSC/DomainControllerConfig.zip'
 param timeZoneId string = 'Eastern Standard Time'
 param managedIdentityId string
+param psScriptLocation string = 'https://raw.githubusercontent.com/lukearp/Azure-IAC-Bicep/master/Scripts/Restart-Vms/restart-vms.ps1'
 
-var domainUserName = newForest == true ? concat(split(domainFqdn,'.')[0],'\\',localAdminUsername) : domainAdminUsername
+var domainUserName = newForest == true ? '${split(domainFqdn,'.')[0]}\\${localAdminUsername}' : domainAdminUsername
 var domainPassword = newForest == true ? localAdminPassword : domainAdminPassword
 resource nics 'Microsoft.Network/networkInterfaces@2020-11-01' = [for i in range(0, count): {
-  name: concat(vmNamePrefix, '-', i + 1, '-nic')
+  name: '${vmNamePrefix}-${i + 1}-nic'
   location: location
   properties: {
     ipConfigurations: [
@@ -37,7 +38,7 @@ resource nics 'Microsoft.Network/networkInterfaces@2020-11-01' = [for i in range
         properties: {
           primary: true
           subnet: {
-            id: concat(vnetId, '/subnets/', subnetName)
+            id: '${vnetId}/subnets/${subnetName}'
           }
         }
       }
@@ -73,7 +74,7 @@ var zones = [for i in range(0, count): contains(azRegions, location) ? [
 ] : []]
 
 resource avSet 'Microsoft.Compute/availabilitySets@2020-12-01' = if (zones == []) {
-  name: concat(vmNamePrefix, '-avset')
+  name: '${vmNamePrefix}-avset'
   location: location
   sku: {
     name: 'Aligned'
@@ -102,14 +103,14 @@ module vmProperties 'vmPropertiesBuilder.bicep' = {
 }
 
 resource dc1 'Microsoft.Compute/virtualMachines@2020-12-01' = {
-  name: concat(vmNamePrefix, '-1')
+  name: '${vmNamePrefix}-1'
   location: location
   zones: zones[0]
   properties: vmProperties.outputs.vmProperties[0]
 }
 
 resource dc1Extension 'Microsoft.Compute/virtualMachines/extensions@2020-12-01' = {
-  name: concat(vmNamePrefix, '-1/DC-Creation')
+  name: '${vmNamePrefix}-1/DC-Creation'
   location: location
   dependsOn: [
     dc1
@@ -144,8 +145,8 @@ resource rebootDc1 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
     }  
   } 
   properties: {
-    arguments: concat(dc1.name,' ', resourceGroup().name,' ', subscription().subscriptionId)
-    scriptContent: 'Connect-AzAccount -Identity -Subscription $args[2];Stop-AzVM -Name $args[0] -ResourceGroupName $args[1] -Confirm:$false -Force;sleep 30;Start-AzVM -Name $args[0] -ResourceGroupName $args[1];'
+    arguments: '${array(dc1.name)} ${resourceGroup().name} ${subscription().subscriptionId}'
+    primaryScriptUri: psScriptLocation 
     azPowerShellVersion: '5.9'
     retentionInterval: 'P1D'    
   } 
@@ -160,13 +161,13 @@ resource otherDcs 'Microsoft.Compute/virtualMachines@2020-12-01' = [for i in ran
     rebootDc1
   ]
   location: location
-  name: concat(vmNamePrefix, '-', i + 1)
+  name: '${vmNamePrefix}-${i + 1}'
   zones: zones[i]
   properties: vmProperties.outputs.vmProperties[i]
 }]
 
 resource otherDcsExtension 'Microsoft.Compute/virtualMachines/extensions@2020-12-01' = [for i in range(1, count - 1): {
-  name: concat(vmNamePrefix, '-', i + 1, '/DC-Creation')
+  name: '${vmNamePrefix}-${i + 1}/DC-Creation'
   location: location
   dependsOn: [
     otherDcs
@@ -189,3 +190,26 @@ resource otherDcsExtension 'Microsoft.Compute/virtualMachines/extensions@2020-12
     }
   }
 }]
+
+var vmNames = [for i in range(1,count-1): otherDcs[i].name]
+
+resource rebootOtherVms 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
+  kind: 'AzurePowerShell'
+  location: location
+  name: 'rebootOtherVms'
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${managedIdentityId}':{}
+    }  
+  } 
+  properties: {
+    arguments: '${vmNames} ${resourceGroup().name} ${subscription().subscriptionId}'
+    primaryScriptUri: psScriptLocation 
+    azPowerShellVersion: '5.9'
+    retentionInterval: 'P1D'    
+  } 
+  dependsOn: [
+    dc1Extension 
+  ]    
+}
