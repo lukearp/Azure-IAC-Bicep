@@ -10,6 +10,6 @@ sleep 15;
 foreach ($vm in $vms) {
     if($vm -ne $null)
     {
-        Start-VM -Name $vm -ResourceGroupName $args[1];
+        Start-AzVM -Name $vm -ResourceGroupName $args[1];
     }
 }

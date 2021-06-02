@@ -146,7 +146,7 @@ resource rebootDc1 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
     }  
   } 
   properties: {
-    arguments: '"${dc1.name}" ${resourceGroup().name} ${subscription().subscriptionId}'
+    arguments: '${dc1.name} ${resourceGroup().name} ${subscription().subscriptionId}'
     primaryScriptUri: psScriptLocation 
     azPowerShellVersion: '5.9'
     retentionInterval: 'PT1H'    
@@ -205,7 +205,7 @@ resource rebootOtherVms 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
     }  
   } 
   properties: {
-    arguments: '"${vmNames}" ${resourceGroup().name} ${subscription().subscriptionId}'
+    arguments: '${vmNames} ${resourceGroup().name} ${subscription().subscriptionId}'
     primaryScriptUri: psScriptLocation 
     azPowerShellVersion: '5.9'
     retentionInterval: 'PT1H'    
