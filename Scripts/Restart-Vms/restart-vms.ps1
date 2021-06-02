@@ -1,5 +1,5 @@
-Connect-AzAccount -Identity -SubscriptionId $args[2];
-$vms = $test.Split("['").Split("']");
+#Connect-AzAccount -Identity -SubscriptionId $args[2];
+$vms = $args[0].Split("[").Split("]").Split("'");
 foreach ($vm in $vms) {
     if($vm -ne $null)
     {
@@ -13,3 +13,4 @@ foreach ($vm in $vms) {
         Start-AzVM -Name $vm -ResourceGroupName $args[1];
     }
 }
+$vms
