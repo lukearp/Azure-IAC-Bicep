@@ -28,6 +28,7 @@ param psScriptLocation string = 'https://raw.githubusercontent.com/lukearp/Azure
 
 var domainUserName = newForest == true ? '${split(domainFqdn,'.')[0]}\\${localAdminUsername}' : domainAdminUsername
 var domainPassword = newForest == true ? localAdminPassword : domainAdminPassword
+var domainSite = newForest == true ? 'Default-First-Site-Name' : site
 resource nics 'Microsoft.Network/networkInterfaces@2020-11-01' = [for i in range(0, count): {
   name: '${vmNamePrefix}-${i + 1}-nic'
   location: location
@@ -127,7 +128,7 @@ resource dc1Extension 'Microsoft.Compute/virtualMachines/extensions@2020-12-01' 
         username: domainUserName
         password: domainPassword
         domain: domainFqdn
-        site: site
+        site: domainSite
         newForest: newForest
       }
     }
@@ -145,10 +146,10 @@ resource rebootDc1 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
     }  
   } 
   properties: {
-    arguments: '${array(dc1.name)} ${resourceGroup().name} ${subscription().subscriptionId}'
+    arguments: '"${dc1.name}" ${resourceGroup().name} ${subscription().subscriptionId}'
     primaryScriptUri: psScriptLocation 
     azPowerShellVersion: '5.9'
-    retentionInterval: 'P1D'    
+    retentionInterval: 'PT1H'    
   } 
   dependsOn: [
     dc1Extension 
@@ -184,14 +185,14 @@ resource otherDcsExtension 'Microsoft.Compute/virtualMachines/extensions@2020-12
         username: domainUserName
         password: domainPassword
         domain: domainFqdn
-        site: site
+        site: domainSite
         newForest: false
       }
     }
   }
 }]
 
-var vmNames = [for i in range(1,count-1): otherDcs[i].name]
+var vmNames = [for i in range(0,count -2): '${otherDcs[i].name},']
 
 resource rebootOtherVms 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
   kind: 'AzurePowerShell'
@@ -204,10 +205,10 @@ resource rebootOtherVms 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
     }  
   } 
   properties: {
-    arguments: '${vmNames} ${resourceGroup().name} ${subscription().subscriptionId}'
+    arguments: '"${vmNames}" ${resourceGroup().name} ${subscription().subscriptionId}'
     primaryScriptUri: psScriptLocation 
     azPowerShellVersion: '5.9'
-    retentionInterval: 'P1D'    
+    retentionInterval: 'PT1H'    
   } 
   dependsOn: [
     dc1Extension 

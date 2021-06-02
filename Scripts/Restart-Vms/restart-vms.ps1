@@ -1,8 +1,15 @@
 Connect-AzAccount -Identity -SubscriptionId $args[2];
-foreach ($vm in $args[0]) {
-    Stop-AzVM -Name $vm -ResourceGroupName $args[1] -Force -Confirm:$false;
+$vms = $args[0].split(',');
+foreach ($vm in $vms) {
+    if($vm -ne $null)
+    {
+        Stop-AzVM -Name $vm -ResourceGroupName $args[1] -Force -Confirm:$false;
+    }
 }
 sleep 15;
-foreach ($vm in $args[0]) {
-    Start-VM -Name $vm -ResourceGroupName $args[1];
+foreach ($vm in $vms) {
+    if($vm -ne $null)
+    {
+        Start-VM -Name $vm -ResourceGroupName $args[1];
+    }
 }
