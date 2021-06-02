@@ -56,7 +56,6 @@ configuration DomainControllerConfig
                 }
                 else {
                     Install-ADDSForest -SkipPreChecks -DomainName $using:domain -SafeModeAdministratorPassword $securepassword -DatabasePath "N:\NTDS" -SysvolPath "S:\SYSVOL" -LogPath "N:\NTDS" -NoRebootOnCompletion:$false -Confirm:$false -Force;
-                    Restart-Computer -Confirm:$false -Force;
                 }
             }
             TestScript = {

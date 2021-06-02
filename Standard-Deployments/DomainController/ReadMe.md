@@ -37,6 +37,7 @@ site | string | Name of Site in Sites and Services, default is 'Default-First-Si
 dnsServers | arrary | = Original DNS Server. DNS Servers to be configured on the DC VMs.  Default is '["168.63.129.16"]'.
 dscConfigScript | string | Location of the DSC Script in a .zip format.  Default: 'https://github.com/lukearp/Azure-IAC-Bicep/releases/download/DSC/DomainControllerConfig.zip'
 timeZoneId | string | Timezone property in Windows Config.  Default: 'Eastern Standard Time' 
+managedIdentityId | string | Resource ID of Managed Identity that has rights to restart the Azure VM.  Restart-AzVM is the command this account will be used for.
 
 # Sample Module
 
@@ -53,7 +54,6 @@ module dc '../Standard-Deployments/DomainController/DomainController.bicep' = {
     ahub: true
     count: 2
     dnsServers: [
-      '192.168.73.5'
       '8.8.8.8'
     ]
     domainAdminPassword: keyVault.getSecret('KEYVAULTSECRET_NAME')

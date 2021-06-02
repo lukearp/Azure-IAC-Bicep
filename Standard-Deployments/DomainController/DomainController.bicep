@@ -23,7 +23,10 @@ param dnsServers array = [
 ]
 param dscConfigScript string = 'https://github.com/lukearp/Azure-IAC-Bicep/releases/download/DSC/DomainControllerConfig.zip'
 param timeZoneId string = 'Eastern Standard Time'
+param managedIdentityId string
 
+var domainUserName = newForest == true ? concat(split(domainFqdn,'.')[0],'\\',localAdminUsername) : domainAdminUsername
+var domainPassword = newForest == true ? localAdminPassword : domainAdminPassword
 resource nics 'Microsoft.Network/networkInterfaces@2020-11-01' = [for i in range(0, count): {
   name: concat(vmNamePrefix, '-', i + 1, '-nic')
   location: location
@@ -120,8 +123,8 @@ resource dc1Extension 'Microsoft.Compute/virtualMachines/extensions@2020-12-01' 
       modulesUrl: dscConfigScript
       configurationFunction: 'DomainControllerConfig.ps1\\DomainControllerConfig'
       properties: {
-        username: domainAdminUsername
-        password: domainAdminPassword
+        username: domainUserName
+        password: domainPassword
         domain: domainFqdn
         site: site
         newForest: newForest
@@ -130,9 +133,31 @@ resource dc1Extension 'Microsoft.Compute/virtualMachines/extensions@2020-12-01' 
   }
 } 
 
+resource rebootDc1 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
+  kind: 'AzurePowerShell'
+  location: location
+  name: 'rebootDc'
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${managedIdentityId}':{}
+    }  
+  } 
+  properties: {
+    arguments: concat(dc1.name,' ', resourceGroup().name,' ', subscription().subscriptionId)
+    scriptContent: 'Connect-AzAccount -Identity -Subscription $args[2];Stop-AzVM -Name $args[0] -ResourceGroupName $args[1] -Confirm:$false -Force;sleep 30;Start-AzVM -Name $args[0] -ResourceGroupName $args[1];'
+    azPowerShellVersion: '5.9'
+    retentionInterval: 'P1D'    
+  } 
+  dependsOn: [
+    dc1Extension 
+  ]    
+}
+
+
 resource otherDcs 'Microsoft.Compute/virtualMachines@2020-12-01' = [for i in range(1, count - 1): {
   dependsOn: [
-    dc1Extension
+    rebootDc1
   ]
   location: location
   name: concat(vmNamePrefix, '-', i + 1)
@@ -155,8 +180,8 @@ resource otherDcsExtension 'Microsoft.Compute/virtualMachines/extensions@2020-12
       modulesUrl: dscConfigScript
       configurationFunction: 'DomainControllerConfig.ps1\\DomainControllerConfig'
       properties: {
-        username: domainAdminUsername
-        password: domainAdminPassword
+        username: domainUserName
+        password: domainPassword
         domain: domainFqdn
         site: site
         newForest: false
