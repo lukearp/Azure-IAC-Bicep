@@ -1,4 +1,4 @@
-#Connect-AzAccount -Identity -SubscriptionId $args[2];
+Connect-AzAccount -Identity -SubscriptionId $args[2];
 $vms = $args[0].Split("[").Split("]").Split("'");
 foreach ($vm in $vms) {
     if($vm -ne $null)
