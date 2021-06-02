@@ -13,4 +13,5 @@ foreach ($vm in $vms) {
         Start-AzVM -Name $vm -ResourceGroupName $args[1];
     }
 }
+sleep 120
 $vms
