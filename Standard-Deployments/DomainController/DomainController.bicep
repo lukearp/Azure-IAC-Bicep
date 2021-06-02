@@ -161,7 +161,7 @@ resource dc1Extension 'Microsoft.Compute/virtualMachines/extensions@2020-12-01' 
 resource rebootDc1 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
   kind: 'AzurePowerShell'
   location: location
-  name: 'rebootDc'
+  name: '${dc1.name}-rebootDc'
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
@@ -240,7 +240,7 @@ resource otherDcExtension 'Microsoft.Compute/virtualMachines/extensions@2020-12-
 resource rebootOtherVms 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
   kind: 'AzurePowerShell'
   location: location
-  name: 'rebootOtherVms'
+  name: '${otherDc.name}-rebootOtherVms'
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
