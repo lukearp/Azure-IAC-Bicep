@@ -1,5 +1,5 @@
 Connect-AzAccount -Identity -SubscriptionId $args[2];
-$vms = $args[0].split(',');
+$vms = $test.Split("['").Split("']");
 foreach ($vm in $vms) {
     if($vm -ne $null)
     {
