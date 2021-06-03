@@ -5,8 +5,19 @@ param hostPoolName string
 param hostPoolResourceGroupName string
 param hostPoolSubscription string
 param hostCount int
+@allowed([
+  'MicrosoftWindowsDesktop'
+])
 param imagePublisher string
+@allowed([
+  'office-365'
+])
 param imageOffer string
+@allowed([
+ '19h2-evd-o365pp'
+ '20h1-evd-o365pp'
+ '21h1-evd-o365pp'
+])
 param imageSku string
 param virtualNetworkId string
 param subnetName string
@@ -48,20 +59,24 @@ resource hostPool 'Microsoft.Compute/virtualMachineScaleSets@2021-03-01' = {
   location: location
   sku: {
     capacity: hostCount 
+    tier: 'Standard'
+    name: vmSize  
   }
   plan: {
    publisher: imagePublisher
    product: imageOffer
    name: imageSku      
   }
-  zones: zones
+  zones: zones 
   properties: {
     zoneBalance: zoneBalance
     upgradePolicy: {
       mode: 'Manual' 
     }
+     
     overprovision: false
     virtualMachineProfile: {
+      licenseType: 'Windows_Client' 
       diagnosticsProfile: {
         bootDiagnostics: {
           enabled: true 
@@ -93,10 +108,41 @@ resource hostPool 'Microsoft.Compute/virtualMachineScaleSets@2021-03-01' = {
           }    
         }  
       }
+      networkProfile: {
+        networkApiVersion: '2020-11-01'
+        networkInterfaceConfigurations: [
+          {
+            name: 'nic'
+            properties: {
+              primary: true
+              ipConfigurations: [
+                {
+                  name: 'ipconfig'
+                  properties: {
+                    subnet: {
+                      id: '${virtualNetworkId}/subnets/${subnetName}' 
+                    } 
+                  }  
+                }
+              ]  
+            }  
+          } 
+        ]   
+      }
       extensionProfile: {
         extensions: [
           {
-             
+             name: 'HealthExtension' 
+             properties: {
+               publisher: 'Microsoft.ManagedServices'
+               type: 'ApplicationHealthWindows'
+               autoUpgradeMinorVersion: true
+               typeHandlerVersion: '1.0'
+               settings: {
+                 protocol: 'tcp'
+                 port: 3389 
+               }    
+             }   
           } 
         ] 
       }    
