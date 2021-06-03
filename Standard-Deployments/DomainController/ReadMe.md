@@ -15,6 +15,8 @@ An Existing Virtual Network to deploy the VMs.
 
 If you are deploying to an existing AD DS Forest, you will need Domain Adming Credentials to add the new VMs as DCs.  If you are creating a New AD DS Forest, the Local Admin user will be the default Domain Admin.
 
+Your target subnet will need either a NVA or Azure NAT Gateway to route traffic to the internet of Availability Zone Deployments.
+
 # Parameters
 param | type | notes
 ------|------|------
