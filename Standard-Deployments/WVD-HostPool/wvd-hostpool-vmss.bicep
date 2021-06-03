@@ -1,5 +1,6 @@
 param splitTenant bool = false
 param wvdTenantId string
+param wvdAppId string
 param keyVaultSecretId string
 param hostPoolName string
 param hostPoolResourceGroupName string
