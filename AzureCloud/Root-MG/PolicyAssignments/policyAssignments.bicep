@@ -4,7 +4,7 @@ param policyName string = 'Executive-Initiative'
 param policyManagementGroup string = 'LukeInternal'
 param parameters object = {
   starting: {
-    value: 4000 
+    value: 4000
   }
   ending: {
     value: 4096
@@ -12,10 +12,11 @@ param parameters object = {
   hubVnetResourceId: {
     value: '/subscriptions/4bb3900a-62d5-41a8-a02c-1b811cf079c7/resourceGroups/rg_paloalto_eastus/providers/Microsoft.Network/virtualNetworks/fwVNET'
   }
-  standardNsgRules: [
-    {
-      name: 'SSH2'
-      properties: {
+  standardNsgRules: {
+    value: [
+      {
+        name: 'SSH2'
+        properties: {
           protocol: 'TCP'
           sourcePortRange: '*'
           destinationPortRange: '22'
@@ -28,9 +29,10 @@ param parameters object = {
           destinationPortRanges: []
           sourceAddressPrefixes: []
           destinationAddressPrefixes: []
+        }
       }
+    ]
   }
-  ]
 }
 
 resource definition 'Microsoft.Authorization/policySetDefinitions@2020-09-01' existing = {
@@ -44,6 +46,6 @@ module assignment '../../../Modules/Microsoft.Authorization/policyAssignments/po
     name: assignmentName
     policyId: definition.id
     parameters: parameters
-    location: 'eastus'  
-  } 
+    location: 'eastus'
+  }
 }
