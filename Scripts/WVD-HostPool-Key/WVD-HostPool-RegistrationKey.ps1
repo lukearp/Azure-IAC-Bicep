@@ -13,7 +13,7 @@ function Get-Token {
         [string]$secretName,
         [string]$hostPoolResourceId
     )
-    #$infraContext = Connect-AzAccount -Identity -ContextName "infra";
+    $infraContext = Connect-AzAccount -Identity -ContextName "infra";
     $secret = Get-AzKeyVaultSecret -VaultName $keyVaultName -Name $secretName;
     $creds = New-Object System.Management.Automation.PSCredential ($appId, $secret.SecretValue);
     $wvdContext = Connect-AzAccount -TenantId $tenantId -Credential $creds -ServicePrincipal -ContextName "wvd" -Force -Confirm:$false;
