@@ -5,15 +5,44 @@ configuration AddSessionHost
         [Parameter(mandatory = $true)]
         [string]$HostPoolName,
 
-        [Parameter(Mandatory = $true)]
-        [string]$RegistrationInfoToken,
+        [Parameter(mandatory = $true)]
+        [string]$scriptUrl,
 
         [Parameter(Mandatory = $true)]
-        [string]$uncPath
+        [string]$uncPath,
+
+        [Parameter(Mandatory = $true)]
+        [string]$appId,
+
+        [Parameter(Mandatory = $true)]
+        [string]$tenantId,
+
+        [Parameter(Mandatory = $true)]
+        [string]$keyVaultId,
+
+        [Parameter(Mandatory = $true)]
+        [string]$secretName,
+
+        [Parameter(Mandatory = $true)]
+        [string]$hostPoolResourceId
     )
 
     $rdshIsServer = $true
     $ScriptPath = [system.io.path]::GetDirectoryName($PSCommandPath)
+
+    $RegistrationInfoToken = & "$($scriptUrl)/WVD-HostPool-RegistrationKey.ps1" -appId $appId -tenantId $tenantId -keyVaultName $keyVaultName -secretName $secretName -hostPoolResourceId $hostPoolResourceId
+
+    Script GetHostPoolToken {
+        GetScript = {
+            return @{'Result' = ''}
+        }
+        SetScript = {
+            & "$using:scriptUrl\WVD-HostPool-RegistrationKey.ps1"
+        }
+        TestScript = {
+            return (Test-path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\FSLogix\Profiles\VHDLocations")
+        }
+    }
 
     $OSVersionInfo = Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion"
     
