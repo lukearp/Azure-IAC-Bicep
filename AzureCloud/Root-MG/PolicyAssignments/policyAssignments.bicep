@@ -12,6 +12,25 @@ param parameters object = {
   hubVnetResourceId: {
     value: '/subscriptions/4bb3900a-62d5-41a8-a02c-1b811cf079c7/resourceGroups/rg_paloalto_eastus/providers/Microsoft.Network/virtualNetworks/fwVNET'
   }
+  standardNsgRules: [
+    {
+      name: 'SSH2'
+      properties: {
+          protocol: 'TCP'
+          sourcePortRange: '*'
+          destinationPortRange: '22'
+          sourceAddressPrefix: '35.132.216.178'
+          destinationAddressPrefix: '*'
+          access: 'Allow'
+          priority: 3000
+          direction: 'Inbound'
+          sourcePortRanges: []
+          destinationPortRanges: []
+          sourceAddressPrefixes: []
+          destinationAddressPrefixes: []
+      }
+  }
+  ]
 }
 
 resource definition 'Microsoft.Authorization/policySetDefinitions@2020-09-01' existing = {
