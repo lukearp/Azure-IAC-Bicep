@@ -47,5 +47,8 @@ module assignment '../../../Modules/Microsoft.Authorization/policyAssignments/po
     policyId: definition.id
     parameters: parameters
     location: 'eastus'
+    notScopes: [
+      '/subscriptions/4bb3900a-62d5-41a8-a02c-1b811cf079c7/resourceGroups/rg_paloalto_eastus'
+    ]
   }
 }
