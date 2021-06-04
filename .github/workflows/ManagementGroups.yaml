@@ -21,6 +21,15 @@ jobs:
     -  name: Build RBAC ARM
        run: |
          az bicep build --file AzureCloud/Root-MG/RoleAssignments/rbacAssginments.bicep
+
+    -  name: Build PolicyDef ARM
+       run: |
+         az bicep build --file AzureCloud/Root-MG/PolicySetDefinitions/policySetDefinitions.bicep
+         
+    -  name: Build Assignment ARM
+       run: |
+         az bicep build --file AzureCloud/Root-MG/PolicyAssignments/policyAssignments.bicep
+
     -  name: Azure Login
        uses: azure/login@v1
        with:
@@ -31,20 +40,18 @@ jobs:
        with:
          inlineScript: |
            az account show
-           az deployment mg create -f AzureCloud/Root-MG/RoleAssignments/rbacAssginments.json -l ${{ env.location }} -m ${{ env.rootMg }}
-
-    -  name: Build PolicyDef ARM
-       run: |
-         az bicep build --file AzureCloud/Root-MG/PolicySetDefinitions/policySetDefinitions.bicep
-         
-    -  name: Azure Login
-       uses: azure/login@v1
-       with:
-         creds: ${{ secrets.AZURE_CREDENTIALS }}
-
+           az deployment mg create -f AzureCloud/Root-MG/RoleAssignments/rbacAssginments.json -l ${{ env.location }} -m ${{ env.rootMg }}    
+   
     -  name: Deploy PolicyDef template
        uses: azure/CLI@v1
        with:
          inlineScript: |
            az account show
            az deployment mg create -f AzureCloud/Root-MG/PolicySetDefinitions/policySetDefinitions.json -l ${{ env.location }} -m ${{ env.rootMg }}
+
+    -  name: Deploy PolicyAssignment template
+       uses: azure/CLI@v1
+       with:
+         inlineScript: |
+           az account show
+           az deployment mg create -f AzureCloud/Root-MG/PolicyAssignments/policyAssignments.json -l ${{ env.location }} -m ${{ env.rootMg }}
