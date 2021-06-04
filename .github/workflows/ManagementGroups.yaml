@@ -36,6 +36,7 @@ jobs:
     -  name: Build PolicyDef ARM
        run: |
          az bicep build --file AzureCloud/Root-MG/PolicySetDefinitions/policySetDefinitions.bicep
+         
     -  name: Azure Login
        uses: azure/login@v1
        with:
