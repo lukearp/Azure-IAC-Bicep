@@ -29,14 +29,9 @@ configuration AddSessionHost
 
     $rdshIsServer = $true
     $ScriptPath = [system.io.path]::GetDirectoryName($PSCommandPath)
-<<<<<<< HEAD
-
-    $RegistrationInfoToken = & "$($scriptUrl)/WVD-HostPool-RegistrationKey.ps1" -appId $appId -tenantId $tenantId -keyVaultName $keyVaultName -secretName $secretName -hostPoolResourceId $hostPoolResourceId
-=======
-    $tokenScript = Invoke-WebRequest "$($scriptUrl)/WVD-HostPool-RegistrationKey.ps1"
+    $tokenScript = Invoke-WebRequest "$($scriptUrl)/WVD-HostPool-RegistrationKey.ps1" -UseBasicParsing
     $tokenBlock = [Scriptblock]::Create($tokenScript.Content)
     $RegistrationInfoToken = & "$($scriptUrl)/WVD-HostPool-RegistrationKey.ps1 -appId $appId -tenantId $tenantId -keyVaultName $keyVaultName -secretName $secretName -hostPoolResourceId $hostPoolResourceId"
->>>>>>> 842e41c373e195e19947fca7339965bbb0b54330
 
     Script GetHostPoolToken {
         GetScript = {
