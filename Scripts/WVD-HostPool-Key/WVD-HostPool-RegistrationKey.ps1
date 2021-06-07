@@ -31,5 +31,5 @@ function Get-Token {
 }
 
 $DeploymentScriptOutputs = @{};
-$DeploymentScriptOutputs['registrationKey']=$token
+$DeploymentScriptOutputs['registrationKey']= Get-Token -appId $appId -tenantId $tenantId -keyVaultName $keyVaultName -secretName $secretName -hostPoolResourceId $hostPoolResourceId
 #return Get-Token -appId $appId -tenantId $tenantId -keyVaultName $keyVaultName -secretName $secretName -hostPoolResourceId $hostPoolResourceId
