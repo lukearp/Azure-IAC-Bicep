@@ -21,3 +21,5 @@ resource deploymentScript 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
     retentionInterval: 'PT1H'    
   }
 }
+
+output results object = deploymentScript.properties.outputs
