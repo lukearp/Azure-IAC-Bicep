@@ -33,6 +33,13 @@ param parameters object = {
       }
     ]
   }
+  listOfAllowedLocations: [
+    'global'
+    'eastus'
+    'westus'
+    'eastus2'
+    'centralus'
+  ]
 }
 
 resource definition 'Microsoft.Authorization/policySetDefinitions@2020-09-01' existing = {
