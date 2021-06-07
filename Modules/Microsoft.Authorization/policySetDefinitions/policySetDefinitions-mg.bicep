@@ -14,3 +14,5 @@ resource policySet 'Microsoft.Authorization/policySetDefinitions@2020-09-01' = {
     parameters: parameters  
   } 
 }
+
+output policyId string = policySet.id

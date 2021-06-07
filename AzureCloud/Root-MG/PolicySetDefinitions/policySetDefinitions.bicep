@@ -334,3 +334,5 @@ module policySet '../../../Modules/Microsoft.Authorization/policySetDefinitions/
     ]    
   } 
 }
+
+output policyId string = policySet.outputs.policyId
