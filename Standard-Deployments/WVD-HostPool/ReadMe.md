@@ -10,7 +10,35 @@ If using SplitTenant = true:
 Key Vault with a secret for Admin Password.  The Users deploying the template will need an Access Policy to Get Secrets.
 
 # Parameters
-Comming soon
+param | type | notes
+------|------|------
+vmNamePrefix | string | a '-Number' will be appended.  Ex: prefix-1 
+location | string | location for VM deployment.  Default is the Location of the Target Resource Group
+vmSize | string | VM instance Size
+hostCount | int | number of VMs to deploy
+splitTenant | bool | Is the WVD Objects within a different AAD Tenant than the Virtual Machine Subscription.
+keyVaultName | string | Name of the Azure Key Vault that has the Client ID Secret to login to remote AAD Tenant.
+keyVaultSecretName | string | Name of the Secret within the keyVault
+wvdAppId | string | If splitTenant = true, the Application ID in the WVD Tenant that has Contributor rights to the Host Pool Object.
+wvdTenantId | string | If splitTenant = true, the Tenant ID that has the Host Pool object.
+hostPoolName | string | Name of existing WVD Host Pool object
+hostPoolResourceGroupName | string | Resource Group Name that has Host Pool Object
+hostPoolSubscription | string | Subscritpion ID that has Host Pool Object
+imagePublisher | string | Source Image Publisher
+imageOffer | string | Source Image offer.
+imageSku | string | Source Image Sku
+vnetId | string | Resource ID of target VNET
+subnetName | string | Subnet Name that the VMs will be deployed in.
+adminUsername | string | Username of the Default Local Admin Account
+adminUsername | string | Password for Default Local Admin Account
+domainFqdn | string | FQDN of the Domain you are wanting to Join or Create
+domainJoinUsername | string | UPN of Domain Admin.  Example: localadmin@test.com
+domainJoinPassword | string | Password for Domain Admin
+ouPath | string | OU DN that Computer Objects will be added.
+profileContainerPath | string | UNC Path to profiles share for FSLogix target. Must double '\' because it is an escape string. Example: '\\\\fileserver.lukeprojects.com\\profiles' 
+artifcatLocation | string | Location of the DSC Script in a .zip format.  Default: 'https://github.com/lukearp/Azure-IAC-Bicep/releases/download/DSC/WVD-DSC.zip'
+userManagedIdentityId | string | Resource ID of Managed Identity that has rights to restart the Azure VM.  Restart-AzVM is the command this account will be used for.
+
 
 # Sample Module
 
