@@ -1,4 +1,5 @@
 param(
+    [bool]$splitTenant,
     [string]$appId,
     [string]$tenantId,
     [string]$keyVaultName,
@@ -7,6 +8,7 @@ param(
 )
 function Get-Token {
     param(
+        [bool]$splitTenant,
         [string]$appId,
         [string]$tenantId,
         [string]$keyVaultName,
@@ -14,10 +16,13 @@ function Get-Token {
         [string]$hostPoolResourceId
     )
     $infraContext = Connect-AzAccount -Identity -ContextName "infra";
-    $secret = Get-AzKeyVaultSecret -VaultName $keyVaultName -Name $secretName;
-    $creds = New-Object System.Management.Automation.PSCredential ($appId, $secret.SecretValue);
-    $wvdContext = Connect-AzAccount -TenantId $tenantId -Credential $creds -ServicePrincipal -ContextName "wvd" -Force -Confirm:$false;
-    $set = Set-AzContext -Name "wvd" -Context $wvdContext.Context -Force -Confirm:$false;
+    if($splitTenant -eq $true)
+    {
+        $secret = Get-AzKeyVaultSecret -VaultName $keyVaultName -Name $secretName;
+        $creds = New-Object System.Management.Automation.PSCredential ($appId, $secret.SecretValue);
+        $wvdContext = Connect-AzAccount -TenantId $tenantId -Credential $creds -ServicePrincipal -ContextName "wvd" -Force -Confirm:$false;
+        $set = Set-AzContext -Name "wvd" -Context $wvdContext.Context -Force -Confirm:$false;    
+    }
     $registrationKey = Get-AzWvdRegistrationInfo -SubscriptionId $hostPoolResourceId.Split('/')[2] -ResourceGroupName $hostPoolResourceId.Split('/')[4] -HostPoolName $hostPoolResourceId.Split('/')[-1];
     $token = "";
     if ($registrationKey.ExpirationTime -lt (Get-Date)) {
@@ -31,5 +36,5 @@ function Get-Token {
 }
 
 $DeploymentScriptOutputs = @{};
-$DeploymentScriptOutputs['registrationKey']= Get-Token -appId $appId -tenantId $tenantId -keyVaultName $keyVaultName -secretName $secretName -hostPoolResourceId $hostPoolResourceId
+$DeploymentScriptOutputs['registrationKey']= Get-Token -splitTenant $splitTenant -appId $appId -tenantId $tenantId -keyVaultName $keyVaultName -secretName $secretName -hostPoolResourceId $hostPoolResourceId
 #return Get-Token -appId $appId -tenantId $tenantId -keyVaultName $keyVaultName -secretName $secretName -hostPoolResourceId $hostPoolResourceId

@@ -1,13 +1,18 @@
 param splitTenant bool = false
 param wvdTenantId string
 param wvdAppId string
-param keyVaultSecretId string
+param keyVaultName string
+param keyVaultSecretName string
 param hostPoolName string
+@maxLength(10)
+param vmNamePrefix string
 param hostPoolResourceGroupName string
 param hostPoolSubscription string
+param profileContainerPath string
+param userManagedIdentityId string
 param hostCount int
 @allowed([
-  'MicrosoftWindowsDesktop'
+  'microsoftwindowsdesktop'
 ])
 param imagePublisher string
 @allowed([
@@ -17,6 +22,7 @@ param imageOffer string
 @allowed([
  '19h2-evd-o365pp'
  '20h1-evd-o365pp'
+ '20h2-evd-o365pp'
  '21h1-evd-o365pp'
 ])
 param imageSku string
@@ -26,13 +32,13 @@ param location string = resourceGroup().location
 param adminUsername string
 @secure()
 param adminPassword string
+param domainJoinUsername string
+@secure()
+param domainJoinPassword string
+param domainFqdn string
+param ouPath string
 param vmSize string = 'Standard_D4_v4'
-param artifcatLocation string = 'https://location.com'
-
-resource keyVault 'Microsoft.KeyVault/vaults@2021-04-01-preview' existing = {
-  name: split(keyVaultSecretId,'/')[8]
-  scope: resourceGroup(split(keyVaultSecretId,'/')[4]) 
-}
+param artifcatLocation string = 'https://github.com/lukearp/Azure-IAC-Bicep/releases/download/DSC/WVD-DSC.zip'
 
 var azRegions = [
   'eastus'
@@ -51,6 +57,19 @@ var zones = contains(azRegions, location) ? [
 ] : []
 
 var zoneBalance = zones == [] ? false : true
+var hostPoolResourceId = '/subscriptions/${hostPoolSubscription}/resourceGroups/${hostPoolResourceGroupName}/providers/Microsoft.DesktopVirtualization/hostpools/${hostPoolName}'
+var getHostRegistrationKeyArgs = splitTenant == true ? '-splitTenant $true -appId ${wvdAppId} -tenantId ${wvdTenantId} -keyVaultName ${keyVaultName} -secretName ${keyVaultSecretName} -hostPoolResourceId ${hostPoolResourceId}' : '-splitTenant $false -appId ${wvdAppId} -tenantId ${wvdTenantId} -keyVaultName ${keyVaultName} -secretName ${keyVaultSecretName} -hostPoolResourceId ${hostPoolResourceId}'
+
+module deploymentScript '../../Modules/Microsoft.Resources/deploymentScripts/deploymentScripts-powershell.bicep' = {
+  name: 'scriptTest'
+  params: {
+    arguments: getHostRegistrationKeyArgs
+    location: resourceGroup().location
+    managedIdentityId: userManagedIdentityId
+    name: 'Get-WVD-Key'
+    pscriptUri: 'https://raw.githubusercontent.com/lukearp/Azure-IAC-Bicep/master/Scripts/WVD-HostPool-Key/WVD-HostPool-RegistrationKey.ps1'       
+  } 
+}
 
 resource hostPool 'Microsoft.Compute/virtualMachineScaleSets@2021-03-01' = {
   name: hostPoolName
@@ -62,12 +81,12 @@ resource hostPool 'Microsoft.Compute/virtualMachineScaleSets@2021-03-01' = {
     capacity: hostCount 
     tier: 'Standard'
     name: vmSize  
-  }
+  }/*
   plan: {
    publisher: imagePublisher
    product: imageOffer
    name: imageSku      
-  }
+  }*/
   zones: zones 
   properties: {
     zoneBalance: zoneBalance
@@ -86,13 +105,10 @@ resource hostPool 'Microsoft.Compute/virtualMachineScaleSets@2021-03-01' = {
       osProfile: {
         adminPassword: adminPassword
         adminUsername: adminUsername
-        computerNamePrefix: hostPoolName    
+        computerNamePrefix: vmNamePrefix     
         windowsConfiguration: {
-          patchSettings: {
-            patchMode: 'AutomaticByPlatform'
-            enableHotpatching: true  
-          } 
-          provisionVMAgent: true  
+          enableAutomaticUpdates: true 
+          provisionVMAgent: true   
         } 
       }
       storageProfile: {
@@ -110,7 +126,6 @@ resource hostPool 'Microsoft.Compute/virtualMachineScaleSets@2021-03-01' = {
         }  
       }
       networkProfile: {
-        networkApiVersion: '2020-11-01'
         networkInterfaceConfigurations: [
           {
             name: 'nic'
@@ -144,6 +159,49 @@ resource hostPool 'Microsoft.Compute/virtualMachineScaleSets@2021-03-01' = {
                  port: 3389 
                }    
              }   
+          }          
+          {
+            name: 'DSC-Setup'
+            properties: {
+              provisionAfterExtensions: [
+                'HealthExtension'
+              ]
+              publisher: 'Microsoft.Powershell'
+              type: 'DSC'
+              autoUpgradeMinorVersion: true
+              typeHandlerVersion: '2.73'
+              settings: {
+                modulesUrl: artifcatLocation
+                configurationFunction: 'Configuration.ps1\\AddSessionHost'
+                properties: {
+                  hostPoolName: hostPoolName
+                  registrationInfoToken: json(string(deploymentScript.outputs.results)).registrationKey
+                  uncPath: profileContainerPath
+                }
+              }  
+            }
+          }
+          {
+            name: 'DomainJoin' 
+            properties: {
+              provisionAfterExtensions: [
+                'DSC-Setup'
+              ]
+              publisher: 'Microsoft.Compute' 
+              type: 'JsonADDomainExtension'  
+              typeHandlerVersion: '1.3'
+              autoUpgradeMinorVersion: true
+              settings: {
+                name: domainFqdn
+                ouPath: ouPath
+                user: domainJoinUsername
+                restart: 'true'
+                options: 3
+              }
+              protectedSettings: {
+                password: domainJoinPassword
+              }
+            } 
           } 
         ] 
       }    
