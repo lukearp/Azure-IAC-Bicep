@@ -9,6 +9,9 @@ If using SplitTenant = true:
 
 Key Vault with a secret for Admin Password.  The Users deploying the template will need an Access Policy to Get Secrets.
 
+# Parameters
+Comming soon
+
 # Sample Module
 
 ```Bicep
