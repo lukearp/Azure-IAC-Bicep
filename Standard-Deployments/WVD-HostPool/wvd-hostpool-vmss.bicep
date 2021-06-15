@@ -67,7 +67,7 @@ module deploymentScript '../../Modules/Microsoft.Resources/deploymentScripts/dep
     location: resourceGroup().location
     managedIdentityId: userManagedIdentityId
     name: 'Get-WVD-Key'
-    pscriptUri: 'https://raw.githubusercontent.com/lukearp/Azure-IAC-Bicep/WVD-Hostpool-StandardDeploy/Scripts/WVD-HostPool-Key/WVD-HostPool-RegistrationKey.ps1'       
+    pscriptUri: 'https://raw.githubusercontent.com/lukearp/Azure-IAC-Bicep/master/Scripts/WVD-HostPool-Key/WVD-HostPool-RegistrationKey.ps1'       
   } 
 }
 
