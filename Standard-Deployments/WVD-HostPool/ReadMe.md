@@ -35,7 +35,7 @@ domainFqdn | string | FQDN of the Domain you are wanting to Join or Create
 domainJoinUsername | string | UPN of Domain Admin.  Example: localadmin@test.com
 domainJoinPassword | string | Password for Domain Admin
 ouPath | string | OU DN that Computer Objects will be added.
-profileContainerPath | string | UNC Path to profiles share for FSLogix target. Must double '\' because it is an escape string. Example: '\\\\fileserver.lukeprojects.com\\profiles' 
+profileContainerPath | string | UNC Path to profiles share for FSLogix target. Must double '\\' because it is an escape string. Example: '\\\\\\fileserver.lukeprojects.com\\\\profiles' 
 artifcatLocation | string | Location of the DSC Script in a .zip format.  Default: 'https://github.com/lukearp/Azure-IAC-Bicep/releases/download/DSC/WVD-DSC.zip'
 userManagedIdentityId | string | Resource ID of Managed Identity that has rights to restart the Azure VM.  Restart-AzVM is the command this account will be used for.
 
