@@ -12,7 +12,7 @@ param profileContainerPath string
 param userManagedIdentityId string
 param hostCount int
 @allowed([
-  'MicrosoftWindowsDesktop'
+  'microsoftwindowsdesktop'
 ])
 param imagePublisher string
 @allowed([
@@ -22,6 +22,7 @@ param imageOffer string
 @allowed([
  '19h2-evd-o365pp'
  '20h1-evd-o365pp'
+ '20h2-evd-o365pp'
  '21h1-evd-o365pp'
 ])
 param imageSku string
@@ -80,12 +81,12 @@ resource hostPool 'Microsoft.Compute/virtualMachineScaleSets@2021-03-01' = {
     capacity: hostCount 
     tier: 'Standard'
     name: vmSize  
-  }
+  }/*
   plan: {
    publisher: imagePublisher
    product: imageOffer
    name: imageSku      
-  }
+  }*/
   zones: zones 
   properties: {
     zoneBalance: zoneBalance
@@ -104,13 +105,10 @@ resource hostPool 'Microsoft.Compute/virtualMachineScaleSets@2021-03-01' = {
       osProfile: {
         adminPassword: adminPassword
         adminUsername: adminUsername
-        computerNamePrefix: vmNamePrefix    
+        computerNamePrefix: vmNamePrefix     
         windowsConfiguration: {
-          patchSettings: {
-            patchMode: 'AutomaticByPlatform'
-            enableHotpatching: true  
-          } 
-          provisionVMAgent: true  
+          enableAutomaticUpdates: true 
+          provisionVMAgent: true   
         } 
       }
       storageProfile: {
@@ -128,7 +126,6 @@ resource hostPool 'Microsoft.Compute/virtualMachineScaleSets@2021-03-01' = {
         }  
       }
       networkProfile: {
-        networkApiVersion: '2020-11-01'
         networkInterfaceConfigurations: [
           {
             name: 'nic'
