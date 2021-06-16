@@ -3,7 +3,8 @@ module sub '../../Modules/Microsoft.Subscription/aliases/aliases-mg.bicep' = {
   scope: tenant()
   params: {
     billingScope: 'test'
-    subscriptionAliasName: 'Test-Sub'  
+    subscriptionAliasName: 'Test-Sub' 
+    workload: 'Production' 
   }  
 }
 
