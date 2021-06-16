@@ -1,7 +1,7 @@
 targetScope = 'tenant'
 param displayName string
 param id string
-param parentId string
+param parentId string = ''
 param subscriptions array
 
 var details = parentId != '' ? {
