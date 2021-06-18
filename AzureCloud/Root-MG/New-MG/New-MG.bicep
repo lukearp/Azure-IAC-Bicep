@@ -1,5 +1,5 @@
 targetScope = 'managementGroup'
-module mg '../../Modules/Microsoft.Management/managementGroups/managementGroups.bicep' = {
+module mg '../../../Modules/Microsoft.Management/managementGroups/managementGroups.bicep' = {
   name: 'Enterprise CloudTN'
   scope: tenant()
   params: {
