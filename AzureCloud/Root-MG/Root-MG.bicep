@@ -16,6 +16,6 @@ module mg '../../Modules/Microsoft.Management/managementGroups/managementGroups.
     id: 'Root-MG'
     subscriptions: [
       sub.outputs.subId
-    ]    
+    ]     
   }  
 }

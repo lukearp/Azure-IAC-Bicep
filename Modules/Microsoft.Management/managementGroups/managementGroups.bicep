@@ -18,6 +18,10 @@ resource managementGroup 'Microsoft.Management/managementGroups@2021-04-01' = {
   }  
 }
 
-resource childSubscriptions 'Microsoft.Management/managementGroups/subscriptions@2021-04-01' = [for sub in subscriptions : {
-  name: '${managementGroup.name}/${sub}' 
-}]
+module childSubs 'subscriptions/subscriptions.bicep' = if(subscriptions != []) {
+  name: '${managementGroup.name}-Subscriptions'
+  params: {
+    managementGroupName: managementGroup.name
+    subscriptions: subscriptions 
+  }  
+}
