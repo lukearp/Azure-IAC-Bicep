@@ -18,7 +18,7 @@ jobs:
     -  name: Checkout Code
        uses: actions/checkout@v2
 
-    -  name: Build RBAC ARM
+    -  name: Build Management Group 
        run: |
          az bicep build --file AzureCloud/Root-MG/Root-MG-Test.bicep
 
@@ -27,7 +27,7 @@ jobs:
        with:
          creds: ${{ secrets.MSDN_SECRET }}
 
-    -  name: Deploy PolicyAssignment template
+    -  name: Deploy Management Group template
        uses: azure/CLI@v1
        with:
          inlineScript: |

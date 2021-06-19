@@ -91,7 +91,7 @@ module policySet '../../../Modules/Microsoft.Authorization/policySetDefinitions/
     policyDefinitionGroups: policyDefinitionGroups
     policyDefinitions: [
       {
-        policyDefinitionId: '/providers/Microsoft.Management/managementGroups/LukeInternal/providers/Microsoft.Authorization/policyDefinitions/Protect-Standard-NSG-Rules'
+        policyDefinitionId: '/providers/Microsoft.Management/managementGroups/Luke-Root-MG/providers/Microsoft.Authorization/policyDefinitions/Protect-Standard-NSG-Rules'
         groupNames: [
           'Network'
         ]
@@ -288,7 +288,7 @@ module policySet '../../../Modules/Microsoft.Authorization/policySetDefinitions/
         parameters: {}  
       }
       {
-        policyDefinitionId: '/providers/Microsoft.Management/managementGroups/LukeInternal/providers/Microsoft.Authorization/policyDefinitions/Append-Standard-NSG-Rules'
+        policyDefinitionId: '/providers/Microsoft.Management/managementGroups/Luke-Root-MG/providers/Microsoft.Authorization/policyDefinitions/Append-Standard-NSG-Rules'
         groupNames: [
           'Network'
         ]
@@ -299,7 +299,7 @@ module policySet '../../../Modules/Microsoft.Authorization/policySetDefinitions/
         }  
       }
       {
-        policyDefinitionId: '/providers/Microsoft.Management/managementGroups/LukeInternal/providers/Microsoft.Authorization/policyDefinitions/VNET-to-Hub-Peering-Enforcement'
+        policyDefinitionId: '/providers/Microsoft.Management/managementGroups/Luke-Root-MG/providers/Microsoft.Authorization/policyDefinitions/VNET-to-Hub-Peering-Enforcement'
         groupNames: [
           'Network'
         ]
