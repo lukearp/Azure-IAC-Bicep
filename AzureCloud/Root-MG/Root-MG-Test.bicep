@@ -30,6 +30,7 @@ module policySetDefinitions 'PolicySetDefinitions/policySetDefinitions.bicep' = 
   name: '${mg.name}-PolicySetDefinitions'
   scope: managementGroup(managementGroupId) 
   dependsOn: [
+    policyDefinitions
     mg
   ] 
 }
