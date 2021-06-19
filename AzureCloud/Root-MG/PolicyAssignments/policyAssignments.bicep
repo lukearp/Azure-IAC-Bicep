@@ -1,7 +1,7 @@
 targetScope = 'managementGroup'
 param assignmentName string = 'My-Initiative-Assignment'
 param policyName string = 'Executive-Initiative'
-param policyManagementGroup string = 'Enterprise_Management_Group'
+param policyManagementGroup string = 'Luke-Root-MG'
 param parameters object = {
   starting: {
     value: 4000
