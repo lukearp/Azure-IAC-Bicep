@@ -1,5 +1,5 @@
 targetScope = 'managementGroup'
-var managementGroupId = 'Enterprise_Management_Group'
+var managementGroupId = 'Luke-Root-MG'
 module mg '../../Modules/Microsoft.Management/managementGroups/managementGroups.bicep' = {
   name: 'Luke-Root-MG-Deploy'
   scope: tenant()
