@@ -34,4 +34,13 @@ module policySetDefinitions 'PolicySetDefinitions/policySetDefinitions.bicep' = 
   ] 
 }
 
+module policyAssignments 'PolicyAssignments/policyAssignments.bicep' = {
+  name: '${mg.name}-PolicyAssignments'
+  scope: managementGroup(managementGroupId)
+  dependsOn: [
+    policyDefinitions
+    policySetDefinitions
+  ] 
+}
+
 
