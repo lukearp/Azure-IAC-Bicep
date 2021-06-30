@@ -1,4 +1,4 @@
-#How to create Azure Automation Account
+# How to create Azure Automation Account
 
 ```dotnetcli
 New-Item -ItemType Directory -Path "C:\Temp" -Force
@@ -8,7 +8,7 @@ $Uri = "https://raw.githubusercontent.com/lukearp/Azure-IAC-Bicep/master/Scripts
 Invoke-WebRequest -Uri $Uri -OutFile ".\CreateOrUpdateAzAutoAccount.ps1"
 ```
 
-#How to create Logic App for Scaling
+# How to create Logic App for Scaling
 
 ```dotnetcli
 New-Item -ItemType Directory -Path "C:\Temp" -Force
