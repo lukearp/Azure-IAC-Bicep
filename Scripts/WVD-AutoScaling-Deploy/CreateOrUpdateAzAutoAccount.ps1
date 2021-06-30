@@ -214,7 +214,7 @@ function Add-ModuleToAutoAccount {
 $URISuffix = "?time=$(get-date -f "yyyy-MM-dd_HH-mm-ss")"
 $ScriptURI = "$ArtifactsURI/basicScale.ps1"
 if (!$UseRDSAPI) {
-	$ScriptURI = "$runBookArtifactsURI/runbookCreationTemplate.json"
+	$ScriptURI = "$runBookArtifactsURI/WVDAutoScaleRunbookARMBased.ps1"
 }
 
 # Creating an automation account & runbook and publish the scaling script file
