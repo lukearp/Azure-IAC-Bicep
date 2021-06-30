@@ -16,4 +16,10 @@ Set-Location -Path "C:\Temp"
 $Uri = "https://raw.githubusercontent.com/lukearp/Azure-IAC-Bicep/master/Scripts/WVD-AutoScaling-Deploy/CreateOrUpdateAzLogicApp.ps1"
 # Download the script
 Invoke-WebRequest -Uri $Uri -OutFile ".\CreateOrUpdateAzLogicApp.ps1"
+
+$Uri = "https://raw.githubusercontent.com/lukearp/Azure-IAC-Bicep/master/Scripts/WVD-AutoScaling-Deploy/Set-LogicAppParameters.ps1"
+# Download the script
+Invoke-WebRequest -Uri $Uri -OutFile ".\Set-LogicAppParameters.ps1"
+
+.\Set-LogicAppParameters.ps1
 ```
