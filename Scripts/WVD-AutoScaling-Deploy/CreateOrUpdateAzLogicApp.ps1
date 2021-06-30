@@ -58,7 +58,7 @@ param(
 	[string]$EndPeakTime = '17:00',
 
 	[Parameter(mandatory = $false)]
-	[string]$TimeZoneId = '-7:00',
+	[string]$TimeZoneId = 'Eastern Standard Time',
 
 	[Parameter(mandatory = $false)]
 	[double]$SessionThresholdPerCPU = 1,
