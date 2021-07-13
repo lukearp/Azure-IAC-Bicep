@@ -2,6 +2,7 @@ param name string
 param version string
 param location string = resourceGroup().location
 param template object
+param tags object = {}
 
 resource templateSpec 'Microsoft.Resources/templateSpecs@2021-05-01' = {
    name: name
@@ -13,8 +14,9 @@ resource templateSpec 'Microsoft.Resources/templateSpecs@2021-05-01' = {
     name: version
     location: location  
     properties: {
-      mainTemplate: template      
-    }   
+      mainTemplate: template       
+    }
+    tags: tags    
   } 
 }
 

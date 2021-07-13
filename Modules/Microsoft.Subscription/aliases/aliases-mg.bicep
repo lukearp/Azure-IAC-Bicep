@@ -16,4 +16,4 @@ resource subscriptionAlias 'Microsoft.Subscription/aliases@2019-10-01-preview' =
   }  
 }
 
-output subId string = subscriptionAlias.id
+output subId string = split(subscriptionAlias.properties.subscriptionId,'/')[1]

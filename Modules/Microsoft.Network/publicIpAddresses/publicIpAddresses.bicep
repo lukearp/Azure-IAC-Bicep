@@ -20,6 +20,7 @@ param publicIpAddressVersion string
 ])
 param publicIpAllocationMethod string
 param location string = resourceGroup().location
+param tags object = {}
 
 resource pip 'Microsoft.Network/publicIPAddresses@2020-11-01' = {
   name: name
@@ -31,5 +32,6 @@ resource pip 'Microsoft.Network/publicIPAddresses@2020-11-01' = {
   properties:{
     publicIPAddressVersion: publicIpAddressVersion
     publicIPAllocationMethod: publicIpAllocationMethod       
-  }   
+  }  
+  tags: tags 
 }

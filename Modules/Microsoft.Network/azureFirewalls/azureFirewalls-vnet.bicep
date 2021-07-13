@@ -1,6 +1,5 @@
 param name string
 param location string = resourceGroup().location
-param tags object = {} 
 param policyId string
 param pipId string
 param subnetId string 
@@ -11,6 +10,7 @@ param subnetId string
 param tier string
 param useZones bool = true
 param zones array = []
+param tags object = {}
 
 var azRegions = [
   'eastus'
@@ -53,6 +53,6 @@ resource firewall 'Microsoft.Network/azureFirewalls@2021-02-01' = {
     sku: {
       name: 'AZFW_VNet'
       tier: tier  
-    }   
-  }    
+    }    
+  }     
 }

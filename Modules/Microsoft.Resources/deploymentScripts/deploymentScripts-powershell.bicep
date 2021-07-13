@@ -3,6 +3,7 @@ param location string = resourceGroup().location
 param managedIdentityId string
 param pscriptUri string
 param arguments string
+param tags object = {}
 
 resource deploymentScript 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
   kind: 'AzurePowerShell' 
@@ -20,6 +21,7 @@ resource deploymentScript 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
     azPowerShellVersion: '5.9'
     retentionInterval: 'PT1H'    
   }
+  tags: tags 
 }
 
 output results object = deploymentScript.properties.outputs

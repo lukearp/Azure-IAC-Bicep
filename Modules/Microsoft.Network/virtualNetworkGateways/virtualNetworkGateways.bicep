@@ -33,6 +33,7 @@ param gatewaySku string
 ])
 param vpnType string
 param location string = resourceGroup().location
+param tags object = {}
 
 var gatewayProperties = gatewayType == 'Vpn' ? {
   activeActive: active_active
@@ -108,7 +109,8 @@ module pip '../publicIpAddresses/publicIpAddresses.bicep' = [for (ip, i) in ipCo
     publicIpAddressVersion:'IPv4'
     publicIpAllocationMethod: pipAllocationMethod
     sku: pipSku
-    tier: 'Regional'  
+    tier: 'Regional' 
+    tags: tags  
   } 
 }]
 
@@ -119,4 +121,5 @@ resource vnetGateway 'Microsoft.Network/virtualNetworkGateways@2020-11-01' = {
  dependsOn: [
    pip
  ]
+ tags: tags 
 }

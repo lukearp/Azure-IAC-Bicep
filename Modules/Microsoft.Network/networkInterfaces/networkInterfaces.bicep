@@ -6,6 +6,7 @@ param dnsServers array
 param loadBalancerConfig array
 param enableAcceleratedNetworking bool
 param ipConfigurations array
+param tags object = {}
 
 resource nic 'Microsoft.Network/networkInterfaces@2020-11-01' = {
   name: name
@@ -17,5 +18,6 @@ resource nic 'Microsoft.Network/networkInterfaces@2020-11-01' = {
     enableAcceleratedNetworking: enableAcceleratedNetworking
     enableIPForwarding: false
     ipConfigurations: ipConfigurations      
-  }   
+  }
+  tags: tags    
 }
