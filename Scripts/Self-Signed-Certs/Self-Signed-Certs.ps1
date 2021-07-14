@@ -31,5 +31,5 @@ foreach($dns in $DNSNames)
 $secureString = ConvertTo-SecureString -String $certPassword -Force -AsPlainText
 foreach($cert in $certs)
 {
-    Export-PfxCertificate -Cert $cert -Password $secureString -FilePath $($OutPath + $cert.Subject + ".pfx")
+    Export-PfxCertificate -Cert $cert -Password $secureString -FilePath $($OutPath + $cert.Subject + ".pfx") -CryptoAlgorithmOption TripleDES_SHA1
 }
