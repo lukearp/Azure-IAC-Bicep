@@ -65,7 +65,17 @@ resource appGateway 'Microsoft.Network/applicationGateways@2021-02-01' = {
     urlPathMaps: urlPathMaps 
     redirectConfigurations: redirectConfigurations
     requestRoutingRules: requestRoutingRules
-    rewriteRuleSets: rewriteRuleSets          
+    rewriteRuleSets: rewriteRuleSets   
+    gatewayIPConfigurations: [
+      {
+        name:
+        properties: {
+          subnet: {
+            id: 
+          } 
+        }  
+      } 
+    ]        
   } 
   tags: tags 
 }
