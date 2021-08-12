@@ -23,3 +23,19 @@ virtualNetworkRg | string | Name of VNET Resource Group
 aseSubnetName | string | Name of dedicated ASE Subnet
 internalLoadBalancingMode | string | Load Balancing Mode, options 'None' External ASE, 'Web' ILB With 80/443 only, 'Publishing' ILB with FTP Only, 'Web, Publishing' ISB with 80/443 and FTP
 ipsslAddressCount | string | Number of IP SSL addresses reserved for the App Service Environment.
+
+# Sample Module
+
+```
+module ase '../Modules/Microsoft.Web/hostingEnvironments/hostingEnvironments.bicep' = {
+  name: 'ASE-Deploy'
+  params: {
+    aseSubnetName: 'ase'
+    internalLoadBalancingMode: 'Web, Publishing'
+    location: 'eastus2'
+    name: 'testase'
+    virtualNetworkName: 'testvnet'
+    virtualNetworkRg: 'testvnetRg'        
+  } 
+}
+```
