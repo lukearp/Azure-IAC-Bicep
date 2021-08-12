@@ -1,5 +1,8 @@
 param name string
 param location string = resourceGroup().location
+param virtualnetwork string
+param virtualnetworkRg string
+param subnetName string
 param tags object = {}
 param useZones bool = true
 param zones array = []
@@ -23,6 +26,8 @@ param enableHttp2 bool
   'Standard_v2'
 ])
 param skuName string
+
+var subnetId = resourceId(virtualnetworkRg, 'Microsoft.Network/virtualNetworks/subnets', virtualnetwork, subnetName)
 
 var azRegions = [
   'eastus'
@@ -68,10 +73,10 @@ resource appGateway 'Microsoft.Network/applicationGateways@2021-02-01' = {
     rewriteRuleSets: rewriteRuleSets   
     gatewayIPConfigurations: [
       {
-        name:
+        name: 'ipConfig'
         properties: {
           subnet: {
-            id: 
+            id: subnetId 
           } 
         }  
       } 
