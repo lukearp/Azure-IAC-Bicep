@@ -8,3 +8,5 @@ resource resourceGroupDef 'Microsoft.Resources/resourceGroups@2021-04-01' = {
    name: name 
    tags: tags  
 }
+
+output resourceGroupId string = resourceGroupDef.id

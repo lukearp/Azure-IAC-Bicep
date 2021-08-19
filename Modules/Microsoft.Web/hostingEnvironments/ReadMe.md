@@ -2,9 +2,9 @@
 Deploys an ASE (Currently V2 only) to an existing Subnet.  The Subnet must be dedicated for the ASE
 
 # What does this module require?
-A Virtual Network that has a dedicated Subnet (minimum of /27 but /24 is recommended) for the ASE Deployment.
+A Virtual Network that has a dedicated Subnet (minimum of /27 but /24 is recommended) for the ASE Deployment.  Microsoft.Web/hostingEnvironment Subnet Delegation is required before deployment.
 
-If a NSG is on the ASE Subnet, the following Inbound rules need to be allowed
+If a NSG is on the ASE Subnet, the following Inbound rules need to be allowed for ASEv2
 Use | From | To
 ----|------|----
 Management | App Service management addresses | ASE Subnet
@@ -15,7 +15,9 @@ Allow Azure load balancer inbound | Azure Load Balancer | ASE subnet Port 16001/
 param | type | notes
 ------|------|------
 name | string | Name of the App Service Environment
-kind | string | Currently only allowed ASEV2
+kind | string | Currently only allowed ASEV2 and ASEV3
+zoneRedundant | bool | Deploy accross availability zones.  Only valid for ASEV3
+dedicatedHostCount | int | Run in Dedicated Hosts. Only valid for ASEV3
 location | string | Azure Region
 tags | object | Azure Resource Tags
 virtualNetworkName | string | Name of target VNET
