@@ -39,6 +39,10 @@ profileContainerPath | string | UNC Path to profiles share for FSLogix target. M
 artifcatLocation | string | Location of the DSC Script in a .zip format.  Default: 'https://github.com/lukearp/Azure-IAC-Bicep/releases/download/DSC/WVD-DSC.zip'
 userManagedIdentityId | string | Resource ID of Managed Identity that has rights to restart the Azure VM.  Restart-AzVM is the command this account will be used for.
 
+Experimental
+param | type | notes
+enablePatchingByPlatform | bool | Default is false.  Currently your subscription must be enrolled in Flexible VMSS to work.  This will allow you session hosts to be patched by platform.  Also, currently Windows 10 is not supported by Platform patching.  You would have to use a Windows server image.  Default value is false.  
+
 
 # Sample Module
 
