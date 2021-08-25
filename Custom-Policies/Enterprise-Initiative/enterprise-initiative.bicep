@@ -3,6 +3,7 @@ targetScope = 'subscription'
 var requiredTagsOnRgs = [
   'Environment'
   'CostCode'
+  'Backup'
 ]
 
 module customPolicyDefinitions '../../Modules/Microsoft.Authorization/policyDefinitions/policyDefinitions-sub-array.bicep' = {
@@ -103,6 +104,11 @@ var policyDefinitionGroups = [
     displayName: 'Resource Level Restrictions'
     category: 'Resource'
   }
+  {
+    name: 'Recovery'
+    displayName: 'Recovery Services'
+    category: 'BCDR'
+  }
 ]
 
 var defaultLocations = [
@@ -201,6 +207,46 @@ var staticPolicyDefs = [
       }
     }
   }
+  {//Primary Region Backup
+    policyDefinitionId: '/providers/Microsoft.Authorization/policyDefinitions/09ce66bc-1220-4153-8104-e3f51c936913'
+    groupNames: [
+      'Recovery'
+    ]
+    parameters: {
+      vaultLocation: {
+        value: '[parameters(\'primaryRegion\')]'
+      }
+      backupPolicyId: {
+        value: '[parameters(\'backupPolicyId\')]'
+      }
+      exclusionTagName: {
+        value: 'Backup'
+      }
+      exclusionTagValue: {
+        value: '[array(\'no\')]'
+      }
+      effect: {
+        value: '[parameters(\'backupPolicyEffect\')]'
+      }
+    }
+  }
+  /*{//DR Configuration
+    policyDefinitionId: '/providers/Microsoft.Authorization/policyDefinitions/ac34a73f-9fa5-4067-9247-a3ecae514468'
+    groupNames: [
+      'Recovery'
+    ]
+    parameters: {
+      sourceRegion: {
+        value: '[parameters(\'primaryRegion\')]'
+      }
+      targetRegion: {
+        value: '[parameters(\'secondaryRegion\')]'
+      }
+      targetResourceGroupId: {
+        '[]'
+      }
+    }
+  }*/
 ]
 
 var policyDefinitions = concat(taggingPoliciesRg,taggingInheritencePolicy,staticPolicyDefs,customPolicies)
@@ -236,6 +282,43 @@ module enterpriseInitiative '../../Modules/Microsoft.Authorization/policySetDefi
           strongType: 'location'
         }
         defaultValue: defaultLocations
+      }
+      primaryRegion: {
+        type: 'String'
+        metadata: {
+          displayName: 'Primary Azure Region'
+          description: 'The primary deployment region for your Azure DataCenter'
+          strongType: 'location'
+        }
+        defaultValue: 'eastus'
+      }
+      backupPolicyEffect: {
+        type: 'String'
+        allowedValues: [
+          'disabled'
+          'deployIfNotExists'
+        ]
+        metadata: {
+          displayName: 'Enable VM Backup'
+          description: 'Enables VM Backup on VMs'
+        }
+        defaultValue: 'disabled'
+      }
+      backupPolicyId: {
+        type: 'String'
+        defaultValue: ''
+        metadata: {
+          displayName: 'Backup Policy ID'
+        }
+      }
+      secondaryRegion: {
+        type: 'String'
+        metadata: {
+          displayName: 'Secondary Azure Region'
+          description: 'The secondary deployment region for your Azure DataCenter. Used for DR'
+          strongType: 'location'
+        }
+        defaultValue: 'westus'
       }
       hubVNETId: {
         type: 'String'
