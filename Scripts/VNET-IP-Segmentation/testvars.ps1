@@ -49,3 +49,7 @@ $subnets += New-Object -TypeName psobject -Property @{
 
 $cloudAddressSpace = "10.128.0.0/17"
 $cloudName = "LukeCommercial"
+
+$vnetAddressSpaces = @()
+$vnetAddressSpaces += "10.20.0.0/25"
+$vnetAddressSpaces += "10.21.0.0/16"
