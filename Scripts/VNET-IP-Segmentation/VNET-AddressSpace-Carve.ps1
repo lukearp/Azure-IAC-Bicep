@@ -21,7 +21,7 @@ foreach ($subnet in $subnets) {
     if($subnet.cider -eq $true) {
         for ($i = 0; $i -lt $vnetAddressSpaces.count; $i++) {
             try {
-                $subnetReserve = Get-SCSubnet -Context $($subscription + "-" + $i) -ReserveCIDR $subnet.addressSize
+                $subnetReserve = Get-SCSubnet -Context $($subscription + "-" + $i) -ReserveCIDR $subnet.addressSize -ErrorAction SilentlyContinue
                 $subnet | Add-Member -Name AddressSpaceReserved -Value $($subnetReserve.NetworkIPAddress.ToString() + "/" + $subnetReserve.CIDR) -MemberType NoteProperty
                 break;
             } catch {
@@ -32,7 +32,7 @@ foreach ($subnet in $subnets) {
     else {
         for ($i = 0; $i -lt $vnetAddressSpaces.count; $i++) {
             try {
-                $subnetReserve = Get-SCSubnet -Context $($subscription + "-" + $i) -ReserveCount $subnet.addressSize
+                $subnetReserve = Get-SCSubnet -Context $($subscription + "-" + $i) -ReserveCount $subnet.addressSize -ErrorAction SilentlyContinue
                 $subnet | Add-Member -Name AddressSpaceReserved -Value $($subnetReserve.NetworkIPAddress.ToString() + "/" + $subnetReserve.CIDR) -MemberType NoteProperty
                 break;
             } catch {
