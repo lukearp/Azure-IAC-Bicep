@@ -14,6 +14,8 @@ catch {
 }
 $subnets = ConvertFrom-Json $subnets
 $vnetAddressSpaces = ConvertFrom-Json $vnetAddressSpaces
+Write-Output $subnets
+Write-Output $vnetAddressSpaces
 if($vnetAddressSpaces.count -gt 1) {
     for ($i = 0; $i -lt $vnetAddressSpaces.count; $i++)
     {
@@ -48,5 +50,5 @@ foreach ($subnet in $subnets) {
     }
 }
 
-$DeploymentScriptOutputs = @{};
-$DeploymentScriptOutputs['output'] = $subnets
+#$DeploymentScriptOutputs = @{};
+#$DeploymentScriptOutputs['output'] = $subnets
