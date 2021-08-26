@@ -8,7 +8,7 @@ param (
 try {
     Install-Module -Name PSSubnetCarver -Force -Confirm:$false
     Import-Module -Name PSSubnetCarver
-    $subnets = ConvertFrom-Json $subnets
+    ConvertFrom-Json $subnets
 } 
 catch {
     
