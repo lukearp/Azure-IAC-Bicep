@@ -6,7 +6,7 @@ param (
 
 #Check for PS Subnet Carver Module
 try {
-    #Install-Module -Name PSSubnetCarver -Force -Confirm:$false
+    Install-Module -Name PSSubnetCarver -Force -Confirm:$false
     Import-Module -Name PSSubnetCarver    
 } 
 catch {
