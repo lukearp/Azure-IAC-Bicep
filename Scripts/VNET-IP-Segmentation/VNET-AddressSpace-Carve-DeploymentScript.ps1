@@ -6,7 +6,7 @@ param (
 
 #Check for PS Subnet Carver Module
 try {
-    Install-Module -Name PSSubnetCarver -Force -Confirm:$false
+    #Install-Module -Name PSSubnetCarver -Force -Confirm:$false
     Import-Module -Name PSSubnetCarver    
 } 
 catch {
@@ -14,14 +14,14 @@ catch {
 }
 $subnets = ConvertFrom-Json $subnets
 $vnetAddressSpaces = ConvertFrom-Json $vnetAddressSpaces
-
-for ($i = 0; $i -lt $vnetAddressSpaces.count; $i++)
-{
-    New-SCContext -Name $($subscription + "-" + $i) -RootAddressSpace $vnetAddressSpaces[$i]
+if($vnetAddressSpaces.count -gt 1) {
+    for ($i = 0; $i -lt $vnetAddressSpaces.count; $i++)
+    {
+        New-SCContext -Name $($subscription + "-" + $i) -RootAddressSpace $vnetAddressSpaces[$i]
+    }
+} else {
+    New-SCContext -Name $($subscription + "-0") -RootAddressSpace $vnetAddressSpaces
 }
-
-$subnets = ConvertFrom-Json $subnets
-$vnetAddressSpaces = ConvertFrom-Json $vnetAddressSpaces
 
 foreach ($subnet in $subnets) {
     if($subnet.cider -eq $true) {
