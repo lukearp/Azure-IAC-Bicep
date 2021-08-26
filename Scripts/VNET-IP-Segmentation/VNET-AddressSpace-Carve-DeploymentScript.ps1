@@ -8,11 +8,12 @@ param (
 try {
     #Install-Module -Name PSSubnetCarver -Force -Confirm:$false
     #Import-Module -Name PSSubnetCarver
-    ConvertFrom-Json $subnets
+    
 } 
 catch {
     
 }
+ConvertFrom-Json $subnets.Replace("\\","`"")
 
 <#
 for ($i = 0; $i -lt $vnetAddressSpaces.count; $i++)
