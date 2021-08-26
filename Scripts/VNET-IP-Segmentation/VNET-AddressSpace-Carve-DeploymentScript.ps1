@@ -16,39 +16,59 @@ $subnets = ConvertFrom-Json $subnets
 $vnetAddressSpaces = ConvertFrom-Json $vnetAddressSpaces
 Write-Output $subnets
 Write-Output $vnetAddressSpaces
-if($vnetAddressSpaces.count -gt 1) {
+if($vnetAddressSpaces.GetType().BaseType.Name -eq "Array") {
+    Write-Output "Multiple Address Spaces"
     for ($i = 0; $i -lt $vnetAddressSpaces.count; $i++)
     {
         New-SCContext -Name $($subscription + "-" + $i) -RootAddressSpace $vnetAddressSpaces[$i]
     }
 } else {
+    Write-Output "Single Address Space"
     New-SCContext -Name $($subscription + "-0") -RootAddressSpace $vnetAddressSpaces
 }
 
 foreach ($subnet in $subnets) {
     if($subnet.cider -eq $true) {
-        for ($i = 0; $i -lt $vnetAddressSpaces.count; $i++) {
+        if ($vnetAddressSpaces.GetType().BaseType.Name -eq "Array") {
+            for ($i = 0; $i -lt $vnetAddressSpaces.count; $i++) {
+                try {
+                    $subnetReserve = Get-SCSubnet -Context $($subscription + "-" + $i) -ReserveCIDR $subnet.addressSize -ErrorAction SilentlyContinue
+                    $subnet | Add-Member -Name AddressSpaceReserved -Value $($subnetReserve.NetworkIPAddress.ToString() + "/" + $subnetReserve.CIDR) -MemberType NoteProperty
+                    break;
+                } catch {
+                    
+                }            
+            }    
+        } else {
             try {
-                $subnetReserve = Get-SCSubnet -Context $($subscription + "-" + $i) -ReserveCIDR $subnet.addressSize -ErrorAction SilentlyContinue
+                $subnetReserve = Get-SCSubnet -Context $($subscription + "-0") -ReserveCIDR $subnet.addressSize -ErrorAction SilentlyContinue
                 $subnet | Add-Member -Name AddressSpaceReserved -Value $($subnetReserve.NetworkIPAddress.ToString() + "/" + $subnetReserve.CIDR) -MemberType NoteProperty
-                break;
             } catch {
                 
-            }            
-        }        
+            }   
+        }           
     }
     else {
-        for ($i = 0; $i -lt $vnetAddressSpaces.count; $i++) {
+        if ($vnetAddressSpaces.GetType().BaseType.Name -eq "Array") {
+            for ($i = 0; $i -lt $vnetAddressSpaces.count; $i++) {
+                try {
+                    $subnetReserve = Get-SCSubnet -Context $($subscription + "-" + $i) -ReserveCount $subnet.addressSize -ErrorAction SilentlyContinue
+                    $subnet | Add-Member -Name AddressSpaceReserved -Value $($subnetReserve.NetworkIPAddress.ToString() + "/" + $subnetReserve.CIDR) -MemberType NoteProperty
+                    break;
+                } catch {
+                    
+                }            
+            }
+        } else {
             try {
-                $subnetReserve = Get-SCSubnet -Context $($subscription + "-" + $i) -ReserveCount $subnet.addressSize -ErrorAction SilentlyContinue
+                $subnetReserve = Get-SCSubnet -Context $($subscription + "-0") -ReserveCount $subnet.addressSize -ErrorAction SilentlyContinue
                 $subnet | Add-Member -Name AddressSpaceReserved -Value $($subnetReserve.NetworkIPAddress.ToString() + "/" + $subnetReserve.CIDR) -MemberType NoteProperty
-                break;
             } catch {
                 
-            }            
-        }
+            }  
+        }       
     }
 }
 
-#$DeploymentScriptOutputs = @{};
-#$DeploymentScriptOutputs['output'] = $subnets
+$DeploymentScriptOutputs = @{};
+$DeploymentScriptOutputs['output'] = ConvertTo-Json $subnets
