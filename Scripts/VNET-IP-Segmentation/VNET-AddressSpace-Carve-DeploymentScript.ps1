@@ -13,10 +13,9 @@ try {
 catch {
     
 }
-$subnets
-ConvertFrom-Json $subnets
+$subnets = ConvertFrom-Json $subnets
+$vnetAddressSpaces = ConvertFrom-Json $vnetAddressSpaces
 
-<#
 for ($i = 0; $i -lt $vnetAddressSpaces.count; $i++)
 {
     New-SCContext -Name $($subscription + "-" + $i) -RootAddressSpace $vnetAddressSpaces[$i]
@@ -49,6 +48,6 @@ foreach ($subnet in $subnets) {
         }
     }
 }
-#>
+
 $DeploymentScriptOutputs = @{};
 $DeploymentScriptOutputs['output'] = $subnets
