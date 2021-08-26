@@ -13,7 +13,8 @@ try {
 catch {
     
 }
-ConvertFrom-Json $subnets.Replace("\\","`"")
+$subnets
+ConvertFrom-Json $subnets
 
 <#
 for ($i = 0; $i -lt $vnetAddressSpaces.count; $i++)
