@@ -7,9 +7,7 @@ param (
 
 #Install-Module -Name PSSubnetCarver -Force -Confirm:$false
 #Import-Module -Name PSSubnetCarver 
-Invoke-WebRequest -Uri "https://github.com/lukearp/Azure-IAC-Bicep/releases/download/DSC/PSSubnetCarver.1.2.0.zip" -OutFile "PSSubnetCarver.zip"
-Expand-Archive .\PSSubnetCarver.zip -DestinationPath .\PSSubnetCarver
-Import-Module .\PSSubnetCarver\
+.\Setup-PSSubnetCarver.ps1 -uri $moduleUrl
 $subnets = ConvertFrom-Json $subnets
 $vnetAddressSpaces = ConvertFrom-Json $vnetAddressSpaces   
 

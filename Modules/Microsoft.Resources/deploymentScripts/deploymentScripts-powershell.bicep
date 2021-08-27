@@ -9,6 +9,8 @@ param arguments string
   'OnExpiration'
 ])
 param cleanupPreference string = 'Always'
+param azPowershellVersion string = '5.9'
+param supportingScriptUris array = []
 param tags object = {}
 
 resource deploymentScript 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
@@ -24,9 +26,10 @@ resource deploymentScript 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
   properties: {
     arguments: arguments
     primaryScriptUri: pscriptUri 
-    azPowerShellVersion: '5.9'
+    azPowerShellVersion: azPowershellVersion
     retentionInterval: 'PT1H' 
-    cleanupPreference: cleanupPreference     
+    cleanupPreference: cleanupPreference 
+    supportingScriptUris: supportingScriptUris     
   }
   tags: tags 
 }
