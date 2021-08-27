@@ -3,6 +3,12 @@ param location string = resourceGroup().location
 param managedIdentityId string
 param pscriptUri string
 param arguments string
+@allowed([
+  'Always'
+  'OnSuccess'
+  'OnExpiration'
+])
+param cleanupPreference string = 'Always'
 param tags object = {}
 
 resource deploymentScript 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
@@ -19,7 +25,8 @@ resource deploymentScript 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
     arguments: arguments
     primaryScriptUri: pscriptUri 
     azPowerShellVersion: '5.9'
-    retentionInterval: 'PT1H'    
+    retentionInterval: 'PT1H' 
+    cleanupPreference: cleanupPreference     
   }
   tags: tags 
 }
