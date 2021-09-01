@@ -23,7 +23,7 @@ param emailAddress string
 param publisherName string
 param subnetId string
 
-var properties = virtualNetworkType == 'Internal' ? {
+var properties = virtualNetworkType != 'None' ? {
   virtualNetworkType: virtualNetworkType
   additionalLocations: additionalLocations
   certificates: certificates
