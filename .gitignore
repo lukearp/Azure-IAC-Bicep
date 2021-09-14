@@ -1,6 +1,3 @@
-AzureCloud/
-    *.json
-Standard-Deployments/
-    *.json
+*.json
 Test-Functions/*
 *.zip
