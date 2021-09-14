@@ -7,7 +7,7 @@ param subnets array
 param userManagedIdentityId string
 
 module deploymentScript '../../Modules/Microsoft.Resources/deploymentScripts/deploymentScripts-powershell.bicep' = {
-  name: 'IPCarveTest'
+  name: '${subscriptionName}-IPCarveTest'
   params: {
     arguments: '-subscription \\"${subscriptionName}\\" -subnets \\"${replace(string(subnets),'"','`\\"')}\\" -vnetAddressSpaces \\"${replace(string(vnetAddressSpaces),'"','`\\"')}\\"'
     location: 'eastus'
