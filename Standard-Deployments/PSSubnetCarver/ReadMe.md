@@ -63,7 +63,7 @@ module deploymentScript '../Standard-Deployments/PSSubnetCarver/psSubnetCarver.b
   } 
 }
 
-output key array = deploymentScript.outputs.carvedSubnets 
+output subnets array = deploymentScript.outputs.carvedSubnets 
 ```
 
 ## Module Output
@@ -78,7 +78,7 @@ Parameters              :
 Outputs                 :
                           Name             Type                       Value
                           ===============  =========================  ==========
-                          key              Array                      [
+                          subnets              Array                      [
                             {
                               "cidr": true,
                               "addressSize": 24,
