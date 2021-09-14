@@ -1,45 +1,81 @@
 param (
     $subscription,
     $subnets,
-    $vnetAddressSpaces
+    $vnetAddressSpaces,
+    $moduleUrl
 )
 
-#Check for PS Subnet Carver Module
-try {
-    Import-Module -Name PSSubnetCarver
-} 
-catch {
-    Install-Module -Name PSSubnetCarver
-    Import-Module -Name PSSubnetCarver
-}
-for ($i = 0; $i -lt $vnetAddressSpaces.count; $i++)
-{
-    New-SCContext -Name $($subscription + "-" + $i) -RootAddressSpace $vnetAddressSpaces[$i]
+Install-Module -Name PSSubnetCarver.Core -Force -Confirm:$false
+Import-Module -Name PSSubnetCarver.Core 
+
+$subnets = ConvertFrom-Json $subnets
+$vnetAddressSpaces = ConvertFrom-Json $vnetAddressSpaces   
+
+Write-Output $subnets
+Write-Output $vnetAddressSpaces
+if($vnetAddressSpaces.GetType().BaseType.Name -eq "Array") {
+    Write-Output "Multiple Address Spaces"
+    for ($i = 0; $i -lt $vnetAddressSpaces.count; $i++)
+    {
+        New-SCContext -Name $($subscription + "-" + $i) -RootAddressSpace $vnetAddressSpaces[$i]
+    }
+} else {
+    Write-Output "Single Address Space"
+    New-SCContext -Name $($subscription + "-0") -RootAddressSpace $vnetAddressSpaces
 }
 
 foreach ($subnet in $subnets) {
-    if($subnet.cider -eq $true) {
-        for ($i = 0; $i -lt $vnetAddressSpaces.count; $i++) {
+    if($subnet.cidr -eq $true) {
+        Write-Output "$($subnet.name) is using Cidr"
+        if ($vnetAddressSpaces.GetType().BaseType.Name -eq "Array") {
+            for ($i = 0; $i -lt $vnetAddressSpaces.count; $i++) {
+                try {
+                    $subnetReserve = Get-SCSubnet -Context $($subscription + "-" + $i) -ReserveCIDR $subnet.addressSize -ErrorAction SilentlyContinue
+                    Write-Output "$($subnet.name) has $($subnetReserve.NetworkIPAddress.ToString())/$( $subnetReserve.CIDR)"
+                    $subnet | Add-Member -Name AddressSpaceReserved -Value $($subnetReserve.NetworkIPAddress.ToString() + "/" + $subnetReserve.CIDR) -MemberType NoteProperty
+                    Write-Output "Address Space Added to Object"
+                    break;
+                } catch {
+                    
+                }            
+            }    
+        } else {
             try {
-                $subnetReserve = Get-SCSubnet -Context $($subscription + "-" + $i) -ReserveCIDR $subnet.addressSize -ErrorAction SilentlyContinue
+                $subnetReserve = Get-SCSubnet -Context $($subscription + "-0") -ReserveCIDR $subnet.addressSize -ErrorAction SilentlyContinue
+                Write-Output "$($subnet.name) has $($subnetReserve.NetworkIPAddress.ToString())/$( $subnetReserve.CIDR)"
                 $subnet | Add-Member -Name AddressSpaceReserved -Value $($subnetReserve.NetworkIPAddress.ToString() + "/" + $subnetReserve.CIDR) -MemberType NoteProperty
-                break;
+                Write-Output "Address Space Added to Object"
             } catch {
                 
-            }            
-        }        
+            }   
+        }           
     }
     else {
-        for ($i = 0; $i -lt $vnetAddressSpaces.count; $i++) {
+        Write-Output "$($subnet.name) is using Count"
+        if ($vnetAddressSpaces.GetType().BaseType.Name -eq "Array") {
+            for ($i = 0; $i -lt $vnetAddressSpaces.count; $i++) {
+                try {
+                    $subnetReserve = Get-SCSubnet -Context $($subscription + "-" + $i) -ReserveCount $subnet.addressSize -ErrorAction SilentlyContinue
+                    Write-Output "$($subnet.name) has $($subnetReserve.NetworkIPAddress.ToString())/$( $subnetReserve.CIDR)"
+                    $subnet | Add-Member -Name AddressSpaceReserved -Value $($subnetReserve.NetworkIPAddress.ToString() + "/" + $subnetReserve.CIDR) -MemberType NoteProperty
+                    Write-Output "Address Space Added to Object"
+                    break;
+                } catch {
+                    
+                }            
+            }
+        } else {
             try {
-                $subnetReserve = Get-SCSubnet -Context $($subscription + "-" + $i) -ReserveCount $subnet.addressSize -ErrorAction SilentlyContinue
+                $subnetReserve = Get-SCSubnet -Context $($subscription + "-0") -ReserveCount $subnet.addressSize -ErrorAction SilentlyContinue
+                Write-Output "$($subnet.name) has $($subnetReserve.NetworkIPAddress.ToString())/$( $subnetReserve.CIDR)"
                 $subnet | Add-Member -Name AddressSpaceReserved -Value $($subnetReserve.NetworkIPAddress.ToString() + "/" + $subnetReserve.CIDR) -MemberType NoteProperty
-                break;
+                Write-Output "Address Space Added to Object"
             } catch {
                 
-            }            
-        }
+            }  
+        }       
     }
 }
+
 $DeploymentScriptOutputs = @{};
-$DeploymentScriptOutputs['output'] = $subnets
+$DeploymentScriptOutputs['subnetObjs'] = $subnets
