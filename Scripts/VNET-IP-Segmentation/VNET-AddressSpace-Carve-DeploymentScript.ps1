@@ -5,15 +5,15 @@ param (
     $moduleUrl
 )
 
-#Install-Module -Name PSSubnetCarver -Force -Confirm:$false
-#Import-Module -Name PSSubnetCarver 
-.\Setup-PSSubnetCarver.ps1 -uri $moduleUrl
+Install-Module -Name PSSubnetCarver.Core -Force -Confirm:$false
+Import-Module -Name PSSubnetCarver.Core 
+
 $subnets = ConvertFrom-Json $subnets
 $vnetAddressSpaces = ConvertFrom-Json $vnetAddressSpaces   
 
 Write-Output $subnets
 Write-Output $vnetAddressSpaces
-<#if($vnetAddressSpaces.GetType().BaseType.Name -eq "Array") {
+if($vnetAddressSpaces.GetType().BaseType.Name -eq "Array") {
     Write-Output "Multiple Address Spaces"
     for ($i = 0; $i -lt $vnetAddressSpaces.count; $i++)
     {
@@ -22,13 +22,8 @@ Write-Output $vnetAddressSpaces
 } else {
     Write-Output "Single Address Space"
     New-SCContext -Name $($subscription + "-0") -RootAddressSpace $vnetAddressSpaces
-}#>
-New-SCContext -Name "MyContext" -RootAddressSpace "10.20.0.0/17"
-Get-SCContext
-New-SCContext -Name "Again" -RootAddressSpace $vnetAddressSpaces
-Get-SCContext
-New-SCContext -Name $subscription -RootAddressSpace "10.55.0.0/20"
-<#
+}
+
 foreach ($subnet in $subnets) {
     if($subnet.cidr -eq $true) {
         Write-Output "$($subnet.name) is using Cidr"
@@ -84,4 +79,3 @@ foreach ($subnet in $subnets) {
 
 $DeploymentScriptOutputs = @{};
 $DeploymentScriptOutputs['output'] = ConvertTo-Json $subnets
-#>
