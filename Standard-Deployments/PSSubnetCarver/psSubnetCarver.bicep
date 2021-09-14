@@ -13,7 +13,7 @@ module deploymentScript '../../Modules/Microsoft.Resources/deploymentScripts/dep
     location: 'eastus'
     managedIdentityId: userManagedIdentityId
     name: '${subscriptionName}-${split(userManagedIdentityId,'/')[8]}'
-    pscriptUri: 'https://raw.githubusercontent.com/lukearp/Azure-IAC-Bicep/Scripts/VNET-IP-Segmentation/VNET-AddressSpace-Carve-DeploymentScript.ps1'   
+    pscriptUri: 'https://raw.githubusercontent.com/lukearp/Azure-IAC-Bicep/master/Scripts/VNET-IP-Segmentation/VNET-AddressSpace-Carve-DeploymentScript.ps1'   
     azPowershellVersion: '5.9' 
     supportingScriptUris: []      
   } 
