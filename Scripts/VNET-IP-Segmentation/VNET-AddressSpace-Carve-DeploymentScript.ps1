@@ -78,4 +78,4 @@ foreach ($subnet in $subnets) {
 }
 
 $DeploymentScriptOutputs = @{};
-$DeploymentScriptOutputs['output'] = ConvertTo-Json $subnets
+$DeploymentScriptOutputs['subnetObjs'] = $subnets
