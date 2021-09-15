@@ -28,6 +28,10 @@ foreach($line in $armTemplate)
         {
             $beforeNoQuotes = "`'`$schema`'"
         }
+        if($beforeNoQuotes -match '(\w)(\s)(\w*)$')
+        {
+            $beforeNoQuotes = "`'" + $($beforeNoQuotes -replace '^\s*','') + "`'"
+        }
     }
     if($line.Contains("`": "))
     {

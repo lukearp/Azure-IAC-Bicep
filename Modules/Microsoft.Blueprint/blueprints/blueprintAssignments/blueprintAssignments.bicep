@@ -2,7 +2,6 @@ param name string
 param location string
 param description string
 @allowed([
-  'None'
   'SystemAssigned'
   'UserAssigned'
 ])
@@ -23,3 +22,27 @@ param excludedActions array = []
 param scope string
 
 var blueprintAssignId = '${blueprintId}/versions/${blueprintVersion}'
+var identity = identityType == 'SystemAssigned' ? {
+  type: identityType
+}:{
+  type: identityType 
+  userAssignedIdentities: {
+    '${userAssignedIdentityId}': {}  
+  }
+} 
+resource assignment 'Microsoft.Blueprint/blueprintAssignments@2018-11-01-preview' = {
+  name: name
+  identity: identity
+  location: location 
+  properties: {
+    locks: {
+      excludedActions: excludedActions
+      excludedPrincipals: excludedPrincipals 
+      mode: lockMode 
+    } 
+    blueprintId: blueprintAssignId 
+    scope: scope
+    parameters: parameters
+    resourceGroups: {}    
+  } 
+}
