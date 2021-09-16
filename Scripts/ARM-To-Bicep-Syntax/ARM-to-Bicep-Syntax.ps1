@@ -1,5 +1,8 @@
 param (
+    [string]
     $path,
+    [ValidateSet("subscription","managementGroup")]
+    [string]
     $scope
 )
 $armTemplate = Get-Content -Path $path
