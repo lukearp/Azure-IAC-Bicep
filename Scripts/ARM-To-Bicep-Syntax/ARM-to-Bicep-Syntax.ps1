@@ -44,7 +44,7 @@ foreach($line in $armTemplate)
 
 $bicepModule = @'
 targetScope = '{1}'
-var template = {0}
+var template = json(string({0}))
 output templateObj object = template
 '@
 
