@@ -5,7 +5,7 @@ param (
     $moduleUrl
 )
 
-Install-Module -Name PSSubnetCarver.Core -Force -Confirm:$false
+Install-Module -Name PSSubnetCarver.Core -Force -Confirm:$false -MinimumVersion 1.0.2 -MaximumVersion 1.0.2
 Import-Module -Name PSSubnetCarver.Core 
 
 $subnets = ConvertFrom-Json $subnets
