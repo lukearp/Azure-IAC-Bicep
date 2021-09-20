@@ -5,7 +5,7 @@ param (
     $moduleUrl
 )
 
-Install-Module -Name PSSubnetCarver.Core -Force -Confirm:$false -MinimumVersion 1.0.1 -MaximumVersion 1.0.1
+Install-Module -Name PSSubnetCarver.Core -Force -Confirm:$false #-MinimumVersion 1.0.1 -MaximumVersion 1.0.1
 Import-Module -Name PSSubnetCarver.Core 
 
 $subnets = ConvertFrom-Json $subnets
@@ -17,11 +17,11 @@ if($vnetAddressSpaces.GetType().BaseType.Name -eq "Array") {
     Write-Output "Multiple Address Spaces"
     for ($i = 0; $i -lt $vnetAddressSpaces.count; $i++)
     {
-        New-SCContext -Name $($subscription + "-" + $i) -RootAddressSpace $vnetAddressSpaces[$i]
+        Set-SCContext -Name $($subscription + "-" + $i) -RootAddressSpace $vnetAddressSpaces[$i]
     }
 } else {
     Write-Output "Single Address Space"
-    New-SCContext -Name $($subscription + "-0") -RootAddressSpace $vnetAddressSpaces
+    Set-SCContext -Name $($subscription + "-0") -RootAddressSpace $vnetAddressSpaces
 }
 
 foreach ($subnet in $subnets) {
