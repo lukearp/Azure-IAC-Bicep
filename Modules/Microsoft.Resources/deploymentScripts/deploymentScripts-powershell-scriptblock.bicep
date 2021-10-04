@@ -1,7 +1,7 @@
 param name string
 param location string = resourceGroup().location
 param managedIdentityId string
-param pscriptUri string
+param psScriptContent string
 param arguments string
 @allowed([
   'Always'
@@ -25,7 +25,7 @@ resource deploymentScript 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
   }
   properties: {
     arguments: arguments
-    scriptContent: '$PSVersionTable' 
+    scriptContent: psScriptContent 
     azPowerShellVersion: azPowershellVersion
     retentionInterval: 'PT1H' 
     cleanupPreference: cleanupPreference 
