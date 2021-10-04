@@ -5,6 +5,39 @@ param description string
 param parameters object = {}
 param resourceGroups object = {}
 param versions array = []
+/*
+Full Artificat objects
+Policy:
+  kind: 'policyAssignment'
+  properties: {
+    dependsOn: [ 'string' ]
+    description: 'string'
+    displayName: 'string'
+    parameters: {}
+    policyDefinitionId: 'string'
+    resourceGroup: 'string'
+  }
+Role Assignment:
+  kind: 'roleAssignment'
+  properties: {
+    dependsOn: [ 'string' ]
+    description: 'string'
+    displayName: 'string'
+    principalIds: any()
+    resourceGroup: 'string'
+    roleDefinitionId: 'string'
+  }
+Template:
+  kind: 'template'
+  properties: {
+    dependsOn: [ 'string' ]
+    description: 'string'
+    displayName: 'string'
+    parameters: {}
+    resourceGroup: 'string'
+    template: any()
+  }
+*/
 param templateArtifacts array
 
 resource blueprintDef 'Microsoft.Blueprint/blueprints@2018-11-01-preview' = {
