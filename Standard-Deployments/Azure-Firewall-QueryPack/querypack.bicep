@@ -12,7 +12,7 @@ resource querypacks_FrontdoorAccessLog 'Microsoft.OperationalInsights/querypacks
   name: '1f83b5fa-a843-408a-a4fa-095a35c926da'
   properties: {
     displayName: 'FrontdoorAccessLog'
-    body: 'AzureDiagnostics\r\n| where Category == "FrontdoorAccessLog"\r\n| project Method=httpMethod_s, RequestUri=requestUri_s, ClientIp=clientIp_s, Response=httpStatusCode_s,RoutingRule=routingRuleName_s,Backend=backendHostname_s, TimeGenerated\r\n| sort by TimeGenerated desc '
+    body: 'AzureDiagnostics\r\n| where Category == "FrontdoorAccessLog"\r\n| project Method=httpMethod_s, RequestUri=requestUri_s, ClientIp=clientIP_s, Response=httpStatusCode_s,RoutingRule=routingRuleName_s,Backend=backendHostname_s, TimeGenerated\r\n| sort by TimeGenerated desc '
     related: {
       categories: []
       resourceTypes: [
@@ -30,7 +30,7 @@ resource querypacks_FrontdoorWebApplicationFirewallLog 'Microsoft.OperationalIns
   name: '55f6e3eb-6f7d-4b6c-bc56-854791e1fdc4'
   properties: {
     displayName: 'FrontdoorWebApplicationFirewallLog'
-    body: 'AzureDiagnostics\r\n| where Category == "FrontdoorWebApplicationFirewallLog"\r\n| project TimeGenerated, RequestUri=requestUri_s,ClientIP=clientIp_s,Rule=ruleName_s,Policy=PolicyName_s,Action=action_s,PolicyMode=policyMode_s\r\n| sort by TimeGenerated desc '
+    body: 'AzureDiagnostics\r\n| where Category == "FrontdoorWebApplicationFirewallLog"\r\n| project TimeGenerated, RequestUri=requestUri_s,ClientIP=clientIP_s,Rule=ruleName_s,Policy=policy_s,Action=action_s,PolicyMode=policyMode_s\r\n| sort by TimeGenerated desc '
     related: {
       categories: []
       resourceTypes: [
