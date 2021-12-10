@@ -15,7 +15,7 @@ subnetResourceId | string | Subnetnet resourceId to deploy the PrivateLink Endpo
 # Sample Module
 
 ```Bicep
-module pLink './privateEndpoints-remoteService.bicep' = {
+module pLink './privateEndpoints.bicep' = {
     name: 'Deploy-Endpoint'
     scope: resourceGroup('myRg')
     properties: {
