@@ -1,3 +1,4 @@
+targetScope = 'subscription'
 param offerName string
 param description string
 param managedByTenantId string
