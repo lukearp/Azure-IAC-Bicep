@@ -1,6 +1,6 @@
 # Sample Module
 
-Script to make the Spoke-Base-Networking-Deploy Standard Deploy a Blueprint Definition
+Script to make the [Spoke-Base-Networking-Deploy](https://github.com/lukearp/Azure-IAC-Bicep/tree/master/Standard-Deployments/Spoke-Base-Networking-Deploy) Standard Deploy a Blueprint Definition
 
 ```
 az bicep build --file ../../Starndard-Deployments/Spoke-Base-Networking-Deploy/Spoke-Blueprint.bicep
