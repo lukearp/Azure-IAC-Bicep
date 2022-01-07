@@ -33,3 +33,28 @@ gatewayRtId | string | Resource ID of the Route Table on the Gateway Subnet to e
 
 # Sample Module
 
+```bicep
+module Spoke 'Spoke-Base-Networking-Deploy/Spoke-Blueprint.bicep' = {
+    name: 'Spoke-Deploy'
+    scope: subscription()
+    params: {
+        vnetName: 'vnet'
+        resourceGroupName: 'spoke-rg'
+        projectTagValue: 'My Proj'
+        existingVnet: false
+        addressspaceOctet3int: 4
+        CIDR: '24'
+        dnsServers: ['10.10.10.10']
+        additionalSubnet: false
+        subnets: []
+        hubVnetId: 'HUBResourceID'
+        hubAddressSpace: '192.168.254.0/24'
+        location: 'eastus'
+        nvaIp: '192.168.254.4'
+        additionalAddressSpace: []
+        updateAddressSpace: false
+        userManagedIdentityId: 'managedidenityResourceId'
+        gatewayRtId: 'resourceID-GatewayRouteTable'
+    }
+}
+```
