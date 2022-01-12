@@ -2,7 +2,7 @@ targetScope = 'tenant'
 param displayName string
 param id string
 param parentId string = ''
-param subscriptions array
+param subscriptions array = []
 
 var details = parentId != '' ? {
   parent: {
@@ -11,10 +11,10 @@ var details = parentId != '' ? {
 } : {}
 
 resource managementGroup 'Microsoft.Management/managementGroups@2021-04-01' = {
-  name: id
+  name: id 
   properties: {
     displayName: displayName 
-    details: details
+    details: details 
   }  
 }
 
@@ -25,3 +25,5 @@ module childSubs 'subscriptions/subscriptions.bicep' = if(subscriptions != []) {
     subscriptions: subscriptions 
   }  
 }
+
+output id string = managementGroup.id
