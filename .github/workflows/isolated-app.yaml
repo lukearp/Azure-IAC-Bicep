@@ -28,4 +28,4 @@ jobs:
        with:
          inlineScript: |
            az account show
-           az deployment sub create --template-file Standard-Deployments/Three-Tier-App/three-tier-app.bicep --parameters '{ \"rgName\": { \"value\": \"${{ env.AZURE_RESOURCE_GROUP }}\" }, \"location\": { \"value\": \"${{ env.location }}\" } }' -l ${{ env.location }}
+           az deployment sub create --template-file Standard-Deployments/Three-Tier-App/three-tier-app.bicep -l ${{ env.location }} --parameters rgName=${{ env.AZURE_RESOURCE_GROUP }} location=${{ env.location }}
