@@ -19,6 +19,19 @@ resource nsgWeb 'Microsoft.Network/networkSecurityGroups@2021-05-01' = {
           sourcePortRange: '*'     
         } 
       }
+      {
+        name: 'Deny-All-Inbound'
+        properties: {
+          priority: 4096
+          direction: 'Inbound'
+          access: 'Deny'
+          protocol: '*'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+          destinationPortRange: '*'
+          sourcePortRange: '*'
+        }
+      }
     ] 
   }  
 }
@@ -41,6 +54,19 @@ resource nsgApp 'Microsoft.Network/networkSecurityGroups@2021-05-01' = {
           sourcePortRange: '*'       
         } 
       }
+      {
+        name: 'Deny-All-Inbound'
+        properties: {
+          priority: 4096
+          direction: 'Inbound'
+          access: 'Deny'
+          protocol: '*'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+          destinationPortRange: '*'
+          sourcePortRange: '*'
+        }
+      }
     ] 
   }  
 }
@@ -62,6 +88,19 @@ resource nsgDB 'Microsoft.Network/networkSecurityGroups@2021-05-01' = {
           destinationPortRange: '1433'  
           sourcePortRange: '*'      
         } 
+      }
+      {
+        name: 'Deny-All-Inbound'
+        properties: {
+          priority: 4096
+          direction: 'Inbound'
+          access: 'Deny'
+          protocol: '*'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+          destinationPortRange: '*'
+          sourcePortRange: '*'
+        }
       }
     ] 
   }  
