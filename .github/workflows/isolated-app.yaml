@@ -1,0 +1,33 @@
+name: Isolated-App
+
+on:
+  push:
+    branches:
+      - "Isolated-App"
+
+env:
+  location: 'eastus'
+  AZURE_RESOURCE_GROUP: 'isolated-app'
+
+jobs:
+  AzureBicepDeploy:
+    name: 'AzureBicepDeploy'
+    runs-on: ubuntu-latest
+ 
+    steps:
+    -  name: Checkout Code
+       uses: actions/checkout@v2
+
+    -  name: Azure Login
+       uses: azure/login@v1
+       with:
+         creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    -  name: Deploy template
+       uses: azure/CLI@v1
+       with:
+         inlineScript: |
+           az account show
+           az deployment sub create --template-file Standard-Deployments/Three-Tier-App/three-tier-app.bicep --parameters '{ \"rgName\": { \"value\": \"${{ env.AZURE_RESOURCE_GROUP }}\" }, \"location\": { \"value\": \"${{ env.location }}\" } }' -l env.location
+
+   
