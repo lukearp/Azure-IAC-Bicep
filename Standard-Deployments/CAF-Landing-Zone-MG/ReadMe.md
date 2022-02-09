@@ -12,6 +12,13 @@ platformMgName | string | The name of the Platform Management Group
 platformChildMgs | array | Array of Names of Child Management Groups under Platform
 landingZoneMgName | string | The name of the Landing Zone Management Group
 landingZoneChildMgs | array | Array of Names of Child Management Groups under Landing Zone
+existingSubscriptions | array | Array of objects to move existing Azure Subscriptions to a deployed Management Group
+
+Example of existingSubscriptions object:
+{
+    mg: 'Management Group Name'
+    id: 'Subscription ID'
+}
 
 # Sample Module
 
@@ -30,6 +37,12 @@ landingZoneChildMgs | array | Array of Names of Child Management Groups under La
          landingZoneChildMgs: [
              'Finance'
              'IT'
+         ]
+         existingSubscriptions: [
+            {
+                mg: 'Connectivity'
+                id: 'SUBID'
+            } 
          ] 
       }
   }

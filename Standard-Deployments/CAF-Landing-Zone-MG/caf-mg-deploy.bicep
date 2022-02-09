@@ -4,6 +4,15 @@ param platformMgName string
 param platformChildMgs array
 param landingZoneMgName string
 param landingZoneChildMgs array
+param existingSubscriptions array = []
+
+/*
+Subscription Object = 
+{
+  mg: 'mgName'
+  id: 'subid'
+}
+*/
 
 resource RootMg 'Microsoft.Management/managementGroups@2021-04-01' = {
   name: rootMgName
@@ -30,9 +39,9 @@ resource childPlatformMg 'Microsoft.Management/managementGroups@2021-04-01' = [f
    details: {
     parent: {
       id: PlatformMg.id
-    }
+    } 
   }
-   displayName: child
+  displayName: child 
  }  
 }]
 
@@ -59,3 +68,11 @@ resource childLandingZoneMg 'Microsoft.Management/managementGroups@2021-04-01' =
     displayName: child
   }  
  }]
+
+resource subscriptions 'Microsoft.Management/managementGroups/subscriptions@2021-04-01' = [for sub in existingSubscriptions: {
+  name: '${sub.mg}/${sub.id}'
+  dependsOn: [
+    childLandingZoneMg
+    childPlatformMg
+  ] 
+}]
