@@ -16,18 +16,22 @@ existingSubscriptions | array | Array of objects to move existing Azure Subscrip
 rbacAssignments | array | Array of objects to assign RBAC to deployed Management Groups.
 
 Example of existingSubscriptions object:
+```
 {
     mg: 'Management Group Name'
     id: 'Subscription ID'
 }
+```
 
 Example of rbacAssignments object:
+```
 {
   mg: 'Management Group Name'
   roleId: 'Azure Role Definition ID'
   objectId: 'AAD ObjectID'
   name: 'Name for Assignment'
 }
+```
 
 # Sample Module
 
