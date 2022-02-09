@@ -5,12 +5,21 @@ param platformChildMgs array
 param landingZoneMgName string
 param landingZoneChildMgs array
 param existingSubscriptions array = []
+param rbacAssignments array = []
 
 /*
-Subscription Object = 
+existingSubscriptions Object = 
 {
   mg: 'mgName'
   id: 'subid'
+}
+
+rbacAssignments Object =
+{
+  mg: 'mgName'
+  roleId: 'roleId'
+  objectId: 'AAD ObjectID'
+  name: 'Name for Assignment'
 }
 */
 
@@ -75,4 +84,19 @@ resource subscriptions 'Microsoft.Management/managementGroups/subscriptions@2021
     childLandingZoneMg
     childPlatformMg
   ] 
+}]
+
+module rbac '../../Modules/Microsoft.Authorization/roleAssignments/roleAssignments-mg.bicep' = [for assignment in rbacAssignments: {
+  name: 'RBAC-${assignment.mg}'
+  scope: managementGroup(assignment.mg) 
+  params: {
+    managementGroupName: assignment.mg
+    objectId: assignment.objectId  
+    name: assignment.name
+    roleDefinitionId: assignment.roleId
+  }
+  dependsOn: [
+    childLandingZoneMg
+    childPlatformMg
+  ]  
 }]
