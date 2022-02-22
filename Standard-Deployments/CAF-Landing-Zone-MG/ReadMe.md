@@ -14,6 +14,7 @@ landingZoneMgName | string | The name of the Landing Zone Management Group
 landingZoneChildMgs | array | Array of Names of Child Management Groups under Landing Zone
 existingSubscriptions | array | Array of objects to move existing Azure Subscriptions to a deployed Management Group
 rbacAssignments | array | Array of objects to assign RBAC to deployed Management Groups.
+virtualNetworks | array | Array of objects to create VNETs in Subscriptions.
 
 Example of existingSubscriptions object:
 ```
