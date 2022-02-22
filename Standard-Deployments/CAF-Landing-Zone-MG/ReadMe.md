@@ -33,6 +33,43 @@ Example of rbacAssignments object:
 }
 ```
 
+Example of virtualNetworks object:
+```
+{
+    name: 'vnet name prefix, example: name: 'prod' and region was eastus would deploy a vnet named 'prod-eastus-vnet'
+    subId: 'Subscription ID that VNET will be deployed in'
+    vnetAddressSpace: 'Cider range for VNET Example: 10.0.0.0/22'
+    dnsServers: [] Arrary of DNS Servers. Example: ['10.2.0.2','192.168.1.1']
+    type: 'Hub or Spoke, Hub Networks have the option to deploy Gateways'
+    location: 'Azure Region'
+    resourceGroupName: 'Name of Resource Group that VNET will be deployed in.'
+    nsgRules: [] Array of NSG Rules
+    routes: [] Array of Routes
+    disableBgpRoutePropagation: 'true or false' Sets on deployed Route Table
+    subnets: [] Array of subnets
+    tags: {} Tags
+}
+```
+
+Example of virtualNetworks/subnets object:
+```
+{
+    name: 'Subnet Name'
+    addressPrefix: 'Cider for Subnet'
+    nsg: true or false 'Apply NSG to subnet True or False'
+    routeTable: true or false 'Apply RouteTable to subnet True or False'
+}
+```
+
+Example of virtualNetworks/gateways object:
+```
+{
+    name: 'vpn' Name of VPN Gateway
+    size: 'Basic' VPN Gateway Size
+    type: 'Vpn' VPN or ExpressRoute
+}
+```
+
 # Sample Module
 
 ```Bicep
@@ -63,6 +100,77 @@ Example of rbacAssignments object:
                 roleId: 'acdd72a7-3385-48ef-bd42-f606fba81ae7'
                 objectId: 'AAD ObjectID'
                 name: 'Finance Readers'
+            }
+         ]
+         virtualNetworks: [
+            {
+                name: 'prod'
+                subId: 'xxx-xxxxx-xxxx-xxxx'
+                vnetAddressSpace: '10.0.0.0/22'
+                dnsServers: ['10.2.0.2','192.168.1.1']
+                type: 'spoke'
+                location: 'eastus'
+                resourceGroupName: 'prod-vnet-eastus'
+                nsgRules: []
+                routes: []
+                disableBgpRoutePropagation: false
+                subnets: [
+                    {
+                        name: 'test1'
+                        addressPrefix: '10.0.0.0/24'
+                        nsg: true
+                        routeTable: false
+                    }
+                    {
+                        name: 'test2'
+                        addressPrefix: '10.0.1.0/24'
+                        nsg: true
+                        routeTable: true
+                    }
+                ] 
+                tags: {
+                    Spoke:'SpokeVNET'
+                }
+            }
+            {
+                name: 'hub'
+                subId: 'xxx-xxxxx-xxxx-xxxx'
+                vnetAddressSpace: '10.0.4.0/22'
+                dnsServers: ['10.2.0.2','192.168.1.1']
+                type: 'hub'
+                location: 'eastus'
+                resourceGroupName: 'hub-vnet-eastus'
+                nsgRules: []
+                routes: []
+                disableBgpRoutePropagation: false
+                subnets: [
+                    {
+                        name: 'test1'
+                        addressPrefix: '10.0.4.0/24'
+                        nsg: true
+                        routeTable: false
+                    }
+                    {
+                        name: 'GatewaySubnet'
+                        addressPrefix: '10.0.7.224/27'
+                        nsg: false
+                        routeTable: false
+                    }
+                ]
+                gateways: [
+                    {
+                        name: 'hubGw-vpn'
+                        size: 'Basic'
+                        type: 'Vpn'
+                    },
+                    {
+                        name: 'hubGw-Er'
+                        size: 'Standard'
+                        type: 'ExpressRoute'
+                    } 
+                ] 
+                tags: {
+                }
             }
          ] 
       }

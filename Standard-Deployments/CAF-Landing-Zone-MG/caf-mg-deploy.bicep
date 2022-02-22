@@ -6,6 +6,7 @@ param landingZoneMgName string
 param landingZoneChildMgs array
 param existingSubscriptions array = []
 param rbacAssignments array = []
+param virtualNetworks array = []
 
 /*
 existingSubscriptions Object = 
@@ -20,6 +21,29 @@ rbacAssignments Object =
   roleId: 'roleId'
   objectId: 'AAD ObjectID'
   name: 'Name for Assignment'
+}
+
+virtualNetworks Object = 
+{
+  name: 'vnetName'
+  subId: 'subid'
+  vnetAddressSpace: '10.0.0.0/22'
+  dnsServers: []
+  type: 'Hub or Spoke'
+  location: 'azure Region'
+  resourceGroupName: 'rgName'
+  nsgRules: []
+  routes: []
+  disableBgpRoutePropagation: 'bool'
+  subnets: [
+    {
+      name: 'subname'
+      addressPrefix: '10.0.0.0/24'
+      nsg: 'bool'
+      routeTable: 'bool'
+    }
+  ]
+  tags: {}
 }
 */
 
@@ -98,5 +122,53 @@ module rbac '../../Modules/Microsoft.Authorization/roleAssignments/roleAssignmen
   dependsOn: [
     childLandingZoneMg
     childPlatformMg
+  ]  
+}]
+
+module rgVnet '../../Modules/Microsoft.Resources/resourceGroups/resourceGroups.bicep' = [for rg in virtualNetworks: {
+  name: '${rg.resourceGroupName}-Deploy'
+  scope: subscription(rg.subId)
+  params: {
+    location: rg.location
+    name: rg.resourceGroupName
+    tags: rg.tags   
+  }
+}] 
+
+module vnetSpokes 'spokeNetworking.bicep' = [for (vnet,i) in virtualNetworks: if(toLower(vnet.type) == 'spoke') {
+  scope: resourceGroup(vnet.subId,vnet.resourceGroupName)
+  name: 'VNET-Deploy-${vnet.name}-${vnet.location}'
+  params: {
+    name: vnet.name
+    vnetAddressSpace: vnet.vnetAddressSpace
+    dnsServers: vnet.dnsServers
+    location: vnet.location
+    nsgRules: vnet.nsgRules
+    routes: vnet.routes
+    subnets: vnet.subnets
+    disableBgpRoutePropagation: vnet.disableBgpRoutePropagation
+    tags: vnet.tags
+  }
+  dependsOn: [
+    rgVnet
+  ] 
+}]
+
+module vnetHubs 'hubNetworking.bicep' = [for(vnet,i) in virtualNetworks: if(toLower(vnet.type) == 'hub'){
+  name: 'VNET-Deploy-${vnet.name}'
+  scope: resourceGroup(vnet.subId,vnet.resourceGroupName)
+  params: {
+    name: vnet.name
+    vnetAddressSpace: vnet.vnetAddressSpace
+    dnsServers: vnet.dnsServers
+    location: vnet.location
+    nsgRules: vnet.nsgRules
+    routes: vnet.routes
+    subnets: vnet.subnets
+    disableBgpRoutePropagation: vnet.disableBgpRoutePropagation
+    gateways: vnet.gateways
+  }
+  dependsOn: [
+    rgVnet
   ]  
 }]
