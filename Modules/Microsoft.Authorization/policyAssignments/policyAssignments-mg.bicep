@@ -5,7 +5,7 @@ param parameters object
 param location string
 param notScopes array
 
-resource policyAssignment 'Microsoft.Authorization/policyAssignments@2020-09-01' = {
+resource policyAssignment 'Microsoft.Authorization/policyAssignments@2021-06-01' = {
   name: name
   properties: {
     policyDefinitionId: policyId 
@@ -13,7 +13,7 @@ resource policyAssignment 'Microsoft.Authorization/policyAssignments@2020-09-01'
     notScopes: notScopes
   }
   identity: {
-    type: 'SystemAssigned' 
+    type: 'SystemAssigned'  
   }
   location: location  
 }

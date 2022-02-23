@@ -6,7 +6,9 @@ param landingZoneMgName string
 param landingZoneChildMgs array
 param existingSubscriptions array = []
 param rbacAssignments array = []
+param policyAssignments array = []
 param virtualNetworks array = []
+param defaultLocation string = 'eastus'
 
 /*
 existingSubscriptions Object = 
@@ -34,6 +36,7 @@ virtualNetworks Object =
   resourceGroupName: 'rgName'
   nsgRules: []
   routes: []
+  gateways: []
   disableBgpRoutePropagation: 'bool'
   subnets: [
     {
@@ -44,6 +47,21 @@ virtualNetworks Object =
     }
   ]
   tags: {}
+}
+
+policyAssignments Object =
+{
+  name: 'Name of Assignment'
+  policyId: 'PolicyId'
+  parameters: {
+    param: {
+      value: 'param'
+    }
+  }
+  notScopes: [
+    'resourceIds'
+  ]
+  mg: 'MG Id'
 }
 */
 
@@ -123,6 +141,18 @@ module rbac '../../Modules/Microsoft.Authorization/roleAssignments/roleAssignmen
     childLandingZoneMg
     childPlatformMg
   ]  
+}]
+
+module policy '../../Modules/Microsoft.Authorization/policyAssignments/policyAssignments-mg.bicep' = [for assignment in policyAssignments: {
+  name: 'Policy-${assignment.name}'
+  scope: managementGroup(assignment.mg)
+  params: {
+    location: defaultLocation
+    name: assignment.name
+    notScopes: assignment.notScopes
+    parameters: assignment.parameters
+    policyId: assignment.policyId  
+  } 
 }]
 
 module rgVnet '../../Modules/Microsoft.Resources/resourceGroups/resourceGroups.bicep' = [for rg in virtualNetworks: {

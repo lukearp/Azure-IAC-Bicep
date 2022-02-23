@@ -14,7 +14,9 @@ landingZoneMgName | string | The name of the Landing Zone Management Group
 landingZoneChildMgs | array | Array of Names of Child Management Groups under Landing Zone
 existingSubscriptions | array | Array of objects to move existing Azure Subscriptions to a deployed Management Group
 rbacAssignments | array | Array of objects to assign RBAC to deployed Management Groups.
+policyAssignments | array | Array of objects to assign Policy to deployed Management Groups.
 virtualNetworks | array | Array of objects to create VNETs in Subscriptions.
+defaultLocation | string | Default Azure Region for certain deployments.  default = 'eastus'
 
 Example of existingSubscriptions object:
 ```
@@ -31,6 +33,24 @@ Example of rbacAssignments object:
   roleId: 'Azure Role Definition ID'
   objectId: 'AAD ObjectID'
   name: 'Name for Assignment'
+}
+```
+
+Example of policyAssignments object: 
+```
+policyAssignments Object =
+{
+  name: 'Name of Assignment'
+  policyId: 'PolicyId'
+  parameters: { Parameters to pass to the policy you are assigning
+    param: {
+      value: 'param'
+    }
+  }
+  notScopes: [
+    'resourceIds' scopes to exclude from policy
+  ]
+  mg: 'MG Id' Target Management Group
 }
 ```
 
@@ -102,6 +122,22 @@ Example of virtualNetworks/gateways object:
                 objectId: 'AAD ObjectID'
                 name: 'Finance Readers'
             }
+         ]
+         policyAssignments: [
+             {
+                name: 'Enterprise-Initiative'
+                policyId: '/providers/Microsoft.Management/managementGroups/luke-test/providers/Microsoft.Authorization/policySetDefinitions/Policy-1'
+                parameters: {
+                    allowedRegions: {
+                        value: [
+                            'eastus'
+                            'westus'
+                        ]
+                    }
+                }
+                notScopes: []
+                mg: 'luke-test'
+             }
          ]
          virtualNetworks: [
             {
