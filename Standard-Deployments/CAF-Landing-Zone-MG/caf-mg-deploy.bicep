@@ -129,7 +129,7 @@ resource subscriptions 'Microsoft.Management/managementGroups/subscriptions@2021
 }]
 
 module rbac '../../Modules/Microsoft.Authorization/roleAssignments/roleAssignments-mg.bicep' = [for assignment in rbacAssignments: {
-  name: 'RBAC-${assignment.mg}'
+  name: 'RBAC-${assignment.name}'
   scope: managementGroup(assignment.mg) 
   params: {
     managementGroupName: assignment.mg
