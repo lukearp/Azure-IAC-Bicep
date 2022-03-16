@@ -1,5 +1,5 @@
 # What does this module do?
-Creates Management Group Hierarchy per [CAF Guidance]("https://docs.microsoft.com/en-us/azure/cloud-adoption-framework/ready/landing-zone/design-area/resource-org-management-groups"). 
+Creates Management Group Hierarchy per [CAF Guidance](https://docs.microsoft.com/en-us/azure/cloud-adoption-framework/ready/landing-zone/design-area/resource-org-management-groups). 
 
 # What does this module Require?
 Must be deployed by a user that has rights to do deployments at the Tenant Level.  To use RBAC Assignments, you must have the Repo downloaded because it's dependant on my roleAssignments-mg.bicep file.
