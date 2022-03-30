@@ -5,9 +5,9 @@ param billingScope string
   'Production'
   'DevTest'
 ])
-param workload string
+param workload string = 'Production'
 
-resource subscriptionAlias 'Microsoft.Subscription/aliases@2019-10-01-preview' = {
+resource subscriptionAlias 'Microsoft.Subscription/aliases@2020-09-01' = {
   name: subscriptionAliasName
   properties: {
     workload: workload 
