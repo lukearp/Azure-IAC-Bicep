@@ -85,7 +85,7 @@ var vnetPropertiesBase = {
 }
 
 resource vnet 'Microsoft.Network/virtualNetworks@2021-05-01' = {
-  name: '${name}-${location}-vnet' 
+  name: name 
   location: location
   properties: vnetPropertiesBase
   tags: tags

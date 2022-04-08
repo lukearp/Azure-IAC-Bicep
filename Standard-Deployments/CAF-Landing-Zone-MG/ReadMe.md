@@ -57,7 +57,7 @@ policyAssignments Object =
 Example of virtualNetworks object:
 ```
 {
-    name: 'vnet name prefix, example: name: 'prod' and region was eastus would deploy a vnet named 'prod-eastus-vnet'
+    name: 'vnet name'
     subId: 'Subscription ID that VNET will be deployed in'
     vnetAddressSpace: 'Cider range for VNET Example: 10.0.0.0/22'
     dnsServers: [] Arrary of DNS Servers. Example: ['10.2.0.2','192.168.1.1']
