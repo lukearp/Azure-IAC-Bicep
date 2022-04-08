@@ -4,6 +4,7 @@ param (
 
 $subscriptions = Get-AzSubscription -TenantId $tenantId
 $nsgInRules = @()
+$nsgBase = @()
 $connectedDevices = @()
 $vnetSubnetsWithoutNSGS = @()
 $report = @()
@@ -20,6 +21,15 @@ foreach($sub in $subscriptions)
                 nsgResourceGroup = $nsg.Id.Split("/")[4]
                 nsgName = $nsg.Name
                 rules = $nsg.SecurityRules | ?{$_.Direction -eq "Inbound"}
+                subnets = $nsg.Subnets.Count -gt 0 ? $nsg.Subnets.Id.Split("/")[-1] : @()
+                interfaces = $nsg.NetworkInterfaces.Count -gt 0 ? $nsg.NetworkInterfaces.Id : @()
+            }
+        }
+        else {
+            $nsgBase +=  New-Object -TypeName psobject -Property @{
+                nsgResourceGroup = $nsg.Id.Split("/")[4]
+                nsgName = $nsg.Name
+                rules = $nsg.DefaultSecurityRules | ?{$_.Direction -eq "Inbound"}
                 subnets = $nsg.Subnets.Count -gt 0 ? $nsg.Subnets.Id.Split("/")[-1] : @()
                 interfaces = $nsg.NetworkInterfaces.Count -gt 0 ? $nsg.NetworkInterfaces.Id : @()
             }
@@ -48,6 +58,7 @@ foreach($sub in $subscriptions)
         SubscriptionName=$sub.Name
         SubscriptionId = $sub.Id
         NSGsWithSecurityRules = $nsgInRules
+        NSGsWithDefaultRules = $nsgBase
         VNetsWithNoNSG = $vnetSubnetsWithoutNSGS
         ConnectedDevices = $connectedDevices
     }
