@@ -45,4 +45,4 @@ foreach($sub in $subscriptions)
     }
 }
 
-ConvertTo-Json -InputObject $report > "$($PWD.Path)\report.json"
+ConvertTo-Json -InputObject $report -Depth 10 > "$($PWD.Path)\report.json"
