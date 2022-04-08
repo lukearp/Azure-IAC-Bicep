@@ -39,7 +39,7 @@ foreach($sub in $subscriptions)
                 }
             }
             $connectedDevices += New-Object -TypeName psobject -Property @{
-                subnetName = $subnet.Name
+                subnet = $subnet.Id
                 interfaces = $subnet.IpConfigurations.Id
             }
         }
