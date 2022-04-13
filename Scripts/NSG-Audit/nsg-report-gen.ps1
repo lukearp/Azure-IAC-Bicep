@@ -48,18 +48,44 @@ $reportHtml = @'
 <head>
 <title>NSG Audit</title>
 </head>
+<style>
+.nsgs {{
+  font-family: Arial, Helvetica, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+}}
+
+.nsgs td, #customers th {{
+  border: 1px solid #ddd;
+  padding: 8px;
+}}
+
+.nsgs tr:nth-child(even){{background-color: #f2f2f2;}}
+
+.nsgs tr:hover {{background-color: #ddd;}}
+
+.nsgs th {{
+  padding-top: 12px;
+  padding-bottom: 12px;
+  text-align: left;
+  background-color: #00bfff;
+  color: white;
+}}
+</style>
 <body>
-<p>Interfaces Protected with Default Rules</p>
-<table>
+<h2>Interfaces With No NSG Associated</h2>
+<table class="nsgs">
 <tr><th>Interface</th><th>Subnet</th><th>VNET</th><th>Subscription</th></tr>
 {0}
 </table>
-<p>Interfaces With Custom Rules Configured</p>
-<table>
+<h2>Interfaces With Custom Rules Configured</h2>
+<table class="nsgs">
+<tr><th>Interface</th><th>NSGS Associated</th><th>Inbound from Internet Allowed</th><th>Subnet</th><th>VNET</th><th>Subscription</th></tr>
 {1}
 </table>
-<p>Interfaces With No NSG Associated</p>
-<table>
+<h2>Interfaces Protected with Default Rules</h2>
+<table class="nsgs">
+<tr><th>Interface</th><th>NSGS Associated</th><th>Subnet</th><th>VNET</th><th>Subscription</th></tr>
 {2}
 </table>
 </body>
@@ -69,9 +95,50 @@ $interfacesPortectedWithDefaultRules = $interfacesReport | ?{($_.SubnetDefaultRu
 $interfacesCustomRules = $interfacesReport | ?{($_.SubnetDefaultRules -eq $false -and $_.InterfaceDefaultRules -eq $false -and $_.SubnetNSG -ne $null) -or ($_.SubnetDefaultRules -eq $false -and $_.InterfaceDefaultRules -eq $false -and $_.InterfaceNSG -ne $null)}
 $interfacesOpen = $interfacesReport | ?{$_.SubnetNSG -eq $null -and $_.InterfaceNSG -eq $null}
 $htmlInterfacesPortectedWithDefaultRules = @()
+$htmlinterfacesCustomRules = @()
+$htmlinterfacesOpen = @()
 foreach($interface in $interfacesPortectedWithDefaultRules)
 {
-    $htmlInterfacesPortectedWithDefaultRules += "<tr><td>$($interface.Interface.split("/")[-1])</td><td>$($interface.Subnet.split("/")[-1])</td><td>$($interface.Subnet.split("/")[8])</td><td>$($interface.SubscriptionId)</td></tr>"
+    $nsgs = ""
+    if($interface.SubnetNSG -ne $null)
+    {
+        $nsgs = $interface.SubnetNSG.nsgName
+    }
+    if ($interface.InterfaceNSG -ne $null -and $interface.SubnetNSG -ne $null) {
+        $nsgs += "," + $interface.InterfaceNSG.nsgName
+    }
+    elseif($interface.InterfaceNSG -ne $null) {
+        $nsgs = $interface.InterfaceNSG.nsgName 
+    }
+    $htmlInterfacesPortectedWithDefaultRules += "<tr><td>$($interface.Interface.split("/")[-1])</td><td>$($nsgs)</td><td>$($interface.Subnet.split("/")[-1])</td><td>$($interface.Subnet.split("/")[8])</td><td>$($interface.SubscriptionId)</td></tr>"
 }
-$($reportHtml -f $($htmlInterfacesPortectedWithDefaultRules -join "")) | Out-File "$($PWD.Path)\interfaceReport.html"
+foreach($interface in $interfacesCustomRules)
+{   
+    $allowedInboundInet = $false  
+    $rules = $interface.SubnetNSG.rules | ?{($_.SourceAddressPrefix -eq "*" -or $_.SourceAddressPrefix -eq "Internet" ) -and $_.Access -eq "Allow" -and $_.Priority -lt 5000} 
+    $nsgs = $interface.SubnetNSG.nsgName
+    if($rules.Count -gt 0 -or $interface.SubnetNSG -eq $null)
+    { 
+        #$nsgs += $interface.SubnetNSG.nsgName       
+        if($interface.InterfaceNSG -ne $null)
+        {
+            $rules = $null
+            $rules = $interface.InterfaceNSG.rules | ?{($_.SourceAddressPrefix -eq "*" -or $_.SourceAddressPrefix -eq "Internet" ) -and $_.Access -eq "Allow" -and $_.Priority -lt 5000}
+            if($rules.Count -gt 0)
+            {
+                $nsgs += "," + $interface.InterfaceNSG.nsgName
+                $allowedInboundInet = $true
+            }
+        }
+        else {
+            $allowedInboundInet = $true
+        }        
+    }
+    $htmlinterfacesCustomRules += "<tr><td>$($interface.Interface.split("/")[-1])</td><td>$($nsgs)</td><td>$($allowedInboundInet)</td><td>$($interface.Subnet.split("/")[-1])</td><td>$($interface.Subnet.split("/")[8])</td><td>$($interface.SubscriptionId)</td></tr>"
+}
+foreach($interface in $interfacesOpen)
+{
+    $htmlinterfacesOpen += "<tr><td>$($interface.Interface.split("/")[-1])</td><td>$($interface.Subnet.split("/")[-1])</td><td>$($interface.Subnet.split("/")[8])</td><td>$($interface.SubscriptionId)</td></tr>"
+}
+$($reportHtml -f $($htmlinterfacesOpen -join ""),$($htmlinterfacesCustomRules -join ""),$($htmlInterfacesPortectedWithDefaultRules -join "")) | Out-File "$($PWD.Path)\interfaceReport.html"
 #ConvertTo-Json -InputObject $interfacesReport -Depth 10 > "$($PWD.Path)\interfaceReport.json"
