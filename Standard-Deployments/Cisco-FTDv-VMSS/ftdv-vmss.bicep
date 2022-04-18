@@ -217,7 +217,7 @@ resource ciscoFtd 'Microsoft.Compute/virtualMachineScaleSets@2021-11-01' = {
                   properties: {
                     subnet: {
                       id: '${vnet.id}/subnets/${mgmtSubnet}'
-                    }
+                    } 
                   }
                 }
               ]
@@ -243,6 +243,8 @@ resource ciscoFtd 'Microsoft.Compute/virtualMachineScaleSets@2021-11-01' = {
             name: 'outside'
             properties: {
               primary: false
+              enableAcceleratedNetworking: true
+              enableIPForwarding: true  
               ipConfigurations: [
                 {
                   name: 'myIpConfig'
@@ -261,9 +263,11 @@ resource ciscoFtd 'Microsoft.Compute/virtualMachineScaleSets@2021-11-01' = {
             }
           }
           {
-            name: 'insdie'
+            name: 'inside'
             properties: {
               primary: false
+              enableAcceleratedNetworking: true
+              enableIPForwarding: true  
               ipConfigurations: [
                 {
                   name: 'myIpConfig'
