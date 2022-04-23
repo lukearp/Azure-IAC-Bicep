@@ -100,7 +100,7 @@ resource iisvm 'Microsoft.Compute/virtualMachines@2021-11-01' = {
 resource installIIS 'Microsoft.Compute/virtualMachines/extensions@2021-11-01' = {
   parent: iisvm
   dependsOn: [
-    iisvm
+    
   ]
   location: location
   name: 'iissetup'
