@@ -12,11 +12,12 @@ param osversion string = '2019-datacenter-gensecond'
 param localadmin string
 @secure()
 param localadminpassword string
-param domainJoinUser string
+param domainjoin bool = false
+param domainJoinUser string = ''
 @secure()
-param domainJoinPassword string
+param domainJoinPassword string = ''
 param ouPath string = ''
-param domainFqdn string
+param domainFqdn string = ''
 param tags object = {}
 param zones array = []
 @allowed([
@@ -25,6 +26,7 @@ param zones array = []
   'Premium_LRS'
 ])
 param storageAccountType string = 'StandardSSD_LRS'
+param dscConfigScript string = 'https://github.com/lukearp/Azure-IAC-Bicep/releases/download/DSC/IISConfig.zip'
 
 var subnet = '${subscription().id}/resourceGroups/${vnetRg}/providers/Microsoft.Network/virtualNetworks/${vnetName}/subnets/${subnetName}'
 resource iisvmnic 'Microsoft.Network/networkInterfaces@2021-05-01' = {
@@ -38,11 +40,11 @@ resource iisvmnic 'Microsoft.Network/networkInterfaces@2021-05-01' = {
         properties: {
           subnet: {
             id: subnet
-          } 
-        }  
-      } 
-    ] 
-  }   
+          }
+        }
+      }
+    ]
+  }
 }
 
 resource iisvm 'Microsoft.Compute/virtualMachines@2021-11-01' = {
@@ -60,7 +62,7 @@ resource iisvm 'Microsoft.Compute/virtualMachines@2021-11-01' = {
         managedDisk: {
           storageAccountType: storageAccountType
         }
-      } 
+      }
       imageReference: {
         publisher: 'MicrosoftWindowsServer'
         offer: 'WindowsServer'
@@ -86,17 +88,39 @@ resource iisvm 'Microsoft.Compute/virtualMachines@2021-11-01' = {
     licenseType: 'Windows_Server'
     diagnosticsProfile: {
       bootDiagnostics: {
-        enabled: true 
-      } 
-    } 
+        enabled: true
+      }
+    }
   }
   identity: {
     type: 'SystemAssigned'
-  } 
+  }
 }
 
-resource joinDomain 'Microsoft.Compute/virtualMachines/extensions@2021-11-01' = {
+resource installIIS 'Microsoft.Compute/virtualMachines/extensions@2021-11-01' = {
   parent: iisvm
+  dependsOn: [
+    iisvm
+  ]
+  location: location
+  name: 'iissetup'
+  properties: {
+    publisher: 'Microsoft.Powershell'
+    type: 'DSC'
+    typeHandlerVersion: '2.73'
+    autoUpgradeMinorVersion: true
+    settings: {
+      modulesUrl: dscConfigScript
+      configurationFunction: 'IISConfig.ps1\\IISConfig'
+    }
+  }
+}
+
+resource joinDomain 'Microsoft.Compute/virtualMachines/extensions@2021-11-01' = if(domainjoin == true) {
+  parent: iisvm
+  dependsOn: [
+    installIIS
+  ]
   location: location
   name: 'joindomain'
   properties: {
