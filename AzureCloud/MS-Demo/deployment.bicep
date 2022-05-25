@@ -132,7 +132,7 @@ module networkManager '../../Modules/Microsoft.Network/networkManagers/networkMa
     description: 'Network Manager for MS-Demo'
     location: 'eastus'
     managementGroups: [
-       'CoreServices'
+       '/providers/Microsoft.Management/managementGroups/CoreServices'
     ]
     name: 'MS-Demo-NM'
     tags: {
