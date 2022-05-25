@@ -114,9 +114,46 @@ module baseInfra '../../Standard-Deployments/CAF-Landing-Zone-MG/caf-mg-deploy.b
         tags: {
           Environment: 'Prod'
           HoursOfOperation: '24-7'
+          Spoke: 'True'
         }
       }
     ] 
     policyAssignments: []         
   }   
+}
+
+module networkManager '../../Modules/Microsoft.Network/networkManagers/networkManagers.bicep' = {
+  name: 'Network-Manager-Deployment'
+  scope: resourceGroup('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-hub-networking-eastus-rg')
+  dependsOn: [
+    baseInfra
+  ]
+  params: {
+    description: 'Network Manager for MS-Demo'
+    location: 'eastus'
+    managementGroups: [
+       'CoreServices'
+    ]
+    name: 'MS-Demo-NM'
+    tags: {
+      Environment: 'Prod'
+    } 
+    subscriptions: [
+      
+    ]     
+  }    
+}
+
+module networkManagerGroup '../../Modules/Microsoft.Network/networkManagers/networkGroups/networkGroups.bicep' = {
+  name: 'Network-Manager-Group-Deployment'
+  scope: resourceGroup('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-hub-networking-eastus-rg')
+  dependsOn: [
+    networkManager
+  ]
+  params: {
+    networkManagerName: 'MS-Demo-NM'
+    description: 'Spokes to Peer'
+    networkGroupName: 'Spoke-VNETs'
+    tagName: 'Spoke'    
+  }    
 }
