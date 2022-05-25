@@ -14,7 +14,7 @@ resource symbolicname 'Microsoft.Network/networkManagers/connectivityConfigurati
   properties: {
     appliesToGroups: [
       {
-        groupConnectivity: 'DirectlyConnected'
+        groupConnectivity: 'None'
         isGlobal: 'False'
         networkGroupId: networkGroupId
         useHubGateway: 'True'
@@ -25,6 +25,7 @@ resource symbolicname 'Microsoft.Network/networkManagers/connectivityConfigurati
     description: description
     hubs: [
       {
+        resourceType: 'Microsoft.Network/virtualNetworks'
         resourceId: hubVnetId
       }
     ]
