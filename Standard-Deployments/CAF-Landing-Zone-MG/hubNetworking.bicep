@@ -117,7 +117,34 @@ resource publicIps 'Microsoft.Network/publicIPAddresses@2021-05-01' = [for pip i
  tags: tags   
 }]
 
-resource virtualNetworkGateway 'Microsoft.Network/virtualNetworkGateways@2021-05-01' = [for (gateway,i) in gateways: {
+resource vpnGateway 'Microsoft.Network/virtualNetworkGateways@2021-05-01' = [for (gateway,i) in gateways: if(toLower(gateway.type) == 'vpn' ) {
+  name: gateway.name
+  location: location
+  properties: {
+    gatewayType: gateway.type
+    sku: {
+      name: gateway.size
+      tier: gateway.size 
+    } 
+    vpnType: 'RouteBased' 
+    ipConfigurations: [
+      {
+        name: 'ipconfig'
+        properties: {
+          subnet: {
+            id: '${vnet.id}/subnets/GatewaySubnet'
+          } 
+          publicIPAddress: {
+            id: publicIps[i].id 
+          } 
+        }  
+      } 
+    ]   
+  } 
+  tags: tags      
+}]
+
+resource erGateway 'Microsoft.Network/virtualNetworkGateways@2021-05-01' = [for (gateway,i) in gateways: if(toLower(gateway.type) != 'vpn' ) {
   name: gateway.name
   location: location
   properties: {
