@@ -86,7 +86,7 @@ module baseInfra '../../Standard-Deployments/CAF-Landing-Zone-MG/caf-mg-deploy.b
             size: 'VpnGw1'
             type: 'Vpn'
             activeActive: true
-            asn: ''
+            asn: 65000
           }
         ]
         tags: {
