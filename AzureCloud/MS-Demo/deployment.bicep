@@ -1,0 +1,122 @@
+targetScope = 'tenant'
+module baseInfra '../../Standard-Deployments/CAF-Landing-Zone-MG/caf-mg-deploy.bicep' = {
+  name: 'Environment'
+  params: {
+    rootMgName: 'MS-Demo'
+    platformMgName: 'MS-Platform'
+    landingZoneMgName: 'MS-LZ'
+    landingZoneChildMgs: [
+      'MSDN'
+    ]
+    platformChildMgs: [
+      'CoreServices'
+    ]
+    defaultLocation: 'eastus'
+    existingSubscriptions: [
+      {
+        mg: 'MSDN'
+        id: '2ab6855d-b9f8-4762-bba5-efe49f339629'
+      }
+      {
+        mg: 'CoreServices'
+        id: '32eb88b4-4029-4094-85e3-ec8b7ce1fc00'
+      }
+    ]
+    rbacAssignments: [
+      {
+        mg: 'MS-Demo'
+        roleId: '8e3af657-a8ff-443c-a75c-2fe8c4bcb635'
+        objectId: 'eb5799c9-a9ac-4b43-8c73-9267724123d0'
+        name: 'MS-Demo-Owners'
+      }
+      {
+        mg: 'MS-Platform'
+        roleId: '8e3af657-a8ff-443c-a75c-2fe8c4bcb635'
+        objectId: '23ffd2ff-1913-4c2f-a8ec-cc5de51ebec6'
+        name: 'MS-Platform-Owners'
+      }
+      {
+        mg: 'MS-LZ'
+        roleId: '8e3af657-a8ff-443c-a75c-2fe8c4bcb635'
+        objectId: '634dd674-f919-4cba-8749-87c02c9c6c51'
+        name: 'MS-LZ-Owners'
+      }
+    ]
+    virtualNetworks: [
+      {
+        name: 'core-hub-vnet-eastus'
+        subId: '32eb88b4-4029-4094-85e3-ec8b7ce1fc00'
+        vnetAddressSpace: '10.0.16.0/22'
+        dnsServers: []
+        type: 'Hub'
+        location: 'eastus'
+        resourceGroupName: 'core-hub-networking-eastus-rg'
+        nsgRules: []
+        routes: []
+        disableBgpRoutePropagation: false
+        subnets: [
+          {
+            name: 'GatewaySubnet'
+            addressPrefix: '10.0.19.224/27'
+            nsg: false
+            routeTable: false
+          }
+          {
+            name: 'AzureBastionSubnet'
+            addressPrefix: '10.0.19.128/26'
+            nsg: false
+            routeTable: false
+          }
+          {
+            name: 'AzureFirewallSubnet'
+            addressPrefix: '10.0.19.64/26'
+            nsg: false
+            routeTable: false
+          }
+          {
+            name: 'DomainControllers'
+            addressPrefix: '10.0.16.0/28'
+            nsg: true
+            routeTable: true
+          }
+        ]
+        gateways: [
+          {
+            name: 'Core-VPN'
+            size: 'VpnGw1'
+            type: 'Vpn'
+          }
+        ]
+        tags: {
+          Environment: 'Prod'
+          HoursOfOperation: '24-7'
+        }
+      }
+      {
+        name: 'core-spoke-eastus-vnet'
+        subId: '32eb88b4-4029-4094-85e3-ec8b7ce1fc00'
+        vnetAddressSpace: '10.0.20.0/22'
+        dnsServers: []
+        type: 'Spoke'
+        location: 'eastus'
+        resourceGroupName: 'core-spoke-network-eastus-rg'
+        nsgRules: []
+        routes: []
+        disableBgpRoutePropagation: false
+        subnets: [
+          {
+            name: 'VDI'
+            addressPrefix: '10.0.20.0/25'
+            nsg: true
+            routeTable: true
+          }
+        ]
+        tags: {
+          Environment: 'Prod'
+          HoursOfOperation: '24-7'
+        }
+      }
+    ] 
+    policyAssignments: []         
+  }   
+}

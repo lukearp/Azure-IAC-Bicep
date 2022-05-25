@@ -1,13 +1,11 @@
-name: Base-Network
+name: Base-Infra
 
 on:
   push:
     branches:
-      - "Base-Network-Deployment"
+      - "MS-Demo-Base-Infra"
 
 env:
-  location: 'eastus'
-  AZURE_RESOURCE_GROUP: 'rg_bicep_test'
 
 jobs:
   AzureBicepDeploy:
@@ -17,10 +15,6 @@ jobs:
     steps:
     -  name: Checkout Code
        uses: actions/checkout@v2
-
-    -  name: Build ARM
-       run: |
-         az bicep build --file AzureCloud/Root-MG/Sub1/rg_bicep_test/networkdeploy.bicep
 
     -  name: Azure Login
        uses: azure/login@v1
@@ -32,5 +26,5 @@ jobs:
        with:
          inlineScript: |
            az account show
-           az deployment group create -f AzureCloud/Root-MG/Sub1/rg_bicep_test/networkdeploy.json -g ${{ env.AZURE_RESOURCE_GROUP }}
+           az deployment tenant create --template-file AzureCloud/MS-Demo/deployment.bicep --location eastus
    
