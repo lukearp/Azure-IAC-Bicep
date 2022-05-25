@@ -117,7 +117,20 @@ resource publicIps 'Microsoft.Network/publicIPAddresses@2021-05-01' = [for pip i
  tags: tags   
 }]
 
-resource vpnGateway 'Microsoft.Network/virtualNetworkGateways@2021-05-01' = [for (gateway,i) in gateways: {
+resource publicActiveIps 'Microsoft.Network/publicIPAddresses@2021-05-01' = [for pip in gateways: if(pip.activeActive == true){
+  name: '${pip.name}-2-pip'
+  location: location
+  sku: {
+   name: contains(pip.size,'Az') ? 'Standard' : 'Basic'
+   tier: 'Regional'
+  }
+  properties: {
+    publicIPAllocationMethod: contains(pip.size,'Az') ? 'Static' : 'Dynamic'  
+  } 
+  tags: tags
+}]
+
+resource vpnGateway 'Microsoft.Network/virtualNetworkGateways@2021-05-01' = [for gateway in gateways: if(toLower(gateway.type) == 'vpn') {
   name: gateway.name
   location: location
   properties: {
@@ -126,7 +139,57 @@ resource vpnGateway 'Microsoft.Network/virtualNetworkGateways@2021-05-01' = [for
       name: gateway.size
       tier: gateway.size 
     } 
-    vpnType: 'RouteBased' 
+    vpnType: 'RouteBased'
+    activeActive: gateway.activeActive == true ? true : false
+    ipConfigurations: gateway.activeActive == false ? [
+      {
+        name: 'ipconfig'
+        properties: {
+          subnet: {
+            id: '${vnet.id}/subnets/GatewaySubnet'
+          } 
+          publicIPAddress: {
+            id: resourceId('Microsoft.Network/publicIPAddresses', '${gateway.name}-pip') 
+          } 
+        }  
+      } 
+    ] : [
+      {
+        name: 'ipconfig'
+        properties: {
+          subnet: {
+            id: '${vnet.id}/subnets/GatewaySubnet'
+          } 
+          publicIPAddress: {
+            id: resourceId('Microsoft.Network/publicIPAddresses', '${gateway.name}-pip')  
+          } 
+        }  
+      }
+      {
+        name: 'ipconfig2'
+        properties: {
+          subnet: {
+            id: '${vnet.id}/subnets/GatewaySubnet'
+          } 
+          publicIPAddress: {
+            id: resourceId('Microsoft.Network/publicIPAddresses', '${gateway.name}-2-pip') 
+          } 
+        }  
+      }  
+    ]  
+  } 
+  tags: tags      
+}]
+
+resource erGateway 'Microsoft.Network/virtualNetworkGateways@2021-05-01' = [for gateway in gateways: if(toLower(gateway.type) == 'expressroute') {
+  name: gateway.name
+  location: location
+  properties: {
+    gatewayType: gateway.type
+    sku: {
+      name: gateway.size
+      tier: gateway.size 
+    } 
     ipConfigurations: [
       {
         name: 'ipconfig'
@@ -135,11 +198,11 @@ resource vpnGateway 'Microsoft.Network/virtualNetworkGateways@2021-05-01' = [for
             id: '${vnet.id}/subnets/GatewaySubnet'
           } 
           publicIPAddress: {
-            id: publicIps[i].id 
+            id: resourceId('Microsoft.Network/publicIPAddresses', '${gateway.name}-pip') 
           } 
         }  
       } 
-    ]   
+    ]
   } 
   tags: tags      
 }]

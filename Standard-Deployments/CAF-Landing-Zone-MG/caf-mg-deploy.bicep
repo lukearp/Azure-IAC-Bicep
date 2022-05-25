@@ -36,7 +36,14 @@ virtualNetworks Object =
   resourceGroupName: 'rgName'
   nsgRules: []
   routes: []
-  gateways: []
+  gateways: [
+    {
+      name: 'Core-VPN'
+      size: 'VpnGw1'
+      type: 'Vpn'
+      activeActive: true
+    }
+  ]
   disableBgpRoutePropagation: 'bool'
   subnets: [
     {

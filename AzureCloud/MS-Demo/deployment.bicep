@@ -85,6 +85,7 @@ module baseInfra '../../Standard-Deployments/CAF-Landing-Zone-MG/caf-mg-deploy.b
             name: 'Core-VPN'
             size: 'VpnGw1'
             type: 'Vpn'
+            activeActive: true
           }
         ]
         tags: {
