@@ -16,3 +16,5 @@ resource networkGroup 'Microsoft.Network/networkManagers/networkGroups@2022-02-0
     conditionalMembership: '{\n   "allOf": [\n      {\n         "field": "tags[\'${tagName}\']",\n         "exists": true\n      }\n   ]\n}'
   }
 }
+
+output groupId string = networkGroup.id

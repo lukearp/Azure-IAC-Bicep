@@ -157,3 +157,15 @@ module networkManagerGroup '../../Modules/Microsoft.Network/networkManagers/netw
     tagName: 'Spoke'    
   }    
 }
+
+module networkConnectivityConfig '../../Modules/Microsoft.Network/networkManagers/connectivityConfigurations/connectivityConfigurations.bicep' = {
+  name: 'Network-Config-Deploy'
+  scope: resourceGroup('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-hub-networking-eastus-rg')
+  params: {
+    connectivityConfigName: 'EastUS-Hub-Spoke'
+    hubVnetId: resourceId('Microsoft.Network/virtualNetworks','core-hub-vnet-eastus')
+    description: 'Peering VNETs in EastUS' 
+    networkGroupId: networkManagerGroup.outputs.groupId
+    networkManagerName: 'MS-Demo-NM'
+  } 
+}
