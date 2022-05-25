@@ -130,7 +130,15 @@ resource publicActiveIps 'Microsoft.Network/publicIPAddresses@2021-05-01' = [for
   tags: tags
 }]
 
-resource vpnGateway 'Microsoft.Network/virtualNetworkGateways@2021-05-01' = [for gateway in gateways: if(toLower(gateway.type) == 'vpn') {
+var vpnGateways = [for gateway in gateways: toLower(gateway.type) == 'vpn' ? gateway : {
+  type: 'noVPN'
+}]
+
+var erGateways = [for gateway in gateways: toLower(gateway.type) == 'expressroute' ? gateway : {
+  type: 'noER'
+}]
+
+resource vpnGateway 'Microsoft.Network/virtualNetworkGateways@2021-05-01' = [for gateway in vpnGateways: if(toLower(gateway.type) == 'vpn') {
   name: gateway.name
   location: location
   properties: {
@@ -181,7 +189,7 @@ resource vpnGateway 'Microsoft.Network/virtualNetworkGateways@2021-05-01' = [for
   tags: tags      
 }]
 
-resource erGateway 'Microsoft.Network/virtualNetworkGateways@2021-05-01' = [for gateway in gateways: if(toLower(gateway.type) == 'expressroute') {
+resource erGateway 'Microsoft.Network/virtualNetworkGateways@2021-05-01' = [for gateway in erGateways: if(toLower(gateway.type) == 'expressroute') {
   name: gateway.name
   location: location
   properties: {
