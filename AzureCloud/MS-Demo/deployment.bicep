@@ -80,6 +80,24 @@ module baseInfra '../../Standard-Deployments/CAF-Landing-Zone-MG/caf-mg-deploy.b
             routeTable: false
           }
           {
+            name: 'Trust'
+            addressPrefix: '10.0.19.0/28'
+            nsg: false
+            routeTable: false
+          }
+          {
+            name: 'Untrust'
+            addressPrefix: '10.0.19.16/28'
+            nsg: false
+            routeTable: false
+          }
+          {
+            name: 'Management'
+            addressPrefix: '10.0.16.32/27'
+            nsg: false
+            routeTable: false
+          }
+          {
             name: 'DomainControllers'
             addressPrefix: '10.0.16.0/28'
             nsg: true
