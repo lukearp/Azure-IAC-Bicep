@@ -103,32 +103,6 @@ resource vnet 'Microsoft.Network/virtualNetworks@2021-05-01' = {
   properties: vnetPropertiesBase
   tags: tags
 }
-//Basic Standard
-resource publicIps 'Microsoft.Network/publicIPAddresses@2021-05-01' = [for pip in gateways: {
- name: '${pip.name}-pip'
- location: location
- sku: {
-   name: contains(pip.size,'Az') ? 'Standard' : 'Basic'
-   tier: 'Regional'  
- } 
- properties: {
-   publicIPAllocationMethod: contains(pip.size,'Az') ? 'Static' : 'Dynamic'  
- } 
- tags: tags   
-}]
-
-resource publicActiveIps 'Microsoft.Network/publicIPAddresses@2021-05-01' = [for pip in gateways: if(pip.activeActive == true){
-  name: '${pip.name}-2-pip'
-  location: location
-  sku: {
-   name: contains(pip.size,'Az') ? 'Standard' : 'Basic'
-   tier: 'Regional'
-  }
-  properties: {
-    publicIPAllocationMethod: contains(pip.size,'Az') ? 'Static' : 'Dynamic'  
-  } 
-  tags: tags
-}]
 
 module vpnGateways '../../Modules/Microsoft.Network/virtualNetworkGateways/virtualNetworkGateways.bicep' = [for gateway in gateways: {
   name: '${gateway.name}-Gateway-Deployment' 

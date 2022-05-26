@@ -35,7 +35,7 @@ param vpnType string
 param location string = resourceGroup().location
 param tags object = {}
 
-var ipConfigs = active_active == true || gatewayType == 'ExpressRoute' ? [
+var ipConfigs = active_active == true ? [
   {
     name: 'ipconfig1'
     properties:{
