@@ -88,6 +88,13 @@ module baseInfra '../../Standard-Deployments/CAF-Landing-Zone-MG/caf-mg-deploy.b
             activeActive: true
             asn: 65000
           }
+          {
+            name: 'Core-ER'
+            size: 'Standard'
+            type: 'ExpressRoute'
+            activeActive: false
+            asn: 65515
+          }
         ]
         tags: {
           Environment: 'Prod'
