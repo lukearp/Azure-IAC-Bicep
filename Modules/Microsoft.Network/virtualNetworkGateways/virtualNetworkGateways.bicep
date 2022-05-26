@@ -35,33 +35,6 @@ param vpnType string
 param location string = resourceGroup().location
 param tags object = {}
 
-var gatewayProperties = gatewayType == 'Vpn' ? {
-  activeActive: active_active
-  enableBgp: true 
-  bgpSettings: {
-    asn: asn
-  }
-  ipConfigurations: ipConfigs 
-  gatewayType: gatewayType
-  sku:{
-     name: gatewaySku
-     tier: gatewaySku 
-  }
-  vpnType: vpnType       
-} : {
-  activeActive: active_active
-  enableBgp: true 
-  bgpSettings: {
-    asn: asn
-  }
-  ipConfigurations: ipConfigs 
-  gatewayType: gatewayType
-  sku:{
-     name: gatewaySku
-     tier: gatewaySku 
-  }
-}
-
 var ipConfigs = active_active == true ? [
   {
     name: 'ipconfig1'
@@ -99,18 +72,41 @@ var ipConfigs = active_active == true ? [
   }
 ]
 
+var gatewayProperties = toLower(gatewayType) == 'vpn' ? {
+  activeActive: active_active
+  enableBgp: true 
+  bgpSettings: {
+    asn: asn
+  }
+  ipConfigurations: ipConfigs 
+  gatewayType: gatewayType
+  sku:{
+     name: gatewaySku
+     tier: gatewaySku 
+  }
+  vpnType: vpnType       
+} : {
+  ipConfigurations: ipConfigs 
+  gatewayType: gatewayType
+  sku:{
+     name: gatewaySku
+     tier: gatewaySku 
+  }
+}
+
 var pipSku = active_active == true && contains(gatewaySku, 'AZ') ? 'Standard': 'Basic'
 var pipAllocationMethod = active_active == true && contains(gatewaySku, 'AZ') ? 'Static' : 'Dynamic'
 
 module pip '../publicIpAddresses/publicIpAddresses.bicep' = [for (ip, i) in ipConfigs :{
-  name: 'pip-${i + 1}'
+  name: '${gatewayName}-pip-${i + 1}'
   params:{
     name: '${gatewayName}${i + 1}-pip'
     publicIpAddressVersion:'IPv4'
     publicIpAllocationMethod: pipAllocationMethod
     sku: pipSku
     tier: 'Regional' 
-    tags: tags  
+    tags: tags
+    location: location 
   } 
 }]
 

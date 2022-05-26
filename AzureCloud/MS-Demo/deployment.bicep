@@ -74,6 +74,12 @@ module baseInfra '../../Standard-Deployments/CAF-Landing-Zone-MG/caf-mg-deploy.b
             routeTable: false
           }
           {
+            name: 'RouteServerSubnet'
+            addressPrefix: '10.0.19.192/27'
+            nsg: false
+            routeTable: false
+          }
+          {
             name: 'DomainControllers'
             addressPrefix: '10.0.16.0/28'
             nsg: true
@@ -85,6 +91,15 @@ module baseInfra '../../Standard-Deployments/CAF-Landing-Zone-MG/caf-mg-deploy.b
             name: 'Core-VPN'
             size: 'VpnGw1'
             type: 'Vpn'
+            activeActive: true
+            asn: 65000
+          }
+          {
+            name: 'Core-ER'
+            size: 'Standard'
+            type: 'ExpressRoute'
+            activeActive: false
+            asn: 65515
           }
         ]
         tags: {
@@ -114,9 +129,74 @@ module baseInfra '../../Standard-Deployments/CAF-Landing-Zone-MG/caf-mg-deploy.b
         tags: {
           Environment: 'Prod'
           HoursOfOperation: '24-7'
+          Spoke: 'True'
         }
       }
     ] 
     policyAssignments: []         
   }   
+}
+
+module routeServer '../../Modules/Microsoft.Network/virtualHubs/routeServer.bicep' = {
+  name: 'Route-Server-Deploy'
+  scope: resourceGroup('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-hub-networking-eastus-rg')
+  dependsOn: [
+    baseInfra
+  ]
+  params: {
+    location: 'eastus'
+    routeServerName: 'rt-server'
+    vnetId: resourceId('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-hub-networking-eastus-rg','Microsoft.Network/virtualNetworks','core-hub-vnet-eastus')
+    tags: {
+      Environment: 'Prod'
+    } 
+  } 
+}
+
+module networkManager '../../Modules/Microsoft.Network/networkManagers/networkManagers.bicep' = {
+  name: 'Network-Manager-Deployment'
+  scope: resourceGroup('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-hub-networking-eastus-rg')
+  dependsOn: [
+    baseInfra
+  ]
+  params: {
+    description: 'Network Manager for MS-Demo'
+    location: 'eastus'
+    managementGroups: [
+       '/providers/Microsoft.Management/managementGroups/CoreServices'
+    ]
+    name: 'MS-Demo-NM'
+    tags: {
+      Environment: 'Prod'
+    } 
+    subscriptions: [
+      
+    ]     
+  }    
+}
+
+module networkManagerGroup '../../Modules/Microsoft.Network/networkManagers/networkGroups/networkGroups.bicep' = {
+  name: 'Network-Manager-Group-Deployment'
+  scope: resourceGroup('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-hub-networking-eastus-rg')
+  dependsOn: [
+    networkManager
+  ]
+  params: {
+    networkManagerName: 'MS-Demo-NM'
+    description: 'Spokes to Peer'
+    networkGroupName: 'Spoke-VNETs'
+    tagName: 'Spoke'    
+  }    
+}
+
+module networkConnectivityConfig '../../Modules/Microsoft.Network/networkManagers/connectivityConfigurations/connectivityConfigurations.bicep' = {
+  name: 'Network-Config-Deploy'
+  scope: resourceGroup('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-hub-networking-eastus-rg')
+  params: {
+    connectivityConfigName: 'EastUS-Hub-Spoke'
+    hubVnetId: resourceId('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-hub-networking-eastus-rg','Microsoft.Network/virtualNetworks','core-hub-vnet-eastus')
+    description: 'Peering VNETs in EastUS' 
+    networkGroupId: networkManagerGroup.outputs.groupId
+    networkManagerName: 'MS-Demo-NM'
+  } 
 }

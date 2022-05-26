@@ -103,44 +103,20 @@ resource vnet 'Microsoft.Network/virtualNetworks@2021-05-01' = {
   properties: vnetPropertiesBase
   tags: tags
 }
-//Basic Standard
-resource publicIps 'Microsoft.Network/publicIPAddresses@2021-05-01' = [for pip in gateways: {
- name: '${pip.name}-pip'
- location: location
- sku: {
-   name: contains(pip.size,'Az') ? 'Standard' : 'Basic'
-   tier: 'Regional'  
- } 
- properties: {
-   publicIPAllocationMethod: contains(pip.size,'Az') ? 'Static' : 'Dynamic'  
- } 
- tags: tags   
-}]
 
-resource virtualNetworkGateway 'Microsoft.Network/virtualNetworkGateways@2021-05-01' = [for (gateway,i) in gateways: {
-  name: gateway.name
-  location: location
-  properties: {
+module vpnGateways '../../Modules/Microsoft.Network/virtualNetworkGateways/virtualNetworkGateways.bicep' = [for gateway in gateways: {
+  name: '${gateway.name}-Gateway-Deployment' 
+  params: {
+    active_active: gateway.activeActive
+    asn: gateway.asn
+    gatewayName: gateway.name
+    gatewaySku: gateway.size
     gatewayType: gateway.type
-    sku: {
-      name: gateway.size
-      tier: gateway.size 
-    } 
-    ipConfigurations: [
-      {
-        name: 'ipconfig'
-        properties: {
-          subnet: {
-            id: '${vnet.id}/subnets/GatewaySubnet'
-          } 
-          publicIPAddress: {
-            id: publicIps[i].id 
-          } 
-        }  
-      } 
-    ]   
+    targetVnetId: vnet.id
+    vpnType: 'RouteBased'
+    location: location
+    tags: tags         
   } 
-  tags: tags      
 }]
 
 output vnetId string = vnet.id

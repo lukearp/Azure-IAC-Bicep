@@ -35,3 +35,5 @@ resource pip 'Microsoft.Network/publicIPAddresses@2020-11-01' = {
   }  
   tags: tags 
 }
+
+output pipid string = pip.id
