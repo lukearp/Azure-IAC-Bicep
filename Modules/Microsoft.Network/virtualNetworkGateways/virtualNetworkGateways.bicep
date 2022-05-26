@@ -72,7 +72,7 @@ var ipConfigs = active_active == true ? [
   }
 ]
 
-var gatewayProperties = gatewayType == 'Vpn' ? {
+var gatewayProperties = toLower(gatewayType) == 'vpn' ? {
   activeActive: active_active
   enableBgp: true 
   bgpSettings: {

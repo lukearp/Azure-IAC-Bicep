@@ -110,7 +110,7 @@ module vpnGateways '../../Modules/Microsoft.Network/virtualNetworkGateways/virtu
     active_active: gateway.activeActive
     asn: gateway.asn
     gatewayName: gateway.name
-    gatewaySku: 'VpnGw1'
+    gatewaySku: gateway.size
     gatewayType: gateway.type
     targetVnetId: vnet.id
     vpnType: 'RouteBased'
