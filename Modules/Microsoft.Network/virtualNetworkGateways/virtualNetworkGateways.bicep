@@ -98,7 +98,7 @@ var pipSku = active_active == true && contains(gatewaySku, 'AZ') ? 'Standard': '
 var pipAllocationMethod = active_active == true && contains(gatewaySku, 'AZ') ? 'Static' : 'Dynamic'
 
 module pip '../publicIpAddresses/publicIpAddresses.bicep' = [for (ip, i) in ipConfigs :{
-  name: 'pip-${i + 1}'
+  name: '${gatewayName}-pip-${i + 1}'
   params:{
     name: '${gatewayName}${i + 1}-pip'
     publicIpAddressVersion:'IPv4'

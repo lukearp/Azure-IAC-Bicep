@@ -74,6 +74,12 @@ module baseInfra '../../Standard-Deployments/CAF-Landing-Zone-MG/caf-mg-deploy.b
             routeTable: false
           }
           {
+            name: 'RouteServerSubnet'
+            addressPrefix: '10.0.19.192/27'
+            nsg: false
+            routeTable: false
+          }
+          {
             name: 'DomainControllers'
             addressPrefix: '10.0.16.0/28'
             nsg: true
@@ -129,6 +135,22 @@ module baseInfra '../../Standard-Deployments/CAF-Landing-Zone-MG/caf-mg-deploy.b
     ] 
     policyAssignments: []         
   }   
+}
+
+module routeServer '../../Modules/Microsoft.Network/virtualHubs/routeServer.bicep' = {
+  name: 'Route-Server-Deploy'
+  scope: resourceGroup('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-hub-networking-eastus-rg')
+  dependsOn: [
+    baseInfra
+  ]
+  params: {
+    location: 'eastus'
+    routeServerName: 'rt-server'
+    vnetId: resourceId('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-hub-networking-eastus-rg','Microsoft.Network/virtualNetworks','core-hub-vnet-eastus')
+    tags: {
+      Environment: 'Prod'
+    } 
+  } 
 }
 
 module networkManager '../../Modules/Microsoft.Network/networkManagers/networkManagers.bicep' = {
