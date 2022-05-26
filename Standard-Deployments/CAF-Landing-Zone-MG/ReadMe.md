@@ -1,6 +1,9 @@
 # What does this module do?
 Creates Management Group Hierarchy per [CAF Guidance](https://docs.microsoft.com/en-us/azure/cloud-adoption-framework/ready/landing-zone/design-area/resource-org-management-groups). 
 
+## Update:
+I recently updated the deployment to leverage my VPN Gateway Module.  This has allowed me to set more gateway specific configurations.  If you have already deployed with the old deployment, the new version will most likely fail due to the ipconfig name on your gateway changing.  The original deployment using ipconfig, but the new using ipconfig1 or ipconfig2 depending if activeActive is set to true.  If this is an issue, you can change the virtualNetworkGateway.bicep module to use ipconfig in your fork. 
+
 # What does this module Require?
 Must be deployed by a user that has rights to do deployments at the Tenant Level.  To use RBAC Assignments, you must have the Repo downloaded because it's dependant on my roleAssignments-mg.bicep file.
 
@@ -82,13 +85,15 @@ Example of virtualNetworks/subnets object:
 }
 ```
 
-Example of virtualNetworks/gateways object:
+Example of virtualNetworks/gateways object (For ER Gateways, still set a value for ASN and Active Active, but they will be ignored on deployment):
 ```
 {
-    name: 'vpn' Name of VPN Gateway
-    size: 'Basic' VPN Gateway Size
-    type: 'Vpn' VPN or ExpressRoute
-}
+    name: 'Core-VPN'
+    size: 'VpnGw1'
+    type: 'Vpn'
+    activeActive: true
+    asn: 65000
+}          
 ```
 
 # Sample Module
