@@ -201,15 +201,19 @@ Example of virtualNetworks/gateways object (For ER Gateways, still set a value f
                 ]
                 gateways: [
                     {
-                        name: 'hubGw-vpn'
-                        size: 'Basic'
+                        name: 'Core-VPN'
+                        size: 'VpnGw1'
                         type: 'Vpn'
-                    },
+                        activeActive: true
+                        asn: 65000
+                    }
                     {
-                        name: 'hubGw-Er'
+                        name: 'Core-ER'
                         size: 'Standard'
                         type: 'ExpressRoute'
-                    } 
+                        activeActive: false
+                        asn: 65515
+                    }  
                 ] 
                 tags: {
                 }
