@@ -1,4 +1,5 @@
 param name string
+param displayName string
 param queryPackName string
 param body string
 param categories array = []
@@ -15,7 +16,7 @@ resource query 'Microsoft.OperationalInsights/queryPacks/queries@2019-09-01' = {
    name: name
    parent: queryPack
    properties: {
-      displayName: name
+      displayName: displayName
       body: body
       related: {
         categories: categories
