@@ -148,10 +148,7 @@ resource aks 'Microsoft.ContainerService/managedClusters@2022-03-02-preview' = {
  name: name
  location: location  
  identity: {
-   type: 'SystemAssigned'
-   userAssignedIdentities: {
-     
-   }  
+   type: 'SystemAssigned' 
  }
  sku: {
    name: 'Basic'
