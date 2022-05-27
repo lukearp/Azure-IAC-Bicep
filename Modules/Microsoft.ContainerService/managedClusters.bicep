@@ -40,7 +40,7 @@ param agentPoolProfiles array
 param internalAddressCider string
 @description('Containers DNS server IP address.')
 param dnsServiceIP string
-@description('Network policy used for building Kubernetes network.')
+@description('Network policy used for building Kubernetes network. Values \'azure\' | \'calico\' | null')
 @allowed([
   'null'
   'azure'
@@ -62,7 +62,21 @@ param aciConnectorLinuxEnabled bool
 param tier string
 param tags object
 
-var actualNetworkPolicy = networkPolicy == 'null' ? null : networkPolicy
+var networkProfile = networkPolicy == 'null' ? {
+  loadBalancerSku: 'standard'
+  networkPlugin: networkPlugin
+  networkPolicy: null
+  serviceCidr: internalAddressCider
+  dnsServiceIP: dnsServiceIP
+  dockerBridgeCidr: dockerBridgeCidr 
+} : {
+  loadBalancerSku: 'standard'
+  networkPlugin: networkPlugin
+  networkPolicy: networkPolicy
+  serviceCidr: internalAddressCider
+  dnsServiceIP: dnsServiceIP
+  dockerBridgeCidr: dockerBridgeCidr 
+}
 
 resource aks 'Microsoft.ContainerService/managedClusters@2022-03-02-preview' = {
  name: name
@@ -112,14 +126,7 @@ resource aks 'Microsoft.ContainerService/managedClusters@2022-03-02-preview' = {
       }
    }
   }
-  networkProfile: {
-    loadBalancerSku: 'standard'
-    networkPlugin: networkPlugin
-    networkPolicy: actualNetworkPolicy
-    serviceCidr: internalAddressCider
-    dnsServiceIP: dnsServiceIP
-    dockerBridgeCidr: dockerBridgeCidr 
-  }
+  networkProfile: networkProfile 
   agentPoolProfiles: agentPoolProfiles     
  }    
 }

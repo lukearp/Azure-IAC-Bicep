@@ -63,7 +63,7 @@ module aks '../../../../../Modules/Microsoft.ContainerService/managedClusters.bi
         count: 1
         enableAutoScaling: true
         minCount: 1
-        maxCount: 5
+        maxCount: 3
         vmSize: 'Standard_B4ms'
         osType: 'Linux'
         storageProfile: 'ManagedDisks'
