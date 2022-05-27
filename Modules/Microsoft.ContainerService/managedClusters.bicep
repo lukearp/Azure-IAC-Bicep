@@ -78,6 +78,72 @@ var networkProfile = networkPolicy == 'null' ? {
   dockerBridgeCidr: dockerBridgeCidr 
 }
 
+var addonProfiles = enableOmsAgent == true && aciConnectorLinuxEnabled == true ? {
+  httpApplicationRouting: {
+    enabled: enableHttpApplicationRouting 
+  }
+  azurepolicy: {
+    enabled: enableAzurePolicy
+  }
+  azureKeyvaultSecretsProvider: {
+    enabled: enableSecretStoreCSIDriver
+  }
+  omsAgent: {
+    enabled: enableOmsAgent
+    config: {
+      logAnalyticsWorkspaceResourceID: omsWorkspaceId
+    }
+  }
+  aciConnectorLinux: {
+    enabled: aciConnectorLinuxEnabled
+    config: {
+      SubnetName: aciVnetSubnetName 
+    }
+ }
+} : enableOmsAgent == false && aciConnectorLinuxEnabled == true ? {
+  httpApplicationRouting: {
+    enabled: enableHttpApplicationRouting 
+  }
+  azurepolicy: {
+    enabled: enableAzurePolicy
+  }
+  azureKeyvaultSecretsProvider: {
+    enabled: enableSecretStoreCSIDriver
+  }
+  aciConnectorLinux: {
+    enabled: aciConnectorLinuxEnabled
+    config: {
+      SubnetName: aciVnetSubnetName 
+    }
+ }
+} : enableOmsAgent == true && aciConnectorLinuxEnabled == false ? {
+  httpApplicationRouting: {
+    enabled: enableHttpApplicationRouting 
+  }
+  azurepolicy: {
+    enabled: enableAzurePolicy
+  }
+  azureKeyvaultSecretsProvider: {
+    enabled: enableSecretStoreCSIDriver
+  }
+  omsAgent: {
+    enabled: enableOmsAgent
+    config: {
+      logAnalyticsWorkspaceResourceID: omsWorkspaceId
+    }
+  }
+} : {
+  httpApplicationRouting: {
+    enabled: enableHttpApplicationRouting 
+  }
+  azurepolicy: {
+    enabled: enableAzurePolicy
+  }
+  azureKeyvaultSecretsProvider: {
+    enabled: enableSecretStoreCSIDriver
+  }
+}
+
 resource aks 'Microsoft.ContainerService/managedClusters@2022-03-02-preview' = {
  name: name
  location: location  
@@ -103,29 +169,7 @@ resource aks 'Microsoft.ContainerService/managedClusters@2022-03-02-preview' = {
    enableRBAC: enableRBAC
    dnsPrefix: dnsPrefix
    kubernetesVersion: kubernetesVersion 
-   addonProfiles: {
-    httpApplicationRouting: {
-      enabled: enableHttpApplicationRouting 
-    }
-    azurepolicy: {
-      enabled: enableAzurePolicy
-    }
-    azureKeyvaultSecretsProvider: {
-      enabled: enableSecretStoreCSIDriver
-    }
-    omsAgent: {
-      enabled: enableOmsAgent
-      config: {
-        logAnalyticsWorkspaceResourceID: omsWorkspaceId
-      }
-    }
-    aciConnectorLinux: {
-      enabled: aciConnectorLinuxEnabled
-      config: {
-        SubnetName: aciVnetSubnetName 
-      }
-   }
-  }
+   addonProfiles: addonProfiles
   networkProfile: networkProfile 
   agentPoolProfiles: agentPoolProfiles     
  }    
