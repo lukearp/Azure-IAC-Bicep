@@ -1,5 +1,5 @@
 targetScope = 'subscription'
-var queryPackName = 'IaaS Monitoring'
+var queryPackName = 'IaaS-Monitoring'
 var resourceGroupName = 'azure-queries'
 var location = 'eastus'
 var tags = {
