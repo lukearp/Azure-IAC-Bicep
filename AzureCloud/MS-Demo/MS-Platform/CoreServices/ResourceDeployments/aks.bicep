@@ -16,8 +16,8 @@ module agentsubnet '../../../../../Modules/Microsoft.Network/virtualNetworks/sub
     addressPrefix: '10.0.21.0/24'
     subnetName: 'aks-agent'
     vnetname: 'core-spoke-eastus-vnet'
-    routeTableName: 'core-spoke-eastus-vnet-eastus-rt'
-    nsgName: 'core-spoke-eastus-vnet-eastus-nsg'  
+    //routeTableName: 'core-spoke-eastus-vnet-eastus-rt'
+    //nsgName: 'core-spoke-eastus-vnet-eastus-nsg'  
   } 
 }
 
@@ -28,8 +28,8 @@ module acisubnet '../../../../../Modules/Microsoft.Network/virtualNetworks/subne
     addressPrefix: '10.0.22.0/26'
     subnetName: 'aks-aci'
     vnetname: 'core-spoke-eastus-vnet'
-    routeTableName: 'core-spoke-eastus-vnet-eastus-rt'
-    nsgName: 'core-spoke-eastus-vnet-eastus-nsg'  
+    //routeTableName: 'core-spoke-eastus-vnet-eastus-rt'
+    //nsgName: 'core-spoke-eastus-vnet-eastus-nsg'  
   } 
 }
 
