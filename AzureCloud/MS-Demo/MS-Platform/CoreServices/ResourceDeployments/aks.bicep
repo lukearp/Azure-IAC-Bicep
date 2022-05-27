@@ -33,6 +33,9 @@ module acisubnet '../../../../../Modules/Microsoft.Network/virtualNetworks/subne
   } 
 }
 
+module workspace 'loganalytics-workspaces.bicep' = {
+  name: 'AKS-Demo-Workspace-Logging'  
+}
 module aks '../../../../../Modules/Microsoft.ContainerService/managedClusters.bicep' = {
   name: 'Luke-AKS-Demo-Deploy'
   scope: resourceGroup(rg.name)
@@ -82,6 +85,8 @@ module aks '../../../../../Modules/Microsoft.ContainerService/managedClusters.bi
         vnetSubnetID: agentsubnet.outputs.subnetId
       }
     ] 
-    enableRBAC: true                            
+    enableRBAC: true 
+    enableOmsAgent: true
+    omsWorkspaceId: workspace.outputs.workspaceResourceId                             
   }    
 }
