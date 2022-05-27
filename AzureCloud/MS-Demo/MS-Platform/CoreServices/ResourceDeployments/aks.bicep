@@ -25,7 +25,7 @@ module acisubnet '../../../../../Modules/Microsoft.Network/virtualNetworks/subne
   name: 'aks-aci-AKS-Subnet-Deployment'
   scope: resourceGroup('core-spoke-network-eastus-rg')  
   params: {
-    addressPrefix: '10.0.21.0/24'
+    addressPrefix: '10.0.22.0/26'
     subnetName: 'aks-aci'
     vnetname: 'core-spoke-eastus-vnet'
     routeTableName: 'core-spoke-eastus-vnet-eastus-rt'
