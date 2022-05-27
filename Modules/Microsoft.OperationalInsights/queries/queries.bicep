@@ -1,6 +1,22 @@
 param name string
+param displayName string
 param queryPackName string
 param body string
+@allowed([
+  'security'
+  'network'
+  'management'
+  'virtualmachines'
+  'container'
+  'audit'
+  'desktopanalytics'
+  'workloads'
+  'resources'
+  'applications'
+  'monitor'
+  'databases'
+  'windowsvirtualdesktop'
+])
 param categories array = []
 param resourceTypes array = [
   'microsoft.operationalinsights/workspaces'
@@ -15,7 +31,7 @@ resource query 'Microsoft.OperationalInsights/queryPacks/queries@2019-09-01' = {
    name: name
    parent: queryPack
    properties: {
-      displayName: name
+      displayName: displayName
       body: body
       related: {
         categories: categories
