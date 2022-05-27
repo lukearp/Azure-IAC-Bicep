@@ -21,3 +21,5 @@ module workspaces '../../../../../Modules/Microsoft.OperationalInsights/workspac
      tags: tags   
   }   
 }
+
+output workspaceResourceId string = workspaces.outputs.workspaceResourceId

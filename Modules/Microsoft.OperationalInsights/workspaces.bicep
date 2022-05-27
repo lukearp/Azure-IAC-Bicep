@@ -28,9 +28,11 @@ var properties = dailyQuotaGB == 0 ? {
   }    
 } 
 
-resource workspaces 'Microsoft.OperationalInsights/workspaces@2021-12-01-preview' = {
+resource workspace 'Microsoft.OperationalInsights/workspaces@2021-12-01-preview' = {
   name: name
   location: location
   properties: properties 
   tags: tags 
 }
+
+output workspaceResourceId string = workspace.id
