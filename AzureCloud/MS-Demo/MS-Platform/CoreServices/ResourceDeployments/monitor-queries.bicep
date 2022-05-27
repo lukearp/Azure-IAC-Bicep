@@ -12,7 +12,7 @@ var queryStrings = [
     displayName: 'Server Down'
     body: 'Heartbeat \r\n| summarize LastCall = max(TimeGenerated) by Computer \r\n| where LastCall < ago(5m)'
     categories: [
-      'IaaS'
+      'virtualmachines'
     ]
     labels: [
       'Availability'
@@ -23,7 +23,7 @@ var queryStrings = [
     displayName: 'Memory Average over 95 Percent'
     body: 'InsightsMetrics\r\n| where Namespace == "Memory" and TimeGenerated > ago(5m)\r\n| project Computer,  Percentage=100 - (Val / parse_json(Tags)["vm.azm.ms/memorySizeMB"] * 100)\r\n| summarize avg(Percentage) by Computer\r\n| where avg_Percentage > 95'
     categories: [
-      'IaaS'
+      'virtualmachines'
     ]
     labels: [
       'Performance'
@@ -34,7 +34,7 @@ var queryStrings = [
     displayName: 'CPU over 95 Percent'
     body: 'InsightsMetrics \r\n//| where Namespace == "Processor" and Name == "UtilizationPercentage" and TimeGenerated > ago(10m)\r\n| summarize avg(Val) by Computer\r\n| where avg_Val > 95'
     categories: [
-      'IaaS'
+      'virtualmachines'
     ]
     labels: [
       'Performance'
