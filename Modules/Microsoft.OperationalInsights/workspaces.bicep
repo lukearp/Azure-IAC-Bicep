@@ -17,7 +17,7 @@ var skuObject = sku == 'CapacityReservation' ? {
   name: sku   
 }
 
-var capping = dailyQuotaGB == 0 ? {
+var properties = dailyQuotaGB == 0 ? {
   sku: skuObject
   retentionInDays: retentionInDays   
 } : {
@@ -31,12 +31,6 @@ var capping = dailyQuotaGB == 0 ? {
 resource workspaces 'Microsoft.OperationalInsights/workspaces@2021-12-01-preview' = {
   name: name
   location: location
-  properties: {
-    sku: skuObject
-    retentionInDays: retentionInDays
-    workspaceCapping: {
-      dailyQuotaGb: dailyQuotaGB 
-    }    
-  } 
+  properties: properties 
   tags: tags 
 }
