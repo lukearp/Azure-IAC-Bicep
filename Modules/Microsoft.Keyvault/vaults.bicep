@@ -10,8 +10,8 @@ param enableRbacAuthorization bool = true
 param enabledForDeployment bool = false
 param enabledForDiskEncryption bool = false
 param enabledForTemplateDeployment bool = false
-param enablePurgeProtection bool = false
-param enableSoftDelete bool = false
+param enablePurgeProtection bool = true
+param enableSoftDelete bool = true
 param accessPolicies array = []
 param networkAcls object = {}
 

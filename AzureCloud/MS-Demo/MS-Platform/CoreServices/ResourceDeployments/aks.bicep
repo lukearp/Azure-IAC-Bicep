@@ -126,6 +126,9 @@ module keyvaultIdentity '../../../../../Modules/Microsoft.ManagedIdentity/userAs
 module keyVaultRbac '../../../../../Modules/Microsoft.Authorization/roleAssignments/roleAssignments-rg.bicep' = {
   name: 'Keyvault-RBAC-Assignment'
   scope: resourceGroup(rg.name)
+  dependsOn: [
+    keyVault
+  ]
   params: {
     name: 'Kevault-SPN'
     objectId: keyvaultIdentity.outputs.clientId 
