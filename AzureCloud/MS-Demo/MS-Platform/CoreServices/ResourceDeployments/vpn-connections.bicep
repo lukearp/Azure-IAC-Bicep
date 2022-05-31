@@ -18,7 +18,7 @@ module localGateway '../../../../../Modules/Microsoft.Network/localNetworkGatewa
     }
     localAddressPrefixes: []
     bgpPeeringAddress: '192.168.0.1'
-    asn: 65550          
+    asn: 65525          
   }   
 }
 
