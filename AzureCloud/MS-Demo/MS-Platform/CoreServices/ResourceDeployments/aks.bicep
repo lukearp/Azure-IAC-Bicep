@@ -131,7 +131,7 @@ module keyVaultRbac '../../../../../Modules/Microsoft.Authorization/roleAssignme
   ]
   params: {
     name: 'Kevault-SPN'
-    objectId: keyvaultIdentity.outputs.clientId 
+    objectId: keyvaultIdentity.outputs.principalId 
     roleDefinitionId: '4633458b-17de-408a-b874-0445c86b69e6'  
   } 
 }
