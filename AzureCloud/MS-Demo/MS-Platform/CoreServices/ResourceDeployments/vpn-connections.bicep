@@ -17,7 +17,7 @@ module localGateway '../../../../../Modules/Microsoft.Network/localNetworkGatewa
       Environment: 'Prod'
     }
     localAddressPrefixes: []
-    bgpPeeringAddress: '192.168.0.1'
+    bgpPeeringAddress: '192.168.1.1'
     asn: 65525          
   }   
 }
