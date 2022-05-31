@@ -24,10 +24,12 @@ resource connection 'Microsoft.Network/connections@2021-08-01' = {
   properties: {
     connectionType: connectionType
     virtualNetworkGateway1: {
-      id: virtualNetworkGateway1  
+      id: virtualNetworkGateway1
+      properties: {}  
     }
     localNetworkGateway2: {
-      id: localNetworkGateway2 
+      id: localNetworkGateway2
+      properties: {}
     }
     connectionMode: 'Default'
     connectionProtocol: connectionProtocol
