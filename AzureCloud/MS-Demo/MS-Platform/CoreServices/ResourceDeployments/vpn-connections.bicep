@@ -2,7 +2,7 @@ targetScope = 'subscription'
 param sharedKey string
 
 resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' existing = {
-  name: 'core-hub-vnet-eastus'
+  name: 'core-hub-networking-eastus-rg'
 }
 
 module localGateway '../../../../../Modules/Microsoft.Network/localNetworkGateways/localNetworkGateways.bicep' = {
