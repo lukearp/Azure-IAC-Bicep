@@ -119,3 +119,5 @@ resource vnetGateway 'Microsoft.Network/virtualNetworkGateways@2020-11-01' = {
  ]
  tags: tags 
 }
+
+output id string = vnetGateway.id
