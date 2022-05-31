@@ -37,6 +37,6 @@ module connection '../../../../../Modules/Microsoft.Network/connections/connecti
     } 
     usePolicyBasedTrafficSelectors: false
     connectionProtocol: 'IKEv2'
-    virtualNetworkGateway1: resourceId('Microsoft.Network/virtualNetworkGateways', 'Core-VPN')        
+    virtualNetworkGateway1: resourceId('32eb88b4-4029-4094-85e3-ec8b7ce1fc00',rg.name,'Microsoft.Network/virtualNetworkGateways', 'Core-VPN')        
   }   
 }

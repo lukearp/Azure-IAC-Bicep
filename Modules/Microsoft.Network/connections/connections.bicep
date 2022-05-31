@@ -25,11 +25,11 @@ resource connection 'Microsoft.Network/connections@2021-08-01' = {
     connectionType: connectionType
     virtualNetworkGateway1: {
       id: virtualNetworkGateway1
-      properties: {}  
+      properties: reference(virtualNetworkGateway1, '2020-11-01', 'FULL').properties  
     }
     localNetworkGateway2: {
       id: localNetworkGateway2
-      properties: {}
+      properties: reference(localNetworkGateway2, '2021-08-01', 'FULL').properties  
     }
     connectionMode: 'Default'
     connectionProtocol: connectionProtocol
