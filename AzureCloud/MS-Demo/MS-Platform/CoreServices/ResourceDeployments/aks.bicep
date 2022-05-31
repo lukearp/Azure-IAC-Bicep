@@ -41,7 +41,7 @@ module aks '../../../../../Modules/Microsoft.ContainerService/managedClusters.bi
   scope: resourceGroup(rg.name)
   params: {
     aadProfileEnabled: true
-    aciConnectorLinuxEnabled: true
+    aciConnectorLinuxEnabled: false
     aciVnetSubnetName: split(acisubnet.outputs.subnetId,'/')[10]
     dnsPrefix: 'luke-aks-deploy'
     networkPlugin: 'azure'
