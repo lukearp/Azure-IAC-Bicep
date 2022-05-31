@@ -103,7 +103,8 @@ module aks '../../../../../Modules/Microsoft.ContainerService/managedClusters.bi
     ] 
     enableRBAC: true 
     enableOmsAgent: true
-    omsWorkspaceId: workspace.outputs.workspaceResourceId                             
+    omsWorkspaceId: workspace.outputs.workspaceResourceId   
+    enableSecretStoreCSIDriver: true                           
   }    
 }
 
