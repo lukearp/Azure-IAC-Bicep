@@ -1,5 +1,6 @@
 targetScope = 'subscription'
-
+var clusterName = 'aks-demo'
+var clusterLocation = 'eastus'
 resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   location: 'eastus'
   name: 'aks-demo'
@@ -36,6 +37,21 @@ module acisubnet '../../../../../Modules/Microsoft.Network/virtualNetworks/subne
 module workspace 'loganalytics-workspaces.bicep' = {
   name: 'AKS-Demo-Workspace-Logging'  
 }
+
+module keyVault '../../../../../Modules/Microsoft.Keyvault/vaults.bicep' = {
+  name: 'AKS-Secret-Vault'
+  scope: resourceGroup(rg.name)
+  params: {
+    location: 'eastus'
+    name: 'AKS-Secret-Vault'
+    sku: 'standard'
+    tags: {
+      Environment: 'Prod'
+    }    
+    enableRbacAuthorization: true  
+  }   
+}
+
 module aks '../../../../../Modules/Microsoft.ContainerService/managedClusters.bicep' = {
   name: 'Luke-AKS-Demo-Deploy'
   scope: resourceGroup(rg.name)
@@ -89,4 +105,30 @@ module aks '../../../../../Modules/Microsoft.ContainerService/managedClusters.bi
     enableOmsAgent: true
     omsWorkspaceId: workspace.outputs.workspaceResourceId                             
   }    
+}
+
+module keyvaultIdentity '../../../../../Modules/Microsoft.ManagedIdentity/userAssignedIdentities.bicep' = {
+  name: 'AKS-Keyvault-ManagedIdentity-ClientId'
+  dependsOn: [
+    aks
+  ]
+  scope: resourceGroup('MC_${rg.name}_${clusterName}_${clusterLocation}')  
+  params: {
+    location: clusterLocation
+    name: 'azurekeyvaultsecretsprovider-${clusterName}'  
+    tags: {
+      Environment: 'Prod'
+      HoursOfOperation: 'N/A'  
+    } 
+  }
+}
+
+module keyVaultRbac '../../../../../Modules/Microsoft.Authorization/roleAssignments/roleAssignments-rg.bicep' = {
+  name: 'Keyvault-RBAC-Assignment'
+  scope: resourceGroup(rg.name)
+  params: {
+    name: 'Kevault-SPN'
+    objectId: keyvaultIdentity.outputs.clientId 
+    roleDefinitionId: '4633458b-17de-408a-b874-0445c86b69e6'  
+  } 
 }
