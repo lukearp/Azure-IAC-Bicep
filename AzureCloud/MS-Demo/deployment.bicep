@@ -155,7 +155,7 @@ module baseInfra '../../Standard-Deployments/CAF-Landing-Zone-MG/caf-mg-deploy.b
         dnsServers: []
         type: 'Spoke'
         location: 'eastus'
-        resourceGroupName: 'core-transit--eastus-rg'
+        resourceGroupName: 'core-transit-networking-eastus-rg'
         nsgRules: []
         routes: []
         disableBgpRoutePropagation: false
