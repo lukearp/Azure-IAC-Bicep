@@ -2,6 +2,7 @@ param routeServerName string
 param location string
 param tags object = {}
 param vnetId string
+param allowBranchToBranchTraffic bool = false
 
 resource routeServer 'Microsoft.Network/virtualHubs@2021-08-01' = {
   name: routeServerName
@@ -9,6 +10,7 @@ resource routeServer 'Microsoft.Network/virtualHubs@2021-08-01' = {
   tags: tags
   properties: {
     sku: 'Standard'
+    allowBranchToBranchTraffic: allowBranchToBranchTraffic 
   }    
 }
 
