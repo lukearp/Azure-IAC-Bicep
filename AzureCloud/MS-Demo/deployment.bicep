@@ -97,13 +97,13 @@ module baseInfra '../../Standard-Deployments/CAF-Landing-Zone-MG/caf-mg-deploy.b
         subnets: [
           {
             name: 'GatewaySubnet'
-            addressPrefix: '10.0.13.224/27'
+            addressPrefix: '10.0.12.224/27'
             nsg: false
             routeTable: false
           }
           {
             name: 'RouteServerSubnet'
-            addressPrefix: '10.0.13.192/27'
+            addressPrefix: '10.0.12.192/27'
             nsg: false
             routeTable: false
           }
@@ -112,8 +112,8 @@ module baseInfra '../../Standard-Deployments/CAF-Landing-Zone-MG/caf-mg-deploy.b
           {
             name: 'Core-ER'
             size: 'Standard'
-            type: 'ExpressRoute'
-            activeActive: true
+            type: 'ExpressRoute' 
+            activeActive: false
             asn: 65000
           }
         ]
