@@ -168,6 +168,7 @@ module routeServer '../../Modules/Microsoft.Network/virtualHubs/routeServer.bice
     tags: {
       Environment: 'Prod'
     } 
+    allowBranchToBranchTraffic: true 
   } 
 }
 
