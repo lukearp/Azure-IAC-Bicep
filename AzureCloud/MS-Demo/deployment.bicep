@@ -130,7 +130,7 @@ module baseInfra '../../Standard-Deployments/CAF-Landing-Zone-MG/caf-mg-deploy.b
         dnsServers: []
         type: 'Spoke'
         location: 'eastus'
-        resourceGroupName: 'core-workloads-network-eastus-rg'
+        resourceGroupName: 'core-workloads-networking-eastus-rg'
         nsgRules: []
         routes: []
         disableBgpRoutePropagation: false
@@ -155,7 +155,7 @@ module baseInfra '../../Standard-Deployments/CAF-Landing-Zone-MG/caf-mg-deploy.b
         dnsServers: []
         type: 'Spoke'
         location: 'eastus'
-        resourceGroupName: 'core-transit-network-eastus-rg'
+        resourceGroupName: 'core-transit--eastus-rg'
         nsgRules: []
         routes: []
         disableBgpRoutePropagation: false
@@ -226,7 +226,7 @@ module routeServerEr '../../Modules/Microsoft.Network/virtualHubs/routeServer.bi
 module networkManager '../../Modules/Microsoft.Network/networkManagers/networkManagers.bicep' = {
   name: 'Network-Manager-Deployment'
   scope: resourceGroup('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-transit-networking-eastus-rg')
-  dependsOn: [
+  dependsOn: [                                            
     baseInfra
   ]
   params: {
