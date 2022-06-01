@@ -44,64 +44,28 @@ module baseInfra '../../Standard-Deployments/CAF-Landing-Zone-MG/caf-mg-deploy.b
     ]
     virtualNetworks: [
       {
-        name: 'core-hub-vnet-eastus'
+        name: 'core-vpn-vnet-eastus'
         subId: '32eb88b4-4029-4094-85e3-ec8b7ce1fc00'
-        vnetAddressSpace: '10.0.16.0/22'
+        vnetAddressSpace: '10.0.12.0/24'
         dnsServers: []
         type: 'Hub'
         location: 'eastus'
-        resourceGroupName: 'core-hub-networking-eastus-rg'
+        resourceGroupName: 'core-vpn-networking-eastus-rg'
         nsgRules: []
         routes: []
         disableBgpRoutePropagation: false
         subnets: [
           {
             name: 'GatewaySubnet'
-            addressPrefix: '10.0.19.224/27'
-            nsg: false
-            routeTable: false
-          }
-          {
-            name: 'AzureBastionSubnet'
-            addressPrefix: '10.0.19.128/26'
-            nsg: false
-            routeTable: false
-          }
-          {
-            name: 'AzureFirewallSubnet'
-            addressPrefix: '10.0.19.64/26'
+            addressPrefix: '10.0.12.224/27'
             nsg: false
             routeTable: false
           }
           {
             name: 'RouteServerSubnet'
-            addressPrefix: '10.0.19.192/27'
+            addressPrefix: '10.0.12.192/27'
             nsg: false
             routeTable: false
-          }
-          {
-            name: 'Trust'
-            addressPrefix: '10.0.19.0/28'
-            nsg: false
-            routeTable: false
-          }
-          {
-            name: 'Untrust'
-            addressPrefix: '10.0.19.16/28'
-            nsg: false
-            routeTable: false
-          }
-          {
-            name: 'Management'
-            addressPrefix: '10.0.16.32/27'
-            nsg: false
-            routeTable: false
-          }
-          {
-            name: 'DomainControllers'
-            addressPrefix: '10.0.16.0/28'
-            nsg: true
-            routeTable: true
           }
         ]
         gateways: [
@@ -112,36 +76,45 @@ module baseInfra '../../Standard-Deployments/CAF-Landing-Zone-MG/caf-mg-deploy.b
             activeActive: true
             asn: 65000
           }
-          {
-            name: 'Core-ER'
-            size: 'Standard'
-            type: 'ExpressRoute'
-            activeActive: false
-            asn: 65515
-          }
         ]
         tags: {
           Environment: 'Prod'
           HoursOfOperation: '24-7'
+          Spoke: 'True'
         }
       }
       {
-        name: 'core-spoke-eastus-vnet'
+        name: 'core-er-vnet-eastus'
         subId: '32eb88b4-4029-4094-85e3-ec8b7ce1fc00'
-        vnetAddressSpace: '10.0.20.0/22'
+        vnetAddressSpace: '10.0.12.0/24'
         dnsServers: []
-        type: 'Spoke'
+        type: 'Hub'
         location: 'eastus'
-        resourceGroupName: 'core-spoke-network-eastus-rg'
+        resourceGroupName: 'core-er-networking-eastus-rg'
         nsgRules: []
         routes: []
         disableBgpRoutePropagation: false
         subnets: [
           {
-            name: 'VDI'
-            addressPrefix: '10.0.20.0/25'
-            nsg: true
-            routeTable: true
+            name: 'GatewaySubnet'
+            addressPrefix: '10.0.13.224/27'
+            nsg: false
+            routeTable: false
+          }
+          {
+            name: 'RouteServerSubnet'
+            addressPrefix: '10.0.13.192/27'
+            nsg: false
+            routeTable: false
+          }
+        ]
+        gateways: [
+          {
+            name: 'Core-ER'
+            size: 'Standard'
+            type: 'ExpressRoute'
+            activeActive: true
+            asn: 65000
           }
         ]
         tags: {
@@ -150,31 +123,109 @@ module baseInfra '../../Standard-Deployments/CAF-Landing-Zone-MG/caf-mg-deploy.b
           Spoke: 'True'
         }
       }
+      {
+        name: 'core-workloads-eastus-vnet'
+        subId: '32eb88b4-4029-4094-85e3-ec8b7ce1fc00'
+        vnetAddressSpace: '10.0.16.0/22'
+        dnsServers: []
+        type: 'Spoke'
+        location: 'eastus'
+        resourceGroupName: 'core-workloads-network-eastus-rg'
+        nsgRules: []
+        routes: []
+        disableBgpRoutePropagation: false
+        subnets: [
+          {
+            name: 'VDI'
+            addressPrefix: '10.0.17.0/25'
+            nsg: true
+            routeTable: true
+          }
+        ] 
+        tags: {
+          Environment: 'Prod'
+          HoursOfOperation: '24-7'
+          Spoke: 'True'
+        }
+      }
+      {
+        name: 'core-transit-eastus-vnet'
+        subId: '32eb88b4-4029-4094-85e3-ec8b7ce1fc00'
+        vnetAddressSpace: '10.0.14.0/24'
+        dnsServers: []
+        type: 'Spoke'
+        location: 'eastus'
+        resourceGroupName: 'core-transit-network-eastus-rg'
+        nsgRules: []
+        routes: []
+        disableBgpRoutePropagation: false
+        subnets: [
+          {
+            name: 'Trust'
+            addressPrefix: '10.0.14.0/28'
+            nsg: false
+            routeTable: false
+          }
+          {
+            name: 'Untrust'
+            addressPrefix: '10.0.14.16/28'
+            nsg: false
+            routeTable: false
+          }
+          {
+            name: 'Mgmt'
+            addressPrefix: '10.0.14.32/27'
+            nsg: true
+            routeTable: true
+          }
+        ]
+        tags: {
+          Environment: 'Prod'
+          HoursOfOperation: '24-7'
+        }
+      }
     ] 
     policyAssignments: []         
   }   
 }
 
-module routeServer '../../Modules/Microsoft.Network/virtualHubs/routeServer.bicep' = {
-  name: 'Route-Server-Deploy'
-  scope: resourceGroup('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-hub-networking-eastus-rg')
+module routeServerVpn '../../Modules/Microsoft.Network/virtualHubs/routeServer.bicep' = {
+  name: 'Route-VPN-Server-Deploy'
+  scope: resourceGroup('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-vpn-networking-eastus-rg')
   dependsOn: [
     baseInfra
   ]
   params: {
     location: 'eastus'
     routeServerName: 'rt-server'
-    vnetId: resourceId('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-hub-networking-eastus-rg','Microsoft.Network/virtualNetworks','core-hub-vnet-eastus')
+    vnetId: resourceId('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-vpn-networking-eastus-rg','Microsoft.Network/virtualNetworks','core-vpn-vnet-eastus')
     tags: {
       Environment: 'Prod'
     } 
-    allowBranchToBranchTraffic: true 
+    allowBranchToBranchTraffic: false 
+  } 
+}
+
+module routeServerEr '../../Modules/Microsoft.Network/virtualHubs/routeServer.bicep' = {
+  name: 'Route-ER-Server-Deploy'
+  scope: resourceGroup('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-er-networking-eastus-rg')
+  dependsOn: [
+    baseInfra
+  ]
+  params: {
+    location: 'eastus'
+    routeServerName: 'rt-server'
+    vnetId: resourceId('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-er-networking-eastus-rg','Microsoft.Network/virtualNetworks','core-er-vnet-eastus')
+    tags: {
+      Environment: 'Prod'
+    } 
+    allowBranchToBranchTraffic: false 
   } 
 }
 
 module networkManager '../../Modules/Microsoft.Network/networkManagers/networkManagers.bicep' = {
   name: 'Network-Manager-Deployment'
-  scope: resourceGroup('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-hub-networking-eastus-rg')
+  scope: resourceGroup('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-vpn-networking-eastus-rg')
   dependsOn: [
     baseInfra
   ]
@@ -196,7 +247,7 @@ module networkManager '../../Modules/Microsoft.Network/networkManagers/networkMa
 
 module networkManagerGroup '../../Modules/Microsoft.Network/networkManagers/networkGroups/networkGroups.bicep' = {
   name: 'Network-Manager-Group-Deployment'
-  scope: resourceGroup('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-hub-networking-eastus-rg')
+  scope: resourceGroup('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-vpn-networking-eastus-rg')
   dependsOn: [
     networkManager
   ]
@@ -210,10 +261,10 @@ module networkManagerGroup '../../Modules/Microsoft.Network/networkManagers/netw
 
 module networkConnectivityConfig '../../Modules/Microsoft.Network/networkManagers/connectivityConfigurations/connectivityConfigurations.bicep' = {
   name: 'Network-Config-Deploy'
-  scope: resourceGroup('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-hub-networking-eastus-rg')
+  scope: resourceGroup('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-vpn-networking-eastus-rg')
   params: {
     connectivityConfigName: 'EastUS-Hub-Spoke'
-    hubVnetId: resourceId('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-hub-networking-eastus-rg','Microsoft.Network/virtualNetworks','core-hub-vnet-eastus')
+    hubVnetId: resourceId('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-vpn-networking-eastus-rg','Microsoft.Network/virtualNetworks','core-vpn-vnet-eastus')
     description: 'Peering VNETs in EastUS' 
     networkGroupId: networkManagerGroup.outputs.groupId
     networkManagerName: 'MS-Demo-NM'
