@@ -268,5 +268,6 @@ module networkConnectivityConfig '../../Modules/Microsoft.Network/networkManager
     description: 'Peering VNETs in EastUS' 
     networkGroupId: networkManagerGroup.outputs.groupId
     networkManagerName: 'MS-Demo-NM'
+    useHubGateway: 'False'
   } 
 }
