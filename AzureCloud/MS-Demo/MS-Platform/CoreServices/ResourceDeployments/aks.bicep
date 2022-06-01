@@ -12,24 +12,24 @@ resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
 
 module agentsubnet '../../../../../Modules/Microsoft.Network/virtualNetworks/subnets/subnets.bicep' = {
   name: 'aks-agent-AKS-Subnet-Deployment'
-  scope: resourceGroup('core-spoke-network-eastus-rg')  
+  scope: resourceGroup('core-workloads-networking-eastus-rg')  
   params: {
-    addressPrefix: '10.0.21.0/24'
+    addressPrefix: '10.0.19.0/24'
     subnetName: 'aks-agent'
-    vnetname: 'core-spoke-eastus-vnet'
-    routeTableName: 'core-spoke-eastus-vnet-eastus-rt'
+    vnetname: 'core-workloads-eastus-vnet'
+    routeTableName: 'core-workloads-eastus-vnet-eastus-rt'
     //nsgName: 'core-spoke-eastus-vnet-eastus-nsg'  
   } 
 }
 
 module acisubnet '../../../../../Modules/Microsoft.Network/virtualNetworks/subnets/subnets.bicep' = {
   name: 'aks-aci-AKS-Subnet-Deployment'
-  scope: resourceGroup('core-spoke-network-eastus-rg')  
+  scope: resourceGroup('core-workloads-networking-eastus-rg')  
   params: {
-    addressPrefix: '10.0.22.0/26'
+    addressPrefix: '10.0.18.0/26'
     subnetName: 'aks-aci'
-    vnetname: 'core-spoke-eastus-vnet'
-    routeTableName: 'core-spoke-eastus-vnet-eastus-rt'
+    vnetname: 'core-workloads-eastus-vnet'
+    routeTableName: 'core-workloads-eastus-vnet-eastus-rt'
     //nsgName: 'core-spoke-eastus-vnet-eastus-nsg'  
   } 
 }
@@ -88,7 +88,7 @@ module aks '../../../../../Modules/Microsoft.ContainerService/managedClusters.bi
         storageProfile: 'ManagedDisks'
         type: 'VirtualMachineScaleSets'
         mode: 'System'
-        maxPods: 60
+        maxPods: 50
         availabilityZones: [
           '1'
           '2'
