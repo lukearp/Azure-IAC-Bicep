@@ -86,7 +86,7 @@ module baseInfra '../../Standard-Deployments/CAF-Landing-Zone-MG/caf-mg-deploy.b
       {
         name: 'core-er-vnet-eastus'
         subId: '32eb88b4-4029-4094-85e3-ec8b7ce1fc00'
-        vnetAddressSpace: '10.0.12.0/24'
+        vnetAddressSpace: '10.0.13.0/24'
         dnsServers: []
         type: 'Hub'
         location: 'eastus'
@@ -97,13 +97,13 @@ module baseInfra '../../Standard-Deployments/CAF-Landing-Zone-MG/caf-mg-deploy.b
         subnets: [
           {
             name: 'GatewaySubnet'
-            addressPrefix: '10.0.12.224/27'
+            addressPrefix: '10.0.13.224/27'
             nsg: false
             routeTable: false
           }
           {
             name: 'RouteServerSubnet'
-            addressPrefix: '10.0.12.192/27'
+            addressPrefix: '10.0.13.192/27'
             nsg: false
             routeTable: false
           }
