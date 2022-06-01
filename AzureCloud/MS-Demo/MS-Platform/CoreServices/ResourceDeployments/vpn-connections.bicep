@@ -40,3 +40,19 @@ module connection '../../../../../Modules/Microsoft.Network/connections/connecti
     virtualNetworkGateway1: resourceId('32eb88b4-4029-4094-85e3-ec8b7ce1fc00',rg.name,'Microsoft.Network/virtualNetworkGateways', 'Core-VPN')        
   }   
 }
+
+module erConnection '../../../../../Modules/Microsoft.Network/connections/connections.bicep' = {
+  name: 'AVS-ER-Connection'
+  scope: resourceGroup(rg.name)
+  params: {
+    connectionType: 'ExpressRoute'
+    location: 'eastus'
+    name: 'AVS-Connection'
+    tags: {
+      Environment: 'Prod'
+    }
+    virtualNetworkGateway1: resourceId('32eb88b4-4029-4094-85e3-ec8b7ce1fc00',rg.name,'Microsoft.Network/virtualNetworkGateways', 'Core-ER')
+    authorizationKey: 'a922d45f-4c11-4f36-bf15-b8a90b43ba51' 
+    erCircuitId: '/subscriptions/e2f192a7-f4e1-4289-b895-52a60dc29fb7/resourceGroups/tnt80-cust-p01-brazilsouth/providers/Microsoft.Network/expressRouteCircuits/tnt80-cust-p01-brazilsouth-er'       
+  }   
+}
