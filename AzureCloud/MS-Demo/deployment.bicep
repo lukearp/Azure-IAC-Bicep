@@ -225,7 +225,7 @@ module routeServerEr '../../Modules/Microsoft.Network/virtualHubs/routeServer.bi
 
 module networkManager '../../Modules/Microsoft.Network/networkManagers/networkManagers.bicep' = {
   name: 'Network-Manager-Deployment'
-  scope: resourceGroup('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-vpn-networking-eastus-rg')
+  scope: resourceGroup('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-transit-networking-eastus-rg')
   dependsOn: [
     baseInfra
   ]
@@ -247,7 +247,7 @@ module networkManager '../../Modules/Microsoft.Network/networkManagers/networkMa
 
 module networkManagerGroup '../../Modules/Microsoft.Network/networkManagers/networkGroups/networkGroups.bicep' = {
   name: 'Network-Manager-Group-Deployment'
-  scope: resourceGroup('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-vpn-networking-eastus-rg')
+  scope: resourceGroup('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-transit-networking-eastus-rg')
   dependsOn: [
     networkManager
   ]
@@ -261,10 +261,10 @@ module networkManagerGroup '../../Modules/Microsoft.Network/networkManagers/netw
 
 module networkConnectivityConfig '../../Modules/Microsoft.Network/networkManagers/connectivityConfigurations/connectivityConfigurations.bicep' = {
   name: 'Network-Config-Deploy'
-  scope: resourceGroup('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-vpn-networking-eastus-rg')
+  scope: resourceGroup('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-transit-networking-eastus-rg')
   params: {
     connectivityConfigName: 'EastUS-Hub-Spoke'
-    hubVnetId: resourceId('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-vpn-networking-eastus-rg','Microsoft.Network/virtualNetworks','core-vpn-vnet-eastus')
+    hubVnetId: resourceId('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-transit-networking-eastus-rg','Microsoft.Network/virtualNetworks','core-transit-vnet-eastus')
     description: 'Peering VNETs in EastUS' 
     networkGroupId: networkManagerGroup.outputs.groupId
     networkManagerName: 'MS-Demo-NM'
