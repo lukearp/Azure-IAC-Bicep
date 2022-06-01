@@ -197,7 +197,7 @@ module routeServerVpn '../../Modules/Microsoft.Network/virtualHubs/routeServer.b
   ]
   params: {
     location: 'eastus'
-    routeServerName: 'rt-server'
+    routeServerName: 'rt-vpn-server'
     vnetId: resourceId('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-vpn-networking-eastus-rg','Microsoft.Network/virtualNetworks','core-vpn-vnet-eastus')
     tags: {
       Environment: 'Prod'
@@ -214,7 +214,7 @@ module routeServerEr '../../Modules/Microsoft.Network/virtualHubs/routeServer.bi
   ]
   params: {
     location: 'eastus'
-    routeServerName: 'rt-server'
+    routeServerName: 'rt-er-server'
     vnetId: resourceId('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-er-networking-eastus-rg','Microsoft.Network/virtualNetworks','core-er-vnet-eastus')
     tags: {
       Environment: 'Prod'
