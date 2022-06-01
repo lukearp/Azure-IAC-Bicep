@@ -97,13 +97,13 @@ module baseInfra '../../Standard-Deployments/CAF-Landing-Zone-MG/caf-mg-deploy.b
         subnets: [
           {
             name: 'GatewaySubnet'
-            addressPrefix: '10.0.13.224/27'
+            addressPrefix: '10.0.12.224/27'
             nsg: false
             routeTable: false
           }
           {
             name: 'RouteServerSubnet'
-            addressPrefix: '10.0.13.192/27'
+            addressPrefix: '10.0.12.192/27'
             nsg: false
             routeTable: false
           }
@@ -112,8 +112,8 @@ module baseInfra '../../Standard-Deployments/CAF-Landing-Zone-MG/caf-mg-deploy.b
           {
             name: 'Core-ER'
             size: 'Standard'
-            type: 'ExpressRoute'
-            activeActive: true
+            type: 'ExpressRoute' 
+            activeActive: false
             asn: 65000
           }
         ]
@@ -130,7 +130,7 @@ module baseInfra '../../Standard-Deployments/CAF-Landing-Zone-MG/caf-mg-deploy.b
         dnsServers: []
         type: 'Spoke'
         location: 'eastus'
-        resourceGroupName: 'core-workloads-network-eastus-rg'
+        resourceGroupName: 'core-workloads-networking-eastus-rg'
         nsgRules: []
         routes: []
         disableBgpRoutePropagation: false
@@ -155,7 +155,7 @@ module baseInfra '../../Standard-Deployments/CAF-Landing-Zone-MG/caf-mg-deploy.b
         dnsServers: []
         type: 'Spoke'
         location: 'eastus'
-        resourceGroupName: 'core-transit-network-eastus-rg'
+        resourceGroupName: 'core-transit-networking-eastus-rg'
         nsgRules: []
         routes: []
         disableBgpRoutePropagation: false
@@ -197,7 +197,7 @@ module routeServerVpn '../../Modules/Microsoft.Network/virtualHubs/routeServer.b
   ]
   params: {
     location: 'eastus'
-    routeServerName: 'rt-server'
+    routeServerName: 'rt-vpn-server'
     vnetId: resourceId('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-vpn-networking-eastus-rg','Microsoft.Network/virtualNetworks','core-vpn-vnet-eastus')
     tags: {
       Environment: 'Prod'
@@ -214,7 +214,7 @@ module routeServerEr '../../Modules/Microsoft.Network/virtualHubs/routeServer.bi
   ]
   params: {
     location: 'eastus'
-    routeServerName: 'rt-server'
+    routeServerName: 'rt-er-server'
     vnetId: resourceId('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-er-networking-eastus-rg','Microsoft.Network/virtualNetworks','core-er-vnet-eastus')
     tags: {
       Environment: 'Prod'
@@ -225,8 +225,8 @@ module routeServerEr '../../Modules/Microsoft.Network/virtualHubs/routeServer.bi
 
 module networkManager '../../Modules/Microsoft.Network/networkManagers/networkManagers.bicep' = {
   name: 'Network-Manager-Deployment'
-  scope: resourceGroup('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-vpn-networking-eastus-rg')
-  dependsOn: [
+  scope: resourceGroup('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-transit-networking-eastus-rg')
+  dependsOn: [                                            
     baseInfra
   ]
   params: {
@@ -247,7 +247,7 @@ module networkManager '../../Modules/Microsoft.Network/networkManagers/networkMa
 
 module networkManagerGroup '../../Modules/Microsoft.Network/networkManagers/networkGroups/networkGroups.bicep' = {
   name: 'Network-Manager-Group-Deployment'
-  scope: resourceGroup('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-vpn-networking-eastus-rg')
+  scope: resourceGroup('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-transit-networking-eastus-rg')
   dependsOn: [
     networkManager
   ]
@@ -261,12 +261,13 @@ module networkManagerGroup '../../Modules/Microsoft.Network/networkManagers/netw
 
 module networkConnectivityConfig '../../Modules/Microsoft.Network/networkManagers/connectivityConfigurations/connectivityConfigurations.bicep' = {
   name: 'Network-Config-Deploy'
-  scope: resourceGroup('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-vpn-networking-eastus-rg')
+  scope: resourceGroup('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-transit-networking-eastus-rg')
   params: {
     connectivityConfigName: 'EastUS-Hub-Spoke'
-    hubVnetId: resourceId('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-vpn-networking-eastus-rg','Microsoft.Network/virtualNetworks','core-vpn-vnet-eastus')
+    hubVnetId: resourceId('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-transit-networking-eastus-rg','Microsoft.Network/virtualNetworks','core-transit-vnet-eastus')
     description: 'Peering VNETs in EastUS' 
     networkGroupId: networkManagerGroup.outputs.groupId
     networkManagerName: 'MS-Demo-NM'
+    useHubGateway: 'False'
   } 
 }
