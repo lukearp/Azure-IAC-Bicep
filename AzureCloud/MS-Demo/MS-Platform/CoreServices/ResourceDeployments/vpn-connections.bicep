@@ -41,6 +41,7 @@ module connection '../../../../../Modules/Microsoft.Network/connections/connecti
   }   
 }
 
+/*
 module erConnection '../../../../../Modules/Microsoft.Network/connections/connections.bicep' = {
   name: 'AVS-ER-Connection'
   scope: resourceGroup(rg.name)
@@ -56,3 +57,4 @@ module erConnection '../../../../../Modules/Microsoft.Network/connections/connec
     erCircuitId: '/subscriptions/e2f192a7-f4e1-4289-b895-52a60dc29fb7/resourceGroups/tnt80-cust-p01-brazilsouth/providers/Microsoft.Network/expressRouteCircuits/tnt80-cust-p01-brazilsouth-er'       
   }   
 }
+*/
