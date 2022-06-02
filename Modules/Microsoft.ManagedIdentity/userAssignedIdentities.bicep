@@ -10,3 +10,4 @@ resource identity 'Microsoft.ManagedIdentity/userAssignedIdentities@2021-09-30-p
 
 output clientId string = identity.properties.clientId
 output principalId string = identity.properties.principalId
+output resourceId string = identity.id
