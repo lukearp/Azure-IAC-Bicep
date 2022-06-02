@@ -202,7 +202,7 @@ module routeServerVpn '../../Modules/Microsoft.Network/virtualHubs/routeServer.b
     tags: {
       Environment: 'Prod'
     } 
-    allowBranchToBranchTraffic: false 
+    allowBranchToBranchTraffic: true 
   } 
 }
 
@@ -219,7 +219,7 @@ module routeServerEr '../../Modules/Microsoft.Network/virtualHubs/routeServer.bi
     tags: {
       Environment: 'Prod'
     } 
-    allowBranchToBranchTraffic: false 
+    allowBranchToBranchTraffic: true 
   } 
 }
 
