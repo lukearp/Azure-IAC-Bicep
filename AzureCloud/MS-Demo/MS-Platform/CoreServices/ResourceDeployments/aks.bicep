@@ -52,6 +52,22 @@ module keyVault '../../../../../Modules/Microsoft.Keyvault/vaults.bicep' = {
   }   
 }
 
+module acr '../../../../../Modules/Microsoft.ContainerRegistry/registries.bicep' = {
+  name: 'Luke-AKS-Demo-ACR-Deploy'
+  scope: resourceGroup(rg.name)
+  params: {
+    location: 'eastus'
+    name: 'luke-aks-demo-acr'
+    adminUserEnabled: true
+    anonymousPullEnabled: false
+    sku: 'Basic'
+    tags: {
+      Environment: 'Prod'
+    }
+    zoneRedundancy: 'Disabled'       
+  }   
+}
+
 module aks '../../../../../Modules/Microsoft.ContainerService/managedClusters.bicep' = {
   name: 'Luke-AKS-Demo-Deploy'
   scope: resourceGroup(rg.name)
@@ -104,7 +120,7 @@ module aks '../../../../../Modules/Microsoft.ContainerService/managedClusters.bi
     enableRBAC: true 
     enableOmsAgent: true
     omsWorkspaceId: workspace.outputs.workspaceResourceId   
-    enableSecretStoreCSIDriver: true                           
+    enableSecretStoreCSIDriver: true                          
   }    
 }
 
