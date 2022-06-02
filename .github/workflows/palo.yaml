@@ -25,5 +25,6 @@ jobs:
          inlineScript: |
            az account show
            az account set --subscription 32eb88b4-4029-4094-85e3-ec8b7ce1fc00
+           az vm image accept-terms --offer vmseries1 --plan byol --publisher paloaltonetworks
            az deployment sub create --template-file AzureCloud/MS-Demo/MS-Platform/CoreServices/ResourceDeployments/palo.bicep --location eastus --parameters adminPassword=${{ secrets.Local_Admin_Password }}
    
