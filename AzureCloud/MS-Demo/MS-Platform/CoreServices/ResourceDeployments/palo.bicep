@@ -44,7 +44,7 @@ module palo '../../../../../Standard-Deployments/PaloAlto-HA-Active_Active/paloA
     trustSubnetName: 'Trust'
     untrustSubnetName: 'Untrust'
     vmSize: 'Standard_DS3_v2'
-    vnetId: resourceId('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-transit-networking-eastus-rg','Microsoft.Network','core-transit-eastus-vnet') 
+    vnetId: resourceId('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-transit-networking-eastus-rg','Microsoft.Network/virtualNetworks','core-transit-eastus-vnet') 
     imageVersion: 'latest'
     location: 'eastus'        
   }    
