@@ -10,7 +10,7 @@ resource nicsDns 'Microsoft.Network/networkInterfaces@2020-11-01' = [for i in ra
   location: location 
   properties: {
     dnsSettings: {
-      dnsServers: concat(dnsIps, dnsServers) 
+      dnsServers: concat(dnsServers,dnsIps) 
     }
     ipConfigurations: nics[i].ipConfigurations 
   }  
