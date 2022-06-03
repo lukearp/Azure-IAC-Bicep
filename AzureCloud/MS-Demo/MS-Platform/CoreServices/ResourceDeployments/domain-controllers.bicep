@@ -70,3 +70,18 @@ module dc '../../../../../Standard-Deployments/DomainController/DomainController
      timeZoneId: 'Eastern Standard Time'               
   }  
 }
+
+module vnetDns '../../../../../Standard-Deployments/Update-VNET-DNS/dnsServerAdd.bicep' = {
+  name: '${domainName}-Set-VNET-DNS-Servers' 
+  scope: resourceGroup('core-workloads-networking-eastus-rg')
+  params: {
+    vnetName: 'core-workloads-eastus-vnet' 
+    dnsServers: [
+      '10.0.16.4'
+      '10.0.16.6'
+    ] 
+  }
+  dependsOn: [
+    dc
+  ] 
+}
