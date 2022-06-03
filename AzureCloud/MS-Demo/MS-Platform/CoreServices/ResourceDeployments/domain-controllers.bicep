@@ -16,7 +16,7 @@ module managedIdentity '../../../../../Modules/Microsoft.ManagedIdentity/userAss
   scope: resourceGroup(rg.name)
   params: {
     location: 'eastus'
-    name: '${domainName}-mi'
+    name: '${replace(domainName,'.','-')}-mi'
     tags: {
       Environment: 'Prod'
     }   
