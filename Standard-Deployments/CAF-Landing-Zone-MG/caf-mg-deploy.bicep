@@ -204,6 +204,7 @@ module vnetHubs 'hubNetworking.bicep' = [for(vnet,i) in virtualNetworks: if(toLo
     subnets: vnet.subnets
     disableBgpRoutePropagation: vnet.disableBgpRoutePropagation
     gateways: vnet.gateways
+    tags: vnet.tags 
   }
   dependsOn: [
     rgVnet

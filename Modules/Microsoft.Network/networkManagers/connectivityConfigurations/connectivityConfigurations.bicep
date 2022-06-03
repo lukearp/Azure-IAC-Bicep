@@ -3,6 +3,11 @@ param connectivityConfigName string
 param networkGroupId string
 param hubVnetId string
 param description string
+@allowed([
+  'True'
+  'False'
+])
+param useHubGateway string
 
 resource networkManager 'Microsoft.Network/networkManagers@2022-02-01-preview' existing = {
   name: networkManagerName 
@@ -17,7 +22,7 @@ resource symbolicname 'Microsoft.Network/networkManagers/connectivityConfigurati
         groupConnectivity: 'None'
         isGlobal: 'False'
         networkGroupId: networkGroupId
-        useHubGateway: 'True'
+        useHubGateway: useHubGateway
       }
     ]
     connectivityTopology: 'HubAndSpoke'

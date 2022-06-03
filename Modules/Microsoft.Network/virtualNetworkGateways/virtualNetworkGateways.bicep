@@ -35,7 +35,7 @@ param vpnType string
 param location string = resourceGroup().location
 param tags object = {}
 
-var ipConfigs = active_active == true ? [
+var ipConfigs = active_active == true && toLower(gatewayType) == 'vpn' ? [
   {
     name: 'ipconfig1'
     properties:{
@@ -119,3 +119,5 @@ resource vnetGateway 'Microsoft.Network/virtualNetworkGateways@2020-11-01' = {
  ]
  tags: tags 
 }
+
+output id string = vnetGateway.id

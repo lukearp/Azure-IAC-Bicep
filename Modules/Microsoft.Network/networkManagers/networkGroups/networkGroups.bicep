@@ -7,7 +7,7 @@ resource networkManager 'Microsoft.Network/networkManagers@2022-02-01-preview' e
   name: networkManagerName 
 }
 
-resource networkGroup 'Microsoft.Network/networkManagers/networkGroups@2022-02-01-preview' = {
+resource networkGroup 'Microsoft.Network/networkManagers/networkGroups@2021-02-01-preview' = {
   name: networkGroupName
   parent: networkManager 
   properties: {
