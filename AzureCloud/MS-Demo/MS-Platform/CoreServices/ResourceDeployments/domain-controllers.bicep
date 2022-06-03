@@ -63,6 +63,10 @@ module dc '../../../../../Standard-Deployments/DomainController/DomainController
      location: 'eastus' 
      managedIdentityId: managedIdentity.outputs.resourceId
      vmNamePrefix: 'DC'
-     vnetId: resourceId('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-workloads-networking-eastus-rg','Microsoft.Network/virtualNetworks','core-workloads-eastus-vnet')            
+     vnetId: resourceId('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-workloads-networking-eastus-rg','Microsoft.Network/virtualNetworks','core-workloads-eastus-vnet')  
+     dnsServers: [
+       '10.0.16.5'
+     ]
+     timeZoneId: 'Eastern Standard Time'               
   }  
 }
