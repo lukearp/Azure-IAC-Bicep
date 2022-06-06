@@ -17,7 +17,7 @@ module agentsubnet '../../../../../Modules/Microsoft.Network/virtualNetworks/sub
     addressPrefix: '10.0.19.0/24'
     subnetName: 'aks-agent'
     vnetname: 'core-workloads-eastus-vnet'
-    routeTableName: 'core-workloads-eastus-vnet-eastus-rt'
+    //routeTableName: 'core-workloads-eastus-vnet-eastus-rt'
     //nsgName: 'core-spoke-eastus-vnet-eastus-nsg'  
   } 
 }
@@ -29,7 +29,7 @@ module acisubnet '../../../../../Modules/Microsoft.Network/virtualNetworks/subne
     addressPrefix: '10.0.18.0/26'
     subnetName: 'aks-aci'
     vnetname: 'core-workloads-eastus-vnet'
-    routeTableName: 'core-workloads-eastus-vnet-eastus-rt'
+    //routeTableName: 'core-workloads-eastus-vnet-eastus-rt'
     //nsgName: 'core-spoke-eastus-vnet-eastus-nsg'  
   } 
 }
@@ -80,9 +80,9 @@ module aks '../../../../../Modules/Microsoft.ContainerService/managedClusters.bi
         name: 'agentpool'
         osDiskSizeGB: 0
         count: 1
-        enableAutoScaling: true
-        minCount: 1
-        maxCount: 3
+        enableAutoScaling: false
+        minCount: 0
+        maxCount: 1
         vmSize: 'Standard_B4ms'
         osType: 'Linux'
         storageProfile: 'ManagedDisks'
