@@ -1,8 +1,8 @@
 param splitTenant bool = false
 param wvdTenantId string
 param wvdAppId string
-param keyVaultName string
-param keyVaultSecretName string
+param keyVaultName string = ''
+param keyVaultSecretName string = ''
 param hostPoolName string
 param vmScalesetName string
 @maxLength(10)
