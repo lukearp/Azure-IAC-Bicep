@@ -1,3 +1,4 @@
 *.json
 Test-Functions/*
 *.zip
+Kube-Deployments/*
