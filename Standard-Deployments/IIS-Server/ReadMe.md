@@ -16,7 +16,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2021-04-01-preview' existing = {
   scope: resourceGroup('RESOURCEGROUPNAME')   
 }
 
-module palo '../Standard-Deployments/IIS-Server/iis-server.bicep' = {
+module iis '../Standard-Deployments/IIS-Server/iis-server.bicep' = {
   name: 'Web-Server'
   scope: resourceGroup('iis')
   params: {
