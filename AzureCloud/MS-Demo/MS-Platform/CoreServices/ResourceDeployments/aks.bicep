@@ -119,7 +119,8 @@ module keyvaultIdentity '../../../../../Modules/Microsoft.ManagedIdentity/userAs
     name: 'azurekeyvaultsecretsprovider-${clusterName}'  
     tags: {
       Environment: 'Prod'
-      HoursOfOperation: 'N/A'  
+      HoursOfOperation: 'N/A'
+      AutoStop: 'True'
     } 
   }
 }
