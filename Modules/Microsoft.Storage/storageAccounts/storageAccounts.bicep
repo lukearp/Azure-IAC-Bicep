@@ -36,3 +36,5 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2021-04-01' = {
      accessTier: accessTier 
   }  
 }
+
+output storageAccountId string = storageAccount.id
