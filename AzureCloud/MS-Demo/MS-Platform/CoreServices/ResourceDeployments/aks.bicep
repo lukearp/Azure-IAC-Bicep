@@ -69,7 +69,8 @@ module aks '../../../../../Modules/Microsoft.ContainerService/managedClusters.bi
     tier: 'Free'
     tags: {
       Environment: 'Prod'
-      HoursOfOperation: 'N/A'  
+      HoursOfOperation: 'N/A' 
+      AutoStop: 'True' 
     }
     kubernetesVersion: '1.22.6'
     adminGroupObjectIDs: [
@@ -97,7 +98,9 @@ module aks '../../../../../Modules/Microsoft.ContainerService/managedClusters.bi
         nodeLabels: {}
         nodeTaints: []
         enableNodePublicIP: false
-        tags: {}
+        tags: {
+          AutoStop: 'True'
+        }
         vnetSubnetID: agentsubnet.outputs.subnetId
       }
     ] 
@@ -120,7 +123,6 @@ module keyvaultIdentity '../../../../../Modules/Microsoft.ManagedIdentity/userAs
     tags: {
       Environment: 'Prod'
       HoursOfOperation: 'N/A'
-      AutoStop: 'True'
     } 
   }
 }
