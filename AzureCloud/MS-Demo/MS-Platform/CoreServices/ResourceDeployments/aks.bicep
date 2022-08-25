@@ -22,7 +22,7 @@ module agentsubnet '../../../../../Modules/Microsoft.Network/virtualNetworks/sub
   } 
 }
 
-module acisubnet '../../../../../Modules/Microsoft.Network/virtualNetworks/subnets/subnets.bicep' = {
+/*module acisubnet '../../../../../Modules/Microsoft.Network/virtualNetworks/subnets/subnets.bicep' = {
   name: 'aks-aci-AKS-Subnet-Deployment'
   scope: resourceGroup('core-workloads-networking-eastus-rg')  
   params: {
@@ -32,7 +32,7 @@ module acisubnet '../../../../../Modules/Microsoft.Network/virtualNetworks/subne
     //routeTableName: 'core-workloads-eastus-vnet-eastus-rt'
     //nsgName: 'core-spoke-eastus-vnet-eastus-nsg'  
   } 
-}
+}*/
 
 module workspace 'loganalytics-workspaces.bicep' = {
   name: 'AKS-Demo-Workspace-Logging'  
@@ -74,7 +74,7 @@ module aks '../../../../../Modules/Microsoft.ContainerService/managedClusters.bi
   params: {
     aadProfileEnabled: true
     aciConnectorLinuxEnabled: false
-    aciVnetSubnetName: split(acisubnet.outputs.subnetId,'/')[10]
+    aciVnetSubnetName: ''
     dnsPrefix: 'luke-aks-deploy'
     networkPlugin: 'azure'
     internalAddressCider: '192.168.0.0/16'
@@ -85,7 +85,8 @@ module aks '../../../../../Modules/Microsoft.ContainerService/managedClusters.bi
     tier: 'Free'
     tags: {
       Environment: 'Prod'
-      HoursOfOperation: 'N/A'  
+      HoursOfOperation: 'N/A' 
+      AutoStop: 'True' 
     }
     kubernetesVersion: '1.22.6'
     adminGroupObjectIDs: [
@@ -113,7 +114,9 @@ module aks '../../../../../Modules/Microsoft.ContainerService/managedClusters.bi
         nodeLabels: {}
         nodeTaints: []
         enableNodePublicIP: false
-        tags: {}
+        tags: {
+          AutoStop: 'True'
+        }
         vnetSubnetID: agentsubnet.outputs.subnetId
       }
     ] 
@@ -136,7 +139,6 @@ module keyvaultIdentity '../../../../../Modules/Microsoft.ManagedIdentity/userAs
     tags: {
       Environment: 'Prod'
       HoursOfOperation: 'N/A'
-      AutoStop: 'True'
     } 
   }
 }
