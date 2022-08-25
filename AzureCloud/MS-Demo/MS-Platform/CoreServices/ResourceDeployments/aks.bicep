@@ -58,7 +58,7 @@ module aks '../../../../../Modules/Microsoft.ContainerService/managedClusters.bi
   params: {
     aadProfileEnabled: true
     aciConnectorLinuxEnabled: false
-    aciVnetSubnetName: split(acisubnet.outputs.subnetId,'/')[10]
+    aciVnetSubnetName: ''
     dnsPrefix: 'luke-aks-deploy'
     networkPlugin: 'azure'
     internalAddressCider: '192.168.0.0/16'
