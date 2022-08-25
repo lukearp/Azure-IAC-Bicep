@@ -22,7 +22,7 @@ module agentsubnet '../../../../../Modules/Microsoft.Network/virtualNetworks/sub
   } 
 }
 
-module acisubnet '../../../../../Modules/Microsoft.Network/virtualNetworks/subnets/subnets.bicep' = {
+/*module acisubnet '../../../../../Modules/Microsoft.Network/virtualNetworks/subnets/subnets.bicep' = {
   name: 'aks-aci-AKS-Subnet-Deployment'
   scope: resourceGroup('core-workloads-networking-eastus-rg')  
   params: {
@@ -32,7 +32,7 @@ module acisubnet '../../../../../Modules/Microsoft.Network/virtualNetworks/subne
     //routeTableName: 'core-workloads-eastus-vnet-eastus-rt'
     //nsgName: 'core-spoke-eastus-vnet-eastus-nsg'  
   } 
-}
+}*/
 
 module workspace 'loganalytics-workspaces.bicep' = {
   name: 'AKS-Demo-Workspace-Logging'  
