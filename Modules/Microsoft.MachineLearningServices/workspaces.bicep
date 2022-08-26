@@ -43,3 +43,5 @@ resource ml 'Microsoft.MachineLearningServices/workspaces@2022-05-01' = {
   }  
   tags: tags  
 }
+
+output mlWorkspaceId string = ml.id
