@@ -31,7 +31,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2020-11-01' = {
     dhcpOptions:{
       dnsServers: vnetDnsServers
     }
-    subnets: subnets
+    subnets: subnets 
   }
   tags: tags
 }

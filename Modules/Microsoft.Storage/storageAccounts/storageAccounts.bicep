@@ -24,11 +24,16 @@ param sku string = 'Standard_LRS'
   'Hot'
 ])
 param accessTier string = 'Hot'
+param enableHierarchicalNamespace bool = false
 param enableDiagnostics bool = false
+param disablePubliAccess bool = false
+param supportsHttpsTrafficOnly bool = true
+/*
 param eventHubAuthorizationRuleId string = ''
 param eventHubName string = ''
 param serviceBusRuleId string = ''
 param storageAccountId string = ''
+*/
 param workspaceId string = ''
 param tags object = {}
 
@@ -41,6 +46,9 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2021-04-01' = {
   } 
   properties: {
      accessTier: accessTier 
+     isHnsEnabled: enableHierarchicalNamespace 
+     allowBlobPublicAccess: disablePubliAccess
+     supportsHttpsTrafficOnly: supportsHttpsTrafficOnly 
   }   
   tags: tags
 }
@@ -67,3 +75,4 @@ resource diag 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if(en
 }
 
 output storageAccountId string = storageAccount.id
+output endpoints object = storageAccount.properties.primaryEndpoints
