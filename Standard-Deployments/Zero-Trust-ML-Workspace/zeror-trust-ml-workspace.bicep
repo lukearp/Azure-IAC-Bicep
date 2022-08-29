@@ -11,13 +11,14 @@ param tags object = {}
 var storageSuffix = azureGovernment == false ? 'core.windows.net' : 'core.usgovcloudapi.net'
 var acrPrivateDns = azureGovernment == false ? 'privatelink.azurecr.io' : 'privatelink.azurecr.io'
 var keyvaultDns = azureGovernment == false ? 'privatelink.vaultcore.azure.net' : 'privatelink.azurecr.io'
-var suffix = substring(replace(subscription().subscriptionId,'-',''),0,15)
+var suffix = substring(replace(guid('${resourceGroupName}-${location}-${subscription().id}'),'-',''),0,15)
 
 resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   name: resourceGroupName
   location: location
   tags: tags
 }
+
 module storage '../../Modules/Microsoft.Storage/storageAccounts/storageAccounts.bicep' = {
    name: '${mlWorkspaceName}-StorageDeployment'
    scope: resourceGroup(rg.name)
@@ -29,7 +30,7 @@ module storage '../../Modules/Microsoft.Storage/storageAccounts/storageAccounts.
     name: 'ml${suffix}'
     enableDiagnostics: enableDiagnostics
     workspaceId: logAnalyticsResourceId  
-    enableHierarchicalNamespace: true 
+    enableHierarchicalNamespace: false 
     disablePubliAccess: true
     supportsHttpsTrafficOnly: true   
     tags: tags    
@@ -88,6 +89,36 @@ module vnet '../../Modules/Microsoft.Network/virtualNetworks/virtualNetworks.bic
       }
     ]  
   }
+}
+
+module appInsights '../../Modules/Microsoft.Insights/components.bicep' = {
+  name: '${mlWorkspaceName}-AppInsights' 
+  scope: resourceGroup(rg.name)
+  params: {
+    name: 'ap${suffix}'
+    location: location
+    publicNetworkAccessForIngestion: 'Enabled'
+    publicNetworkAccessForQuery: 'Enabled'
+    tags: tags     
+  }
+}
+
+module mlworkspace '../../Modules/Microsoft.MachineLearningServices/workspaces.bicep' = {
+  name: '${mlWorkspaceName}-Deployment'
+  scope: resourceGroup(rg.name)
+  params: {
+    containerRegisteryId: acr.outputs.acrId
+    identity: 'SystemAssigned'
+    keyVaultId: keyvault.outputs.keyVaultId
+    location: location
+    name: mlWorkspaceName
+    storageAccountId: storage.outputs.storageAccountId
+    publicNetworkAccess: 'Enabled'
+    tags: tags
+    tier: 'Basic'
+    v1LegacyMode: false
+    applicationInsightsId: appInsights.outputs.appInsightId             
+  }  
 }
 
 module storagePrivateLinkBlob '../../Modules/Microsoft.Network/privateEndpoints/privateEndpoints.bicep' = {
