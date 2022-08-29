@@ -10,6 +10,7 @@ param tags object = {}
 
 var storageSuffix = azureGovernment == false ? 'core.windows.net' : 'core.usgovcloudapi.net'
 var acrPrivateDns = azureGovernment == false ? 'privatelink.azurecr.io' : 'privatelink.azurecr.io'
+var keyvaultDns = azureGovernment == false ? 'privatelink.vaultcore.azure.net' : 'privatelink.azurecr.io'
 var suffix = substring(replace(subscription().subscriptionId,'-',''),0,15)
 
 resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
@@ -137,6 +138,22 @@ module storagePrivateLinkDfs '../../Modules/Microsoft.Network/privateEndpoints/p
   } 
 }
 
+module keyvaultPrivateLink '../../Modules/Microsoft.Network/privateEndpoints/privateEndpoints.bicep' = {
+  name: '${mlWorkspaceName}-KeyVaultPL'
+  scope: resourceGroup(rg.name) 
+  params: {
+    location: location
+    name: '${mlWorkspaceName}-KeyVaultPL'
+    remoteServiceResourceId: keyvault.outputs.keyVaultId
+    subnetResourceId: '${vnet.outputs.resourceId}/subnets/PrivateLink'
+    targetSubResource: [
+      'vault'
+    ] 
+    manual: false
+    requestMessage: 'AutoDeploy'      
+  } 
+}
+
 module acrPrivateLink '../../Modules/Microsoft.Network/privateEndpoints/privateEndpoints.bicep' = {
   name: '${mlWorkspaceName}-AcrPL'
   scope: resourceGroup(rg.name)
@@ -174,6 +191,14 @@ module dfsPlNic '../../Modules/Microsoft.Network/networkInterfaces/networkInterf
   scope: resourceGroup(rg.name)
   params: {
     name: split(storagePrivateLinkDfs.outputs.networkInterfaces[0].id,'/')[8]
+  }    
+}
+
+module keyVaultPlNic '../../Modules/Microsoft.Network/networkInterfaces/networkInterfaces-existing.bicep'  = {
+  name: '${mlWorkspaceName}-KeyVaultPLNicIP'
+  scope: resourceGroup(rg.name)
+  params: {
+    name: split(keyvaultPrivateLink.outputs.networkInterfaces[0].id,'/')[8]
   }    
 }
 
@@ -227,6 +252,23 @@ module dfsDNSZone '../../Modules/Microsoft.Network/privateDnsZones/privateDnsZon
     createARecord: true
     aRecordName: split(storage.outputs.storageAccountId,'/')[8]  
     aRecordIp: dfsPlNic.outputs.ip
+    vnetAssociations: [
+      {
+        id: vnet.outputs.resourceId
+        registrationEnabled: false
+      }
+    ]
+  }
+}
+
+module keyvaultDNSZone '../../Modules/Microsoft.Network/privateDnsZones/privateDnsZones.bicep' = {
+  name: '${mlWorkspaceName}-KeyVaultDNSZone' 
+  scope: resourceGroup(rg.name)
+  params: {
+    zoneName: keyvaultDns 
+    createARecord: true
+    aRecordName: split(keyvault.outputs.keyVaultId,'/')[8]  
+    aRecordIp: keyVaultPlNic.outputs.ip
     vnetAssociations: [
       {
         id: vnet.outputs.resourceId
