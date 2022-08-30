@@ -9,8 +9,10 @@ param azureGovernment bool = false
 param tags object = {}
 
 var storageSuffix = azureGovernment == false ? 'core.windows.net' : 'core.usgovcloudapi.net'
-var acrPrivateDns = azureGovernment == false ? 'privatelink.azurecr.io' : 'privatelink.azurecr.io'
-var keyvaultDns = azureGovernment == false ? 'privatelink.vaultcore.azure.net' : 'privatelink.azurecr.io'
+var acrPrivateDns = azureGovernment == false ? 'privatelink.azurecr.io' : 'privatelink.azurecr.us'
+var keyvaultDns = azureGovernment == false ? 'privatelink.vaultcore.azure.net' : 'privatelink.vault.usgovcloudapi.net'
+var mlApiDns = azureGovernment == false ? 'privatelink.api.azureml.ms' : 'privatelink.api.ml.azure.us'
+var mlNotbookDns = azureGovernment == false ? 'privatelink.notebooks.azure.net' : 'privatelink.notebooks.usgovcloudapi.net'
 var suffix = substring(replace(guid('${resourceGroupName}-${location}-${subscription().id}'),'-',''),0,15)
 
 resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
