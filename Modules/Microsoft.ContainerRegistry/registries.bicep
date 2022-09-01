@@ -32,3 +32,5 @@ resource acr 'Microsoft.ContainerRegistry/registries@2021-12-01-preview' = {
   } 
   tags: tags 
 }
+
+output acrId string = acr.id
