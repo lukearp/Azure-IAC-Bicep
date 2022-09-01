@@ -123,6 +123,22 @@ module mlworkspace '../../Modules/Microsoft.MachineLearningServices/workspaces.b
   }  
 }
 
+module mlworkspacePrivateLin '../../Modules/Microsoft.Network/privateEndpoints/privateEndpoints.bicep' = {
+  name: '${mlWorkspaceName}-StorageBlobPL'
+  scope: resourceGroup(rg.name) 
+  params: {
+    location: location
+    name: '${mlWorkspaceName}-StorageBlobPL'
+    remoteServiceResourceId: storage.outputs.storageAccountId
+    subnetResourceId: '${vnet.outputs.resourceId}/subnets/PrivateLink'
+    targetSubResource: [
+      'blob'
+    ] 
+    manual: false
+    requestMessage: 'AutoDeploy'      
+  } 
+}
+
 module storagePrivateLinkBlob '../../Modules/Microsoft.Network/privateEndpoints/privateEndpoints.bicep' = {
   name: '${mlWorkspaceName}-StorageBlobPL'
   scope: resourceGroup(rg.name) 
@@ -316,6 +332,40 @@ module acrDNSZone '../../Modules/Microsoft.Network/privateDnsZones/privateDnsZon
   scope: resourceGroup(rg.name)
   params: {
     zoneName: acrPrivateDns 
+    createARecord: true
+    aRecordName: split(acr.outputs.acrId,'/')[8]  
+    aRecordIp: acrPlNic.outputs.ip
+    vnetAssociations: [
+      {
+        id: vnet.outputs.resourceId
+        registrationEnabled: false
+      }
+    ]
+  }
+}
+
+module mlApiDnsZone '../../Modules/Microsoft.Network/privateDnsZones/privateDnsZones.bicep' = {
+  name: '${mlWorkspaceName}-mlApiDnsZone' 
+  scope: resourceGroup(rg.name)
+  params: {
+    zoneName: mlApiDns 
+    createARecord: true
+    aRecordName: split(acr.outputs.acrId,'/')[8]  
+    aRecordIp: acrPlNic.outputs.ip
+    vnetAssociations: [
+      {
+        id: vnet.outputs.resourceId
+        registrationEnabled: false
+      }
+    ]
+  }
+}
+
+module mlNotebookDnsZone '../../Modules/Microsoft.Network/privateDnsZones/privateDnsZones.bicep' = {
+  name: '${mlWorkspaceName}-mlNotebookDnsZone' 
+  scope: resourceGroup(rg.name)
+  params: {
+    zoneName: mlNotbookDns 
     createARecord: true
     aRecordName: split(acr.outputs.acrId,'/')[8]  
     aRecordIp: acrPlNic.outputs.ip
