@@ -17,6 +17,15 @@ module agentsubnet '../../../../../Modules/Microsoft.Network/virtualNetworks/sub
     addressPrefix: '10.0.19.0/24'
     subnetName: 'aks-agent'
     vnetname: 'core-workloads-eastus-vnet'
+    serviceEndpoints: [
+      {
+        service: 'Microsoft.Storage'
+        locations: [
+          'eastus'
+          'westus'
+        ]
+      }
+    ] 
     //routeTableName: 'core-workloads-eastus-vnet-eastus-rt'
     //nsgName: 'core-spoke-eastus-vnet-eastus-nsg'  
   } 

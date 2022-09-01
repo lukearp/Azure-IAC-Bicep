@@ -2,9 +2,9 @@ param name string
 param location string
 @allowed([
   'Basic'
-  'Free'
+/*  'Free'
   'Premium'
-  'Standard'
+  'Standard'*/
 ])
 param tier string = 'Basic'
 @allowed([
@@ -14,7 +14,8 @@ param tier string = 'Basic'
 param identity string
 param storageAccountId string
 param keyVaultId string
-param containerRegistery string
+param containerRegisteryId string
+param applicationInsightsId string
 param v1LegacyMode bool = false
 @allowed([
   'Enabled'
@@ -37,9 +38,12 @@ resource ml 'Microsoft.MachineLearningServices/workspaces@2022-05-01' = {
     friendlyName: name
     storageAccount: storageAccountId
     keyVault: keyVaultId
-    containerRegistry: containerRegistery
+    containerRegistry: containerRegisteryId
     v1LegacyMode: v1LegacyMode 
-    publicNetworkAccess: publicNetworkAccess       
+    publicNetworkAccess: publicNetworkAccess 
+    applicationInsights: applicationInsightsId 
   }  
   tags: tags  
 }
+
+output mlWorkspaceId string = ml.id
