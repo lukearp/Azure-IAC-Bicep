@@ -346,6 +346,10 @@ resource hostPool 'Microsoft.Compute/virtualMachineScaleSets@2021-03-01' = {
   identity: {
     type: 'SystemAssigned' 
   }
+  dependsOn: [
+    removeHostsFromPool
+    hostpoolRegistration
+  ]
   location: location
   sku: {
     capacity: vmCount 
