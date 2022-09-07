@@ -1,6 +1,8 @@
 param scaleSetName string
 param vmPrefix string
-param vmCount string
+@maxValue(1000)
+@minValue(1)
+param vmCount int = 1
 param vmSize string
 param customImage bool = false
 param customImageResourceId string = ''
