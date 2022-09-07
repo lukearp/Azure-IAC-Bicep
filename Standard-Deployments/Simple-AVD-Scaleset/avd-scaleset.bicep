@@ -22,6 +22,7 @@ param hostpoolResourceId string
 param managedIdentityId string
 param virtualNetworkId string
 param subnetName string
+param useAvailabilityZones bool
 param tags object = {}
 
 var hostPoolName = split(hostpoolResourceId,'/')[8]
@@ -42,7 +43,7 @@ var zones = contains(azRegions, location) ? [
   '3'
 ] : []
 
-var zoneBalance = zones == [] ? false : true
+var zoneBalance = zones == [] && useAvailabilityZones == true ? false : true
 
 var removeHostsFromScaleSetArgs = '-scaleset ${scaleSetName} -resourceGroup ${resourceGroup().name} -subscription ${subscription().subscriptionId}'
 module removeHostsFromScaleSet '../../Modules/Microsoft.Resources/deploymentScripts/deploymentScripts-powershell.bicep' = {
