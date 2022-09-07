@@ -39,5 +39,12 @@ resource volume 'Microsoft.NetApp/netAppAccounts/capacityPools/volumes@2022-03-0
     creationToken: shareName
     usageThreshold: sizeThreshold  
     networkFeatures: networkFeatures
+    exportPolicy: {
+      rules: [
+        {
+          nfsv3: false
+        } 
+      ] 
+    } 
   }     
 }
