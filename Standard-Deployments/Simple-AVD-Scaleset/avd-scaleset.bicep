@@ -1,5 +1,7 @@
 param scaleSetName string
 param vmPrefix string
+param vmCount string
+param vmSize string
 param customImage bool = false
 param customImageResourceId string = ''
 param imageOffer string = ''
@@ -18,8 +20,10 @@ param hostpoolResourceId string
 param managedIdentityId string
 param virtualNetworkId string
 param subnetName string
+param tags object = {}
 
 var hostPoolName = split(hostpoolResourceId,'/')[8]
+var hostPoolResourceGroup = split(hostpoolResourceId,'/')[4]
 var azRegions = [
   'eastus'
   'eastus2'
@@ -37,21 +41,25 @@ var zones = contains(azRegions, location) ? [
 ] : []
 
 var zoneBalance = zones == [] ? false : true
+
+var removeHostsFromScaleSetArgs = '-scaleset ${scaleSetName} -resourceGroup ${resourceGroup().name} -subscription ${subscription().subscriptionId}'
 module removeHostsFromScaleSet '../../Modules/Microsoft.Resources/deploymentScripts/deploymentScripts-powershell.bicep' = {
   name: 'Remove-VMs-From-${scaleSetName}'
   params: {
-    arguments: ''
+    arguments: removeHostsFromScaleSetArgs
     managedIdentityId: managedIdentityId  
     name: 'Remove-VMs-${scaleSetName}' 
     pscriptUri: 'https://raw.githubusercontent.com/lukearp/Azure-IAC-Bicep/master/Scripts/Remove-VMScaleSetInstances/Remove-VMScaleSetInstances.ps1'
     location: location 
   }
 }
+
+var removeHostsFromPoolArgs = '-vms ${json(string(removeHostsFromScaleSet.outputs.results)).computerNames} -hostpoolName ${hostPoolName} -hostpoolResourceGroup ${hostPoolResourceGroup} -subscription ${subscription().subscriptionId}'
 module removeHostsFromPool '../../Modules/Microsoft.Resources/deploymentScripts/deploymentScripts-powershell.bicep' = {
   name: 'Remove-VMs-${hostPoolName}-${scaleSetName}' 
   scope: resourceGroup(split(hostpoolResourceId,'/')[4]) 
   params: {
-    arguments: ''
+    arguments: removeHostsFromPoolArgs
     managedIdentityId: managedIdentityId  
     name: 'Remove-Hosts-${scaleSetName}' 
     pscriptUri: 'https://raw.githubusercontent.com/lukearp/Azure-IAC-Bicep/master/Scripts/Remove-VMsFromAVDHostPool/Remove-VMsFromAVDHostPool.ps1'
@@ -326,4 +334,25 @@ var vmssProperties = customImage == false ? {
       ] 
     }    
   }     
+}
+
+resource hostPool 'Microsoft.Compute/virtualMachineScaleSets@2021-03-01' = {
+  name: scaleSetName
+  identity: {
+    type: 'SystemAssigned' 
+  }
+  location: location
+  sku: {
+    capacity: vmCount 
+    tier: 'Standard'
+    name: vmSize  
+  }/*
+  plan: {
+   publisher: imagePublisher
+   product: imageOffer
+   name: imageSku      
+  }*/
+  zones: zones 
+  properties: vmssProperties
+  tags: tags 
 }

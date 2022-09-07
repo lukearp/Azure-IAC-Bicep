@@ -23,4 +23,4 @@ function Remove-VMsFromHostPool {
 }
 Connect-AzAccount -Identity -Subscription $subscription
 $DeploymentScriptOutputs = @{};
-$DeploymentScriptOutputs['sessionHosts']= Remove-VMsFromHostPool -scaleset $scalesetName -resourceGroup $resourceGroup
+$DeploymentScriptOutputs['sessionHosts']= Remove-VMsFromHostPool -vms $vms -hostpoolName $hostpoolName -hostpoolResourceGroup $hostpoolResourceGroup
