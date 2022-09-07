@@ -1,5 +1,6 @@
 param scaleSetName string
 param vmPrefix string
+param newScaleSet bool = false
 @maxValue(1000)
 @minValue(1)
 param vmCount int = 1
@@ -46,7 +47,7 @@ var zones = contains(azRegions, location) ? [
 var zoneBalance = zones == [] && useAvailabilityZones == true ? false : true
 
 var removeHostsFromScaleSetArgs = '-scaleset ${scaleSetName} -resourceGroup ${resourceGroup().name} -subscription ${subscription().subscriptionId}'
-module removeHostsFromScaleSet '../../Modules/Microsoft.Resources/deploymentScripts/deploymentScripts-powershell.bicep' = {
+module removeHostsFromScaleSet '../../Modules/Microsoft.Resources/deploymentScripts/deploymentScripts-powershell.bicep' = if(newScaleSet == false){
   name: 'Remove-VMs-From-${scaleSetName}'
   params: {
     arguments: removeHostsFromScaleSetArgs
@@ -59,7 +60,7 @@ module removeHostsFromScaleSet '../../Modules/Microsoft.Resources/deploymentScri
 }
 
 var removeHostsFromPoolArgs = '-vms ${json(string(removeHostsFromScaleSet.outputs.results)).computerNames} -hostpoolName ${hostPoolName} -hostpoolResourceGroup ${hostPoolResourceGroup} -subscription ${subscription().subscriptionId}'
-module removeHostsFromPool '../../Modules/Microsoft.Resources/deploymentScripts/deploymentScripts-powershell.bicep' = {
+module removeHostsFromPool '../../Modules/Microsoft.Resources/deploymentScripts/deploymentScripts-powershell.bicep' = if(newScaleSet == false){
   name: 'Remove-VMs-${hostPoolName}-${scaleSetName}' 
   scope: resourceGroup(split(hostpoolResourceId,'/')[4]) 
   params: {
