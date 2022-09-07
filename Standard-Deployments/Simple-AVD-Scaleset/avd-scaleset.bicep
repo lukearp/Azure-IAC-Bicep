@@ -1,4 +1,6 @@
 param scaleSetName string
+@maxLength(9)
+@minLength(3)
 param vmPrefix string
 param newScaleSet bool = false
 @maxValue(1000)
@@ -59,7 +61,7 @@ module removeHostsFromScaleSet '../../Modules/Microsoft.Resources/deploymentScri
   }
 }
 
-var removeHostsFromPoolArgs = '-vms ${json(string(removeHostsFromScaleSet.outputs.results)).computerNames} -hostpoolName ${hostPoolName} -hostpoolResourceGroup ${hostPoolResourceGroup} -subscription ${subscription().subscriptionId}'
+var removeHostsFromPoolArgs = newScaleSet == false ? '-vms ${json(string(removeHostsFromScaleSet.outputs.results)).computerNames} -hostpoolName ${hostPoolName} -hostpoolResourceGroup ${hostPoolResourceGroup} -subscription ${subscription().subscriptionId}' : ''
 module removeHostsFromPool '../../Modules/Microsoft.Resources/deploymentScripts/deploymentScripts-powershell.bicep' = if(newScaleSet == false){
   name: 'Remove-VMs-${hostPoolName}-${scaleSetName}' 
   scope: resourceGroup(split(hostpoolResourceId,'/')[4]) 
@@ -77,7 +79,7 @@ module removeHostsFromPool '../../Modules/Microsoft.Resources/deploymentScripts/
 var getHostRegistrationKeyArgs = '-splitTenant $false -appId $null -tenantId $null -keyVaultName $null -secretName $null -hostPoolResourceId ${hostpoolResourceId}'
 
 module hostpoolRegistration '../../Modules/Microsoft.Resources/deploymentScripts/deploymentScripts-powershell.bicep' = {
-  name: 'scriptTest'
+  name: 'GetRegistrionTokey-${hostPoolName}'
   params: {
     arguments: getHostRegistrationKeyArgs
     location: location
