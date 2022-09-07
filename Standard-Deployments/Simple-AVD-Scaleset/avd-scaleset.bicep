@@ -54,6 +54,7 @@ module removeHostsFromScaleSet '../../Modules/Microsoft.Resources/deploymentScri
     name: 'Remove-VMs-${scaleSetName}' 
     pscriptUri: 'https://raw.githubusercontent.com/lukearp/Azure-IAC-Bicep/master/Scripts/Remove-VMScaleSetInstances/Remove-VMScaleSetInstances.ps1'
     location: location 
+    azPowershellVersion: '8.0' 
   }
 }
 
@@ -66,7 +67,8 @@ module removeHostsFromPool '../../Modules/Microsoft.Resources/deploymentScripts/
     managedIdentityId: managedIdentityId  
     name: 'Remove-Hosts-${scaleSetName}' 
     pscriptUri: 'https://raw.githubusercontent.com/lukearp/Azure-IAC-Bicep/master/Scripts/Remove-VMsFromAVDHostPool/Remove-VMsFromAVDHostPool.ps1'
-    location: location   
+    location: location
+    azPowershellVersion: '8.0'    
   } 
 }
 

@@ -26,7 +26,7 @@ resource deploymentScript 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
   properties: {
     arguments: arguments
     primaryScriptUri: pscriptUri 
-    azPowerShellVersion: azPowershellVersion
+    azPowerShellVersion: azPowershellVersion 
     retentionInterval: 'PT1H' 
     cleanupPreference: cleanupPreference 
     supportingScriptUris: supportingScriptUris     

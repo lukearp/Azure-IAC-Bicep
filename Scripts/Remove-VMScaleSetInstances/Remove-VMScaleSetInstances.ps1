@@ -5,7 +5,7 @@ param(
 )
 function Remove-Scaleset {
     param(
-        [string] $scaleset,
+        [string] $scalesetName,
         [string] $resourceGroup
     )
     $instances = Get-AzVmssVM -ResourceGroupName $resourceGroup -VMScaleSetName $scalesetName
