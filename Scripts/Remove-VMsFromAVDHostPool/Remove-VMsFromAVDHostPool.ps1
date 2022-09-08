@@ -1,5 +1,5 @@
 param(
-    [array] $vms,
+    [string] $vms,
     [string] $hostpoolName,
     [string] $hostpoolResourceGroup,
     [string] $subscription
@@ -22,5 +22,6 @@ function Remove-VMsFromHostPool {
     return $hosts
 }
 Connect-AzAccount -Identity -Subscription $subscription
+$vmArray = ConvertFrom-Json -InputObject $vms
 $DeploymentScriptOutputs = @{};
-$DeploymentScriptOutputs['sessionHosts']= Remove-VMsFromHostPool -vms $vms -hostpoolName $hostpoolName -hostpoolResourceGroup $hostpoolResourceGroup
+$DeploymentScriptOutputs['sessionHosts']= Remove-VMsFromHostPool -vms $vmArray -hostpoolName $hostpoolName -hostpoolResourceGroup $hostpoolResourceGroup

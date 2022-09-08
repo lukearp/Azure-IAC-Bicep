@@ -55,9 +55,8 @@ module removeHostsFromScaleSet '../../Modules/Microsoft.Resources/deploymentScri
     arguments: removeHostsFromScaleSetArgs
     managedIdentityId: managedIdentityId  
     name: 'Remove-VMs-${scaleSetName}' 
-    pscriptUri: 'https://raw.githubusercontent.com/lukearp/Azure-IAC-Bicep/master/Scripts/Remove-VMScaleSetInstances/Remove-VMScaleSetInstances.ps1'
+    pscriptUri: 'https://raw.githubusercontent.com/lukearp/Azure-IAC-Bicep/master/Scripts/Remove-VMScaleSet/Remove-VMScaleSet.ps1'
     location: location 
-    azPowershellVersion: '8.0' 
   }
 }
 
@@ -70,8 +69,7 @@ module removeHostsFromPool '../../Modules/Microsoft.Resources/deploymentScripts/
     managedIdentityId: managedIdentityId  
     name: 'Remove-Hosts-${scaleSetName}' 
     pscriptUri: 'https://raw.githubusercontent.com/lukearp/Azure-IAC-Bicep/master/Scripts/Remove-VMsFromAVDHostPool/Remove-VMsFromAVDHostPool.ps1'
-    location: location
-    azPowershellVersion: '8.0'    
+    location: location    
   } 
 }
 
@@ -181,11 +179,7 @@ var vmssProperties = customImage == false ? {
                 registrationInfoToken: json(string(hostpoolRegistration.outputs.results)).registrationKey
                 aadJoin: false
                 UseAgentDownloadEndpoint: true
-                aadJoinPreview: {
-                  hostpoolUpdateFeature: false
-                  aadJoinPreview: false 
-                  sessionHostConfigurationVersion: ''
-                }
+                aadJoinPreview: false
                 mdmId: ''
                 sessionHostConfigurationLastUpdateTime: ''
               }
@@ -368,3 +362,4 @@ resource hostPool 'Microsoft.Compute/virtualMachineScaleSets@2021-03-01' = {
   properties: vmssProperties
   tags: tags 
 }
+

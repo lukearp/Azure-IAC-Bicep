@@ -14,9 +14,7 @@ function Remove-Scaleset {
     {
         $computerNames += $instance.OsProfile.ComputerName
     }
-    $scaleset = Get-AzVMss -ResourceGroupName $resourceGroup -VMScaleSetName $scalesetName
-    $scaleset.Sku.Capacity = 0
-    Update-AzVmss -VirtualMachineScaleSet $scaleset -ResourceGroupName $resourceGroup -VMScaleSetName $scalesetName
+    Remove-AzVmss -ResourceGroupName $resourceGroup -VMScaleSetName $scalesetName -Force -Confirm:$false
     return $computerNames
 }
 Connect-AzAccount -Identity -Subscription $subscription
