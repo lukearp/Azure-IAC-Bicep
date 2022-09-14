@@ -12,7 +12,9 @@ var storageSuffix = azureGovernment == false ? 'core.windows.net' : 'core.usgovc
 var acrPrivateDns = azureGovernment == false ? 'privatelink.azurecr.io' : 'privatelink.azurecr.us'
 var keyvaultDns = azureGovernment == false ? 'privatelink.vaultcore.azure.net' : 'privatelink.vault.usgovcloudapi.net'
 var mlApiDns = azureGovernment == false ? 'privatelink.api.azureml.ms' : 'privatelink.api.ml.azure.us'
+var mlApiNonPrivateDns = azureGovernment == false ? 'api.azureml.ms' : 'api.ml.azure.us'
 var mlNotbookDns = azureGovernment == false ? 'privatelink.notebooks.azure.net' : 'privatelink.notebooks.usgovcloudapi.net'
+var mlNotbookNonPrivateDns = azureGovernment == false ? 'notebooks.azure.net' : 'notebooks.usgovcloudapi.net'
 var suffix = substring(replace(guid('${resourceGroupName}-${location}-${subscription().id}'),'-',''),0,15)
 
 resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
@@ -45,7 +47,8 @@ module keyvault '../../Modules/Microsoft.KeyVaults/vaults.bicep' = {
   params: {
     location: location
     name: 'kv${suffix}'
-    tags: tags      
+    tags: tags  
+    enableSoftDelete: true     
   }  
 }
 
@@ -123,16 +126,16 @@ module mlworkspace '../../Modules/Microsoft.MachineLearningServices/workspaces.b
   }  
 }
 
-module mlworkspacePrivateLin '../../Modules/Microsoft.Network/privateEndpoints/privateEndpoints.bicep' = {
-  name: '${mlWorkspaceName}-StorageBlobPL'
+module mlworkspacePrivateLink '../../Modules/Microsoft.Network/privateEndpoints/privateEndpoints.bicep' = {
+  name: '${mlWorkspaceName}-mlWorkspacePL'
   scope: resourceGroup(rg.name) 
   params: {
     location: location
-    name: '${mlWorkspaceName}-StorageBlobPL'
-    remoteServiceResourceId: storage.outputs.storageAccountId
+    name: '${mlWorkspaceName}-mlPL'
+    remoteServiceResourceId: mlworkspace.outputs.mlWorkspaceId
     subnetResourceId: '${vnet.outputs.resourceId}/subnets/PrivateLink'
     targetSubResource: [
-      'blob'
+      'amlworkspace'
     ] 
     manual: false
     requestMessage: 'AutoDeploy'      
@@ -199,7 +202,7 @@ module keyvaultPrivateLink '../../Modules/Microsoft.Network/privateEndpoints/pri
       'vault'
     ] 
     manual: false
-    requestMessage: 'AutoDeploy'      
+    requestMessage: 'AutoDeploy'       
   } 
 }
 
@@ -219,46 +222,6 @@ module acrPrivateLink '../../Modules/Microsoft.Network/privateEndpoints/privateE
   }    
 }
 
-module blobPlNic '../../Modules/Microsoft.Network/networkInterfaces/networkInterfaces-existing.bicep'  = {
-  name: '${mlWorkspaceName}-BlobPLNicIP'
-  scope: resourceGroup(rg.name)
-  params: {
-    name: split(storagePrivateLinkBlob.outputs.networkInterfaces[0].id,'/')[8]
-  }    
-}
-
-module filePlNic '../../Modules/Microsoft.Network/networkInterfaces/networkInterfaces-existing.bicep'  = {
-  name: '${mlWorkspaceName}-FilePLNicIP'
-  scope: resourceGroup(rg.name)
-  params: {
-    name: split(storagePrivateLinkFile.outputs.networkInterfaces[0].id,'/')[8]
-  }    
-}
-
-module dfsPlNic '../../Modules/Microsoft.Network/networkInterfaces/networkInterfaces-existing.bicep'  = {
-  name: '${mlWorkspaceName}-DfsPLNicIP'
-  scope: resourceGroup(rg.name)
-  params: {
-    name: split(storagePrivateLinkDfs.outputs.networkInterfaces[0].id,'/')[8]
-  }    
-}
-
-module keyVaultPlNic '../../Modules/Microsoft.Network/networkInterfaces/networkInterfaces-existing.bicep'  = {
-  name: '${mlWorkspaceName}-KeyVaultPLNicIP'
-  scope: resourceGroup(rg.name)
-  params: {
-    name: split(keyvaultPrivateLink.outputs.networkInterfaces[0].id,'/')[8]
-  }    
-}
-
-module acrPlNic '../../Modules/Microsoft.Network/networkInterfaces/networkInterfaces-existing.bicep'  = {
-  name: '${mlWorkspaceName}-AcrPLNicIP'
-  scope: resourceGroup(rg.name)
-  params: {
-    name: split(acrPrivateLink.outputs.networkInterfaces[0].id,'/')[8]
-  }    
-}
-
 module blobDNSZone '../../Modules/Microsoft.Network/privateDnsZones/privateDnsZones.bicep' = {
   name: '${mlWorkspaceName}-BlobDNSZone' 
   scope: resourceGroup(rg.name)
@@ -266,7 +229,7 @@ module blobDNSZone '../../Modules/Microsoft.Network/privateDnsZones/privateDnsZo
     zoneName: 'privatelink.blob.${storageSuffix}' 
     createARecord: true
     aRecordName: split(storage.outputs.storageAccountId,'/')[8]  
-    aRecordIp: blobPlNic.outputs.ip
+    aRecordIp: storagePrivateLinkBlob.outputs.customerDnsConfigs[0].ipAddresses[0] 
     vnetAssociations: [
       {
         id: vnet.outputs.resourceId
@@ -283,7 +246,7 @@ module fileDNSZone '../../Modules/Microsoft.Network/privateDnsZones/privateDnsZo
     zoneName: 'privatelink.file.${storageSuffix}' 
     createARecord: true
     aRecordName: split(storage.outputs.storageAccountId,'/')[8]  
-    aRecordIp: filePlNic.outputs.ip
+    aRecordIp: storagePrivateLinkFile.outputs.customerDnsConfigs[0].ipAddresses[0]
     vnetAssociations: [
       {
         id: vnet.outputs.resourceId
@@ -300,7 +263,7 @@ module dfsDNSZone '../../Modules/Microsoft.Network/privateDnsZones/privateDnsZon
     zoneName: 'privatelink.dfs.${storageSuffix}' 
     createARecord: true
     aRecordName: split(storage.outputs.storageAccountId,'/')[8]  
-    aRecordIp: dfsPlNic.outputs.ip
+    aRecordIp: storagePrivateLinkDfs.outputs.customerDnsConfigs[0].ipAddresses[0]
     vnetAssociations: [
       {
         id: vnet.outputs.resourceId
@@ -317,7 +280,7 @@ module keyvaultDNSZone '../../Modules/Microsoft.Network/privateDnsZones/privateD
     zoneName: keyvaultDns 
     createARecord: true
     aRecordName: split(keyvault.outputs.keyVaultId,'/')[8]  
-    aRecordIp: keyVaultPlNic.outputs.ip
+    aRecordIp: keyvaultPrivateLink.outputs.customerDnsConfigs[0].ipAddresses[0]
     vnetAssociations: [
       {
         id: vnet.outputs.resourceId
@@ -334,7 +297,7 @@ module acrDNSZone '../../Modules/Microsoft.Network/privateDnsZones/privateDnsZon
     zoneName: acrPrivateDns 
     createARecord: true
     aRecordName: split(acr.outputs.acrId,'/')[8]  
-    aRecordIp: acrPlNic.outputs.ip
+    aRecordIp: acrPrivateLink.outputs.customerDnsConfigs[0].ipAddresses[0]
     vnetAssociations: [
       {
         id: vnet.outputs.resourceId
@@ -351,7 +314,7 @@ module mlApiDnsZone '../../Modules/Microsoft.Network/privateDnsZones/privateDnsZ
     zoneName: mlApiDns 
     createARecord: true
     aRecordName: split(acr.outputs.acrId,'/')[8]  
-    aRecordIp: acrPlNic.outputs.ip
+    aRecordIp: acrPrivateLink.outputs.customerDnsConfigs[0].ipAddresses[0]
     vnetAssociations: [
       {
         id: vnet.outputs.resourceId
@@ -366,9 +329,7 @@ module mlNotebookDnsZone '../../Modules/Microsoft.Network/privateDnsZones/privat
   scope: resourceGroup(rg.name)
   params: {
     zoneName: mlNotbookDns 
-    createARecord: true
-    aRecordName: split(acr.outputs.acrId,'/')[8]  
-    aRecordIp: acrPlNic.outputs.ip
+    createARecord: false
     vnetAssociations: [
       {
         id: vnet.outputs.resourceId
