@@ -41,3 +41,4 @@ resource privateEndpoint 'Microsoft.Network/privateEndpoints@2021-03-01' = {
 }
 
 output networkInterfaces array = privateEndpoint.properties.networkInterfaces
+output customerDnsConfigs array = privateEndpoint.properties.customDnsConfigs

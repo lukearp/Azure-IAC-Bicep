@@ -1,8 +1,8 @@
 param zoneName string
 param createARecord bool = false
 param vnetAssociations array = []
-param aRecordName string
-param aRecordIp string
+param aRecordName string = ''
+param aRecordIp string = ''
 
 /*
 vnetAssociations Object
