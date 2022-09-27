@@ -32,7 +32,7 @@ resource netappFilesCapacityPool 'Microsoft.NetApp/netAppAccounts/capacityPools@
   parent: netappFiles 
 }
 
-var sizeThreshold = 1073741824 * int(sizeThresholdGiB)
+var sizeThreshold = 1073741824 * sizeThresholdGiB
 
 resource volume 'Microsoft.NetApp/netAppAccounts/capacityPools/volumes@2022-03-01' = {
   location: location
@@ -50,10 +50,21 @@ resource volume 'Microsoft.NetApp/netAppAccounts/capacityPools/volumes@2022-03-0
       rules: [
         {
           nfsv3: false
+          nfsv41: true
+          allowedClients: '0.0.0.0/0'
+          ruleIndex: 1
+          unixReadOnly: false
+          unixReadWrite: true
+          kerberos5iReadOnly: false
+          kerberos5iReadWrite: false
+          kerberos5pReadOnly: false
+          kerberos5pReadWrite: false
+          kerberos5ReadOnly: false
+          kerberos5ReadWrite: false
+          hasRootAccess: true  
         } 
       ] 
     }
-    avsDataStore: avsDataStore
-        
+    avsDataStore: avsDataStore        
   }     
 }
