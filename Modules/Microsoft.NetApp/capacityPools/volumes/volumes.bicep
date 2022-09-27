@@ -12,10 +12,15 @@ param protocolTypes array = [
 param networkFeatures string = 'Basic'
 @minValue(100)
 @maxValue(1000)
-param sizeThreshold int = 100
+param sizeThresholdGiB int = 100
 param zones array = []
 param netappFilesName string
 param netappCapacityPoolName string
+@allowed([
+  'Enabled'
+  'Disabled'
+])
+param avsDataStore string = 'Disabled'
 param tags object = {}
 
 resource netappFiles 'Microsoft.NetApp/netAppAccounts@2022-03-01' existing = {
@@ -26,6 +31,8 @@ resource netappFilesCapacityPool 'Microsoft.NetApp/netAppAccounts/capacityPools@
   name: netappCapacityPoolName
   parent: netappFiles 
 }
+
+var sizeThreshold = 1073741824 * int(sizeThresholdGiB)
 
 resource volume 'Microsoft.NetApp/netAppAccounts/capacityPools/volumes@2022-03-01' = {
   location: location
@@ -45,6 +52,8 @@ resource volume 'Microsoft.NetApp/netAppAccounts/capacityPools/volumes@2022-03-0
           nfsv3: false
         } 
       ] 
-    } 
+    }
+    avsDataStore: avsDataStore
+        
   }     
 }
