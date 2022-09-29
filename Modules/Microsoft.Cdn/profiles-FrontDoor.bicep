@@ -11,7 +11,7 @@ param frontDoorEndpointName string = 'afd-${uniqueString(resourceGroup().id)}'
 ])
 param frontDoorSkuName string = 'Standard_AzureFrontDoor'
 
-var frontDoorProfileName = 'MyFrontDoor'
+param frontDoorProfileName string = 'MyFrontDoor'
 
 resource frontDoorProfile 'Microsoft.Cdn/profiles@2021-06-01' = {
   name: frontDoorProfileName
