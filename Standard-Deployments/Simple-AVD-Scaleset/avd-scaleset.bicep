@@ -61,7 +61,7 @@ module removeHostsFromScaleSet '../../Modules/Microsoft.Resources/deploymentScri
   }
 }
 
-var removeHostsFromPoolArgs = newScaleSet == false ? '-vms "${json(string(removeHostsFromScaleSet.outputs.results)).computerNames}" -hostpoolName ${hostPoolName} -hostpoolResourceGroup ${hostPoolResourceGroup} -subscription ${subscription().subscriptionId}' : ''
+var removeHostsFromPoolArgs = newScaleSet == false && scaleExisting == false ? '-vms "${json(string(removeHostsFromScaleSet.outputs.results)).computerNames}" -hostpoolName ${hostPoolName} -hostpoolResourceGroup ${hostPoolResourceGroup} -subscription ${subscription().subscriptionId}' : ''
 module removeHostsFromPool '../../Modules/Microsoft.Resources/deploymentScripts/deploymentScripts-powershell.bicep' = if(newScaleSet == false && scaleExisting == false){
   name: 'Remove-VMs-${hostPoolName}-${scaleSetName}' 
   scope: resourceGroup(split(hostpoolResourceId,'/')[4]) 
