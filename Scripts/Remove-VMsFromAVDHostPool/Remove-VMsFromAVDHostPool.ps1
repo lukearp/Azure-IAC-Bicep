@@ -22,7 +22,7 @@ function Remove-VMsFromHostPool {
     return $hosts
 }
 Connect-AzAccount -Identity -Subscription $subscription
-if($vms[0].Length > 1)
+if($vms[0].Length -gt 1)
 {
     $vmArray = ConvertFrom-Json -InputObject $vms
 }
