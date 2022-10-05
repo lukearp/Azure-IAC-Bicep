@@ -17,7 +17,7 @@ function Remove-VMsFromHostPool {
     }
     foreach($sessionHost in $hosts)
     {
-        Remove-AzWvdSessionHost -HostPoolName $vms -ResourceGroupName $hostpoolResourceGroup -Name $sessionHost.Split("/")[1]
+        Remove-AzWvdSessionHost -HostPoolName $hostpoolName -ResourceGroupName $hostpoolResourceGroup -Name $sessionHost.Split("/")[1]
     }
     return $hosts
 }
