@@ -8,13 +8,13 @@ function Remove-Scaleset {
         [string] $scalesetName,
         [string] $resourceGroup
     )
-    $instances = Get-AzVmssVM -ResourceGroupName $resourceGroup -VMScaleSetName $scalesetName;
+    $instances = Get-AzVmssVM -ResourceGroupName $resourceGroup -VMScaleSetName $scalesetName;    
+    $vmss = Remove-AzVmss -ResourceGroupName $resourceGroup -VMScaleSetName $scalesetName -Force -Confirm:$false;
     $computerNames = @();
     foreach($instance in $instances)
     {
         $computerNames += $instance.OsProfile.ComputerName;
     }
-    $vmss = Remove-AzVmss -ResourceGroupName $resourceGroup -VMScaleSetName $scalesetName -Force -Confirm:$false;
     return $computerNames;
 }
 Connect-AzAccount -Identity -Subscription $subscription;

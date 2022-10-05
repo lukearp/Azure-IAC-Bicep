@@ -68,6 +68,7 @@ module removeHostsFromPool '../../Modules/Microsoft.Resources/deploymentScripts/
   params: {
     arguments: removeHostsFromPoolArgs
     managedIdentityId: managedIdentityId  
+    cleanupPreference: 'OnSuccess'
     name: 'Remove-Hosts-${scaleSetName}' 
     pscriptUri: 'https://raw.githubusercontent.com/lukearp/Azure-IAC-Bicep/master/Scripts/Remove-VMsFromAVDHostPool/Remove-VMsFromAVDHostPool.ps1'
     location: location    
@@ -83,6 +84,7 @@ module hostpoolRegistration '../../Modules/Microsoft.Resources/deploymentScripts
     arguments: getHostRegistrationKeyArgs
     location: location
     managedIdentityId: managedIdentityId
+    cleanupPreference: 'OnSuccess' 
     name: 'Get-WVD-Key'
     pscriptUri: 'https://raw.githubusercontent.com/lukearp/Azure-IAC-Bicep/master/Scripts/WVD-HostPool-Key/WVD-HostPool-RegistrationKey.ps1'       
   } 
