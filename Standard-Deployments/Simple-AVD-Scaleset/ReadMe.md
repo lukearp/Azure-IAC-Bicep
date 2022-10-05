@@ -2,8 +2,8 @@
 Creats a VM Scale set to a target virtual network.   
 
 # What does this module require?
+This Standard Deployment is dependent on Modules in this Repo.  Clone repository, and then you can reference the module.
 
-If using SplitTenant = true: 
 1. A User Assigned Managed Identity that has rights to get secrets from the key vault that has the WVD-Tenant AppID Secret.
 2. The App registration needs rights to create Registration tokens on the target host pool.  
 
