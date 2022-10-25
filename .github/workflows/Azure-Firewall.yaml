@@ -1,0 +1,28 @@
+name: Azure-Firewall
+
+on:
+  push:
+    branches:
+      - "azure-firewall"
+
+jobs:
+  AzureBicepDeploy:
+    name: 'AzureBicepDeploy'
+    runs-on: ubuntu-latest
+ 
+    steps:
+    -  name: Checkout Code
+       uses: actions/checkout@v2
+
+    -  name: Azure Login
+       uses: azure/login@v1
+       with:
+         creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    -  name: Deploy template
+       uses: azure/CLI@v1
+       with:
+         inlineScript: |
+           az account show
+           az account set --subscription 32eb88b4-4029-4094-85e3-ec8b7ce1fc00
+           az deployment sub create --template-file AzureCloud/MS-Demo/MS-Platform/CoreServices/ResourceDeployments/azfirewall.bicep --location eastus
