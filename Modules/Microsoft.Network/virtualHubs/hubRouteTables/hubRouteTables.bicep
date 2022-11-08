@@ -30,3 +30,5 @@ resource routeTable 'Microsoft.Network/virtualHubs/hubRouteTables@2022-05-01' = 
     routes: routes    
   }   
 }
+
+output routeTableId string = routeTable.id
