@@ -7,6 +7,8 @@ Resource Group with the following resources:
     3. Key Vault
     4. Azure Container Registry
     5. PrivateLink Endpoints for all supported services
+    6. All required private DNS Zones
+    7. AVD Workspace, Host Pool, and Application Group
 
 # What does this module require?
 

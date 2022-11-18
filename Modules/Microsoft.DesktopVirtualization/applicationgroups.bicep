@@ -18,3 +18,5 @@ resource applicationGroup 'Microsoft.DesktopVirtualization/applicationGroups@202
     friendlyName: name    
   }   
 }
+
+output id string = applicationGroup.id

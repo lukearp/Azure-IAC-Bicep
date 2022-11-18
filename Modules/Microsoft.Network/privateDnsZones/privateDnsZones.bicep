@@ -19,17 +19,15 @@ resource privateDns 'Microsoft.Network/privateDnsZones@2020-06-01' = {
   }  
 }
 
-resource records 'Microsoft.Network/privateDnsZones/A@2020-06-01' = if(createARecord) {
-  name: aRecordName
-  parent: privateDns
-  properties: {
-    aRecords: [
-      {
-        ipv4Address: aRecordIp 
-      }  
-    ]
-    ttl: 300  
-  }   
+module records 'DNSRecord/dnsRecord.bicep' = if(createARecord) {
+  name: '${aRecordName}-${aRecordIp}-record'
+  params: {
+    dnsZoneName: zoneName
+    hostName: aRecordName
+    recordTarget: aRecordIp
+    recordType: 'A'
+    recordTtl: 300     
+  }    
 }
 
 resource virtualNetwork 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = [for vnetAssociation in vnetAssociations : {

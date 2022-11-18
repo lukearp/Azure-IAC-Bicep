@@ -28,3 +28,5 @@ resource hostpool 'Microsoft.DesktopVirtualization/hostPools@2022-04-01-preview'
     loadBalancerType: loadBalancerType
   } 
 }
+
+output id string = hostpool.id

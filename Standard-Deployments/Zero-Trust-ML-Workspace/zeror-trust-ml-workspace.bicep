@@ -312,9 +312,7 @@ module mlApiDnsZone '../../Modules/Microsoft.Network/privateDnsZones/privateDnsZ
   scope: resourceGroup(rg.name)
   params: {
     zoneName: mlApiDns 
-    createARecord: true
-    aRecordName: split(acr.outputs.acrId,'/')[8]  
-    aRecordIp: acrPrivateLink.outputs.customerDnsConfigs[0].ipAddresses[0]
+    createARecord: false
     vnetAssociations: [
       {
         id: vnet.outputs.resourceId
@@ -337,4 +335,54 @@ module mlNotebookDnsZone '../../Modules/Microsoft.Network/privateDnsZones/privat
       }
     ]
   }
+}
+
+module mlRecords 'dnsrecordLoop.bicep' = {
+  name: 'Create-ML-DNS-Records'
+  scope: resourceGroup(rg.name)
+  dependsOn: [
+    mlApiDnsZone
+    mlNotebookDnsZone
+  ]
+  params: {
+    records: mlworkspacePrivateLink.outputs.customerDnsConfigs
+    azureGovernment: azureGovernment
+  }
+}
+
+module hostPool '../../Modules/Microsoft.DesktopVirtualization/hostpools.bicep' = {
+  name: '${mlWorkspaceName}-AVD-Hostpool'
+  scope: resourceGroup(rg.name) 
+  params: {
+    loadBalancerType: 'BreadthFirst'
+    location: location
+    name: '${mlWorkspaceName}-AVD-Hostpool'
+    hostPoolType: 'Pooled'
+    preferredAppGroupType: 'Desktop'     
+  }  
+}
+
+module appGroup '../../Modules/Microsoft.DesktopVirtualization/applicationgroups.bicep' = {
+  name: '${mlWorkspaceName}-AVD-AppGroup'
+  scope: resourceGroup(rg.name)
+  params: {
+    applicationGroupType: 'Desktop'
+    hostpoolResourceId: hostPool.outputs.id
+    description: 'Desktop App Group'
+    location: location
+    name: '${mlWorkspaceName}-AVD-AppGroup'    
+  }  
+}
+
+module avdWorkspace '../../Modules/Microsoft.DesktopVirtualization/workspaces.bicep' = {
+  name: '${mlWorkspaceName}-AVD-Workspace'
+  scope: resourceGroup(rg.name)
+  params: {
+    description: 'Access to private ML Workspace'
+    location: location
+    name: '${mlWorkspaceName}-AVD-Workspace'
+    applicationGroupReferences: [
+      appGroup.outputs.id
+    ]     
+  }   
 }
