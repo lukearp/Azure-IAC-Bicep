@@ -12,9 +12,7 @@ var storageSuffix = azureGovernment == false ? 'core.windows.net' : 'core.usgovc
 var acrPrivateDns = azureGovernment == false ? 'privatelink.azurecr.io' : 'privatelink.azurecr.us'
 var keyvaultDns = azureGovernment == false ? 'privatelink.vaultcore.azure.net' : 'privatelink.vault.usgovcloudapi.net'
 var mlApiDns = azureGovernment == false ? 'privatelink.api.azureml.ms' : 'privatelink.api.ml.azure.us'
-var mlApiNonPrivateDns = azureGovernment == false ? 'api.azureml.ms' : 'api.ml.azure.us'
 var mlNotbookDns = azureGovernment == false ? 'privatelink.notebooks.azure.net' : 'privatelink.notebooks.usgovcloudapi.net'
-var mlNotbookNonPrivateDns = azureGovernment == false ? 'notebooks.azure.net' : 'notebooks.usgovcloudapi.net'
 var suffix = substring(replace(guid('${resourceGroupName}-${location}-${subscription().id}'),'-',''),0,15)
 
 resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
