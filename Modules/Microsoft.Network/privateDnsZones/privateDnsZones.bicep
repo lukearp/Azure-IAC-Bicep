@@ -3,6 +3,7 @@ param createARecord bool = false
 param vnetAssociations array = []
 param aRecordName string = ''
 param aRecordIp string = ''
+param tags object = {}
 
 /*
 vnetAssociations Object
@@ -42,7 +43,8 @@ resource virtualNetwork 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2
     virtualNetwork: {
       id: vnetAssociation.id 
     }  
-  }    
+  }
+  tags: tags     
 }]
 
 output zoneId string = privateDns.id

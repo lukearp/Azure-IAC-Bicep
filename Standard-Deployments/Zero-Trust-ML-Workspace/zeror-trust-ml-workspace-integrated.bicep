@@ -118,7 +118,8 @@ module mlworkspacePrivateLink '../../Modules/Microsoft.Network/privateEndpoints/
       'amlworkspace'
     ] 
     manual: false
-    requestMessage: 'AutoDeploy'      
+    requestMessage: 'AutoDeploy' 
+    tags: tags       
   } 
 }
 
@@ -134,7 +135,8 @@ module storagePrivateLinkBlob '../../Modules/Microsoft.Network/privateEndpoints/
       'blob'
     ] 
     manual: false
-    requestMessage: 'AutoDeploy'      
+    requestMessage: 'AutoDeploy'
+    tags: tags     
   } 
 }
 
@@ -150,7 +152,8 @@ module storagePrivateLinkFile '../../Modules/Microsoft.Network/privateEndpoints/
       'file'
     ] 
     manual: false
-    requestMessage: 'AutoDeploy'      
+    requestMessage: 'AutoDeploy' 
+    tags: tags      
   } 
 }
 
@@ -166,7 +169,8 @@ module storagePrivateLinkDfs '../../Modules/Microsoft.Network/privateEndpoints/p
       'dfs'
     ] 
     manual: false
-    requestMessage: 'AutoDeploy'      
+    requestMessage: 'AutoDeploy'
+    tags: tags       
   } 
 }
 
@@ -182,7 +186,8 @@ module keyvaultPrivateLink '../../Modules/Microsoft.Network/privateEndpoints/pri
       'vault'
     ] 
     manual: false
-    requestMessage: 'AutoDeploy'       
+    requestMessage: 'AutoDeploy'
+    tags: tags        
   } 
 }
 
@@ -198,7 +203,8 @@ module acrPrivateLink '../../Modules/Microsoft.Network/privateEndpoints/privateE
     requestMessage: 'AutoDeploy'
     targetSubResource: [
       'registry'
-    ]       
+    ]
+    tags: tags        
   }    
 }
 
@@ -216,6 +222,7 @@ module blobDNSZone '../../Modules/Microsoft.Network/privateDnsZones/privateDnsZo
         registrationEnabled: false
       }
     ]
+    tags: tags 
   }
 }
 
@@ -233,6 +240,7 @@ module fileDNSZone '../../Modules/Microsoft.Network/privateDnsZones/privateDnsZo
         registrationEnabled: false
       }
     ]
+    tags: tags 
   }
 }
 
@@ -250,6 +258,7 @@ module dfsDNSZone '../../Modules/Microsoft.Network/privateDnsZones/privateDnsZon
         registrationEnabled: false
       }
     ]
+    tags: tags 
   }
 }
 
@@ -267,6 +276,7 @@ module keyvaultDNSZone '../../Modules/Microsoft.Network/privateDnsZones/privateD
         registrationEnabled: false
       }
     ]
+    tags: tags 
   }
 }
 
@@ -284,6 +294,7 @@ module acrDNSZone '../../Modules/Microsoft.Network/privateDnsZones/privateDnsZon
         registrationEnabled: false
       }
     ]
+    tags: tags 
   }
 }
 
@@ -299,6 +310,7 @@ module mlApiDnsZone '../../Modules/Microsoft.Network/privateDnsZones/privateDnsZ
         registrationEnabled: false
       }
     ]
+    tags: tags 
   }
 }
 
@@ -314,6 +326,7 @@ module mlNotebookDnsZone '../../Modules/Microsoft.Network/privateDnsZones/privat
         registrationEnabled: false
       }
     ]
+    tags: tags 
   }
 }
 
