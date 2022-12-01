@@ -106,6 +106,16 @@ module mlworkspace '../../Modules/Microsoft.MachineLearningServices/workspaces.b
   }  
 }
 
+module rbac '../../Modules/Microsoft.Authorization/roleAssignments/roleAssignments-rg.bicep' = {
+  name: 'ML-RBAC-Reader'
+  scope: resourceGroup(rg.name)
+  params: {
+    name: '${mlWorkspaceName}-${resourceGroupName}'
+    objectId: mlworkspace.outputs.principalId
+    roleDefinitionId: 'acdd72a7-3385-48ef-bd42-f606fba81ae7'   
+  }   
+}
+
 module mlworkspacePrivateLink '../../Modules/Microsoft.Network/privateEndpoints/privateEndpoints.bicep' = {
   name: '${mlWorkspaceName}-mlWorkspacePL'
   scope: resourceGroup(rg.name) 

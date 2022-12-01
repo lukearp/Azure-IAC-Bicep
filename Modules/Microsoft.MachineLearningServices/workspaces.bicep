@@ -47,3 +47,4 @@ resource ml 'Microsoft.MachineLearningServices/workspaces@2022-05-01' = {
 }
 
 output mlWorkspaceId string = ml.id
+output principalId string = ml.identity.principalId
