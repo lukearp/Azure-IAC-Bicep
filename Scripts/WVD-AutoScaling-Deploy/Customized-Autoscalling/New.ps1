@@ -72,6 +72,7 @@ try {
 	[string]$TimeZoneId = $RqtParams.TimeZoneId
 	[string]$BeginPeakTime = $RqtParams.BeginPeakTime
 	[int]$FullPeakHrOffset = $RqtParams.FullPeakHrOffset
+	[int]$RampDownOffSet = $RqtParams.RampDownOffSet
 	[string]$EndPeakTime = $RqtParams.EndPeakTime
 	[double]$SessionThresholdPerCPU = $RqtParams.SessionThresholdPerCPU
 	[int]$MinRunningVMs = $RqtParams.MinimumNumberOfRDSH
@@ -229,8 +230,8 @@ try {
 		}
 		#try {
 		#$AzAuth = Connect-AzAccount -Identity #-SubscriptionId cfaf9ba2-223d-42e6-ac55-03daf3f7cd87 # -ApplicationId $Connection.ApplicationId -CertificateThumbprint $Connection.CertificateThumbprint -TenantId $Connection.TenantId -SubscriptionId $Connection.SubscriptionId -ServicePrincipal
-		#Connect-AzAccount -ApplicationId $WVDConnection.ApplicationId -CertificateThumbprint $WVDConnection.CertificateThumbprint -TenantId $WVDConnection.TenantId -SubscriptionId $WVDConnection.SubscriptionId -ServicePrincipal
-		$WvdAuth = Connect-AzAccount -ApplicationId "5fa8b6bd-3a2e-4013-be2f-4b75c9bfa2c8" -CertificateThumbprint "6CA6FE92B16EA690BA51770AA17007DBACD6D9A1" -TenantId "f1b15770-c72f-44d1-ac7f-e65ecb4d0c54" -SubscriptionId "6fb24f41-2cb9-4242-861c-413a3775d97b" -ServicePrincipal
+		Connect-AzAccount -ApplicationId $WVDConnection.ApplicationId -CertificateThumbprint $WVDConnection.CertificateThumbprint -TenantId $WVDConnection.TenantId -SubscriptionId $WVDConnection.SubscriptionId -ServicePrincipal
+		#$WvdAuth = Connect-AzAccount -ApplicationId "5fa8b6bd-3a2e-4013-be2f-4b75c9bfa2c8" -CertificateThumbprint "6CA6FE92B16EA690BA51770AA17007DBACD6D9A1" -TenantId "f1b15770-c72f-44d1-ac7f-e65ecb4d0c54" -SubscriptionId "6fb24f41-2cb9-4242-861c-413a3775d97b" -ServicePrincipal
 			
 		$AzContext = $WvdAuth.Context
 		Write-Log "$($AzContext)" 
@@ -319,9 +320,11 @@ try {
 	$CurrentDateTime = Get-LocalDateTime
 	$BeginPeakDateTime = [datetime]::Parse($CurrentDateTime.ToShortDateString() + ' ' + $BeginPeakTime)
 	$FullPeakDateTime = [datetime]::Parse($CurrentDateTime.ToShortDateString() + ' ' + $BeginPeakTime).AddHours($FullPeakHrOffset)
+	$RampDownDateTime = [datetime]::Parse($CurrentDateTime.ToShortDateString() + ' ' + $EndPeakTime).AddHours($(-1 * $RampDownOffSet))
 	$EndPeakDateTime = [datetime]::Parse($CurrentDateTime.ToShortDateString() + ' ' + $EndPeakTime)
 	$fullPeak = $false
 	$peak = $false
+	$rampDown = $false
 	$offPeak = $false
 	# Adjust peak times to make sure begin peak time is always before end peak time
 	if ($EndPeakDateTime -lt $BeginPeakDateTime) {
@@ -334,23 +337,34 @@ try {
 	}
 
 	Write-Log "Using current time: $($CurrentDateTime.ToString('yyyy-MM-dd HH:mm:ss')), begin peak time: $($BeginPeakDateTime.ToString('yyyy-MM-dd HH:mm:ss')), end peak time: $($EndPeakDateTime.ToString('yyyy-MM-dd HH:mm:ss'))"
-	if ($BeginPeakTime -le $CurrentDateTime -and $CurrentDateTime -le $FullPeakDateTime) {
+	if ($BeginPeakDateTime -le $CurrentDateTime -and $CurrentDateTime -le $FullPeakDateTime) {
 		Write-Log "In full peek hours"
 		$fullPeak = $true
 		$peak = $false
 		$offPeak = $false
+		$rampDown = $false
+	}
+	elseif($RampDownDateTime -le $CurrentDateTime -and $CurrentDateTime -le $EndPeakDateTime)
+	{
+		Write-Log "In Ramp Down"
+		$fullPeak = $false
+		$peak = $false
+		$offPeak = $false
+		$rampDown = $true
 	}
 	elseif ($BeginPeakDateTime -le $CurrentDateTime -and $CurrentDateTime -le $EndPeakDateTime) {
 		Write-Log "In peak hours"
 		$fullPeak = $false
 		$peak = $true
 		$offPeak = $false
+		$rampDown = $false
 	}
 	else {
 		Write-Log "Off peak hours"
 		$fullPeak = $false
 		$peak = $false
 		$offPeak = $true
+		$rampDown = $false
 	}
 
 	#endregion
@@ -471,6 +485,15 @@ try {
 		if($HostPool.LoadBalancerType -eq 'DepthFirst')
 		{
 			$HostPool = Update-AzWvdHostPool -Name $HostPoolName -ResourceGroupName $ResourceGroupName -LoadBalancerType 'BreadthFirst'
+		}
+	}
+	elseif($rampDown)
+	{
+		#Logoff all users
+				
+		if($HostPool.LoadBalancerType -ne 'DepthFirst')
+		{
+			$HostPool = Update-AzWvdHostPool -Name $HostPoolName -ResourceGroupName $ResourceGroupName -LoadBalancerType 'DepthFirst'
 		}
 	}
 	else {
