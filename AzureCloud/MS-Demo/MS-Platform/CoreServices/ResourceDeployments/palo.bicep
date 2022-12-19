@@ -40,7 +40,7 @@ module palo '../../../../../Standard-Deployments/PaloAlto-HA-Active_Active/paloA
     managementSubnetName: 'Mgmt'
     paloNamePrefix: 'transit'
     planName: 'byol'
-    planOffer: 'vmseries1'
+    planOffer: 'vmseries-flex' 
     trustSubnetName: 'Trust'
     untrustSubnetName: 'Untrust'
     vmSize: 'Standard_DS3_v2'
