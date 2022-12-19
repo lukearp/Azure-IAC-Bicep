@@ -5,10 +5,6 @@ resource vpnRg 'Microsoft.Resources/resourceGroups@2021-04-01' existing = {
   name: 'core-vpn-networking-eastus-rg'
 }
 
-resource erRg 'Microsoft.Resources/resourceGroups@2021-04-01' existing = {
-  name: 'core-er-networking-eastus-rg'
-}
-
 module localGateway '../../../../../Modules/Microsoft.Network/localNetworkGateways/localNetworkGateways.bicep' = {
   name: 'Home-LG-Deploy'
   scope: resourceGroup(vpnRg.name)
@@ -45,9 +41,10 @@ module connection '../../../../../Modules/Microsoft.Network/connections/connecti
   }   
 }
 
+/*
 module erConnection '../../../../../Modules/Microsoft.Network/connections/connections.bicep' = {
   name: 'AVS-ER-Connection'
-  scope: resourceGroup(erRg.name)
+  scope: resourceGroup(vpnRg.name)
   params: {
     connectionType: 'ExpressRoute'
     location: 'eastus'
@@ -55,8 +52,9 @@ module erConnection '../../../../../Modules/Microsoft.Network/connections/connec
     tags: {
       Environment: 'Prod'
     }
-    virtualNetworkGateway1: resourceId('32eb88b4-4029-4094-85e3-ec8b7ce1fc00',erRg.name,'Microsoft.Network/virtualNetworkGateways', 'Core-ER')
-    authorizationKey: 'a922d45f-4c11-4f36-bf15-b8a90b43ba51' 
+    virtualNetworkGateway1: resourceId('32eb88b4-4029-4094-85e3-ec8b7ce1fc00',vpnRg.name,'Microsoft.Network/virtualNetworkGateways', 'Core-ER')
+    authorizationKey: authorizationKey 
     erCircuitId: '/subscriptions/e2f192a7-f4e1-4289-b895-52a60dc29fb7/resourceGroups/tnt80-cust-p01-brazilsouth/providers/Microsoft.Network/expressRouteCircuits/tnt80-cust-p01-brazilsouth-er'       
   }   
 }
+*/

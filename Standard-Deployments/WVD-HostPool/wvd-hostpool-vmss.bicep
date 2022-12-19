@@ -12,6 +12,8 @@ param hostPoolSubscription string
 param profileContainerPath string
 param userManagedIdentityId string
 param hostCount int
+param customImages bool = false
+param imageResourceId string = ''
 @allowed([
   'microsoftwindowsdesktop'
 ])
@@ -41,6 +43,7 @@ param ouPath string
 param vmSize string = 'Standard_D4_v4'
 param artifcatLocation string = 'https://github.com/lukearp/Azure-IAC-Bicep/releases/download/DSC/WVD-DSC.zip'
 param enablePatchingByPlatform bool = false
+param tags object = {}
 
 var vmSSname = vmScalesetName == '' ? hostPoolName : vmScalesetName
 
@@ -95,6 +98,123 @@ var vmssProperties = enablePatchingByPlatform == true ? {
   orchestrationMode: 'Flexible'
   singlePlacementGroup: false
   //overprovision: false
+  virtualMachineProfile: {
+    licenseType: 'Windows_Client' 
+    diagnosticsProfile: {
+      bootDiagnostics: {
+        enabled: true 
+      } 
+    }
+    osProfile: {
+      adminPassword: adminPassword
+      adminUsername: adminUsername
+      computerNamePrefix: vmNamePrefix     
+      windowsConfiguration: windowsConfiguration 
+    }
+    storageProfile: { 
+      imageReference: {
+        offer: imageOffer
+        publisher: imagePublisher
+        sku: imageSku
+        version: 'latest'    
+      }
+      osDisk: {
+        createOption: 'FromImage'
+        managedDisk: {
+          storageAccountType: 'StandardSSD_LRS' 
+        }    
+      }  
+    }
+    networkProfile: {
+      networkInterfaceConfigurations: [
+        {
+          name: 'nic'
+          properties: {
+            primary: true
+            ipConfigurations: [
+              {
+                name: 'ipconfig'
+                properties: {
+                  subnet: {
+                    id: '${virtualNetworkId}/subnets/${subnetName}' 
+                  } 
+                }  
+              }
+            ]  
+          }  
+        } 
+      ]   
+    }
+    extensionProfile: {
+      extensions: [
+        {
+           name: 'HealthExtension' 
+           properties: {
+             publisher: 'Microsoft.ManagedServices'
+             type: 'ApplicationHealthWindows'
+             autoUpgradeMinorVersion: true
+             typeHandlerVersion: '1.0'
+             settings: {
+               protocol: 'tcp'
+               port: 3389 
+             }    
+           }   
+        }          
+        {
+          name: 'DSC-Setup'
+          properties: {
+            provisionAfterExtensions: [
+              'HealthExtension'
+            ]
+            publisher: 'Microsoft.Powershell'
+            type: 'DSC'
+            autoUpgradeMinorVersion: true
+            typeHandlerVersion: '2.73'
+            settings: {
+              modulesUrl: artifcatLocation
+              configurationFunction: 'Configuration.ps1\\AddSessionHost'
+              properties: {
+                hostPoolName: hostPoolName
+                registrationInfoToken: json(string(deploymentScript.outputs.results)).registrationKey
+                uncPath: profileContainerPath
+              }
+            }  
+          }
+        }
+        {
+          name: 'DomainJoin' 
+          properties: {
+            provisionAfterExtensions: [
+              'DSC-Setup'
+            ]
+            publisher: 'Microsoft.Compute' 
+            type: 'JsonADDomainExtension'  
+            typeHandlerVersion: '1.3'
+            autoUpgradeMinorVersion: true
+            settings: {
+              name: domainFqdn
+              ouPath: ouPath
+              user: domainJoinUsername
+              restart: 'true'
+              options: 3
+            }
+            protectedSettings: {
+              password: domainJoinPassword
+            }
+          } 
+        } 
+      ] 
+    }    
+  }     
+} : customImages == false ? {
+  zoneBalance: zoneBalance
+  upgradePolicy: {
+    mode: 'Manual'
+  }
+  platformFaultDomainCount: zoneBalance == true ? 1 : 3
+  orchestrationMode: 'Uniform'
+  singlePlacementGroup: enablePatchingByPlatform == true
+  overprovision: false
   virtualMachineProfile: {
     licenseType: 'Windows_Client' 
     diagnosticsProfile: {
@@ -227,10 +347,7 @@ var vmssProperties = enablePatchingByPlatform == true ? {
     }
     storageProfile: {
       imageReference: {
-        offer: imageOffer
-        publisher: imagePublisher
-        sku: imageSku
-        version: 'latest'    
+        id: imageResourceId   
       }
       osDisk: {
         createOption: 'FromImage'
@@ -340,4 +457,5 @@ resource hostPool 'Microsoft.Compute/virtualMachineScaleSets@2021-03-01' = {
   }*/
   zones: zones 
   properties: vmssProperties
+  tags: tags 
 }

@@ -9,11 +9,11 @@ param description string
 ])
 param useHubGateway string
 
-resource networkManager 'Microsoft.Network/networkManagers@2021-02-01-preview' existing = {
+resource networkManager 'Microsoft.Network/networkManagers@2022-02-01-preview' existing = {
   name: networkManagerName 
 }
 
-resource symbolicname 'Microsoft.Network/networkManagers/connectivityConfigurations@2021-02-01-preview' = {
+resource symbolicname 'Microsoft.Network/networkManagers/connectivityConfigurations@2022-02-01-preview' = {
   name: connectivityConfigName
   parent: networkManager
   properties: {

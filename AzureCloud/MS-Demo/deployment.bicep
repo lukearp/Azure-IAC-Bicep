@@ -43,7 +43,7 @@ module baseInfra '../../Standard-Deployments/CAF-Landing-Zone-MG/caf-mg-deploy.b
       }
     ]
     virtualNetworks: [
-      {
+      /*{
         name: 'core-vpn-vnet-eastus'
         subId: '32eb88b4-4029-4094-85e3-ec8b7ce1fc00'
         vnetAddressSpace: '10.0.12.0/24'
@@ -183,12 +183,13 @@ module baseInfra '../../Standard-Deployments/CAF-Landing-Zone-MG/caf-mg-deploy.b
           Environment: 'Prod'
           HoursOfOperation: '24-7'
         }
-      }
+      }*/  
     ] 
     policyAssignments: []         
-  }   
+  } 
 }
 
+/*
 module routeServerVpn '../../Modules/Microsoft.Network/virtualHubs/routeServer.bicep' = {
   name: 'Route-VPN-Server-Deploy'
   scope: resourceGroup('32eb88b4-4029-4094-85e3-ec8b7ce1fc00','core-vpn-networking-eastus-rg')
@@ -202,9 +203,10 @@ module routeServerVpn '../../Modules/Microsoft.Network/virtualHubs/routeServer.b
     tags: {
       Environment: 'Prod'
     } 
-    allowBranchToBranchTraffic: false 
+    allowBranchToBranchTraffic: true 
   } 
 }
+
 
 module routeServerEr '../../Modules/Microsoft.Network/virtualHubs/routeServer.bicep' = {
   name: 'Route-ER-Server-Deploy'
@@ -219,9 +221,9 @@ module routeServerEr '../../Modules/Microsoft.Network/virtualHubs/routeServer.bi
     tags: {
       Environment: 'Prod'
     } 
-    allowBranchToBranchTraffic: false 
+    allowBranchToBranchTraffic: true 
   } 
-}
+}*/
 
 module networkManager '../../Modules/Microsoft.Network/networkManagers/networkManagers.bicep' = {
   name: 'Network-Manager-Deployment'

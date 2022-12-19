@@ -5,6 +5,7 @@ param targetSubResource array = []
 param requestMessage string = 'Needing Access'
 param location string
 param manual bool = false
+param tags object = {}
 
 var privateLinkServiceConnections = manual == false ? [
   {
@@ -38,4 +39,8 @@ resource privateEndpoint 'Microsoft.Network/privateEndpoints@2021-03-01' = {
       id: subnetResourceId
     }
   }
+  tags: tags 
 }
+
+output networkInterfaces array = privateEndpoint.properties.networkInterfaces
+output customerDnsConfigs array = privateEndpoint.properties.customDnsConfigs

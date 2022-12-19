@@ -3,7 +3,7 @@ param networkGroupName string
 param tagName string
 param description string
 
-resource networkManager 'Microsoft.Network/networkManagers@2021-02-01-preview' existing = {
+resource networkManager 'Microsoft.Network/networkManagers@2022-02-01-preview' existing = {
   name: networkManagerName 
 }
 

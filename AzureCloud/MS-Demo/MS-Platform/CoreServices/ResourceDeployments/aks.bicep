@@ -17,22 +17,31 @@ module agentsubnet '../../../../../Modules/Microsoft.Network/virtualNetworks/sub
     addressPrefix: '10.0.19.0/24'
     subnetName: 'aks-agent'
     vnetname: 'core-workloads-eastus-vnet'
-    routeTableName: 'core-workloads-eastus-vnet-eastus-rt'
+    serviceEndpoints: [
+      {
+        service: 'Microsoft.Storage'
+        locations: [
+          'eastus'
+          'westus'
+        ]
+      }
+    ] 
+    //routeTableName: 'core-workloads-eastus-vnet-eastus-rt'
     //nsgName: 'core-spoke-eastus-vnet-eastus-nsg'  
   } 
 }
 
-module acisubnet '../../../../../Modules/Microsoft.Network/virtualNetworks/subnets/subnets.bicep' = {
+/*module acisubnet '../../../../../Modules/Microsoft.Network/virtualNetworks/subnets/subnets.bicep' = {
   name: 'aks-aci-AKS-Subnet-Deployment'
   scope: resourceGroup('core-workloads-networking-eastus-rg')  
   params: {
     addressPrefix: '10.0.18.0/26'
     subnetName: 'aks-aci'
     vnetname: 'core-workloads-eastus-vnet'
-    routeTableName: 'core-workloads-eastus-vnet-eastus-rt'
+    //routeTableName: 'core-workloads-eastus-vnet-eastus-rt'
     //nsgName: 'core-spoke-eastus-vnet-eastus-nsg'  
   } 
-}
+}*/
 
 module workspace 'loganalytics-workspaces.bicep' = {
   name: 'AKS-Demo-Workspace-Logging'  
@@ -52,13 +61,29 @@ module keyVault '../../../../../Modules/Microsoft.Keyvault/vaults.bicep' = {
   }   
 }
 
+module acr '../../../../../Modules/Microsoft.ContainerRegistry/registries.bicep' = {
+  name: 'Luke-AKS-Demo-ACR-Deploy'
+  scope: resourceGroup(rg.name)
+  params: {
+    location: 'eastus'
+    name: 'luke-aks-demo-acr'
+    adminUserEnabled: true
+    anonymousPullEnabled: false
+    sku: 'Basic'
+    tags: {
+      Environment: 'Prod'
+    }
+    zoneRedundancy: 'Disabled'       
+  }   
+}
+
 module aks '../../../../../Modules/Microsoft.ContainerService/managedClusters.bicep' = {
   name: 'Luke-AKS-Demo-Deploy'
   scope: resourceGroup(rg.name)
   params: {
     aadProfileEnabled: true
     aciConnectorLinuxEnabled: false
-    aciVnetSubnetName: split(acisubnet.outputs.subnetId,'/')[10]
+    aciVnetSubnetName: ''
     dnsPrefix: 'luke-aks-deploy'
     networkPlugin: 'azure'
     internalAddressCider: '192.168.0.0/16'
@@ -69,7 +94,8 @@ module aks '../../../../../Modules/Microsoft.ContainerService/managedClusters.bi
     tier: 'Free'
     tags: {
       Environment: 'Prod'
-      HoursOfOperation: 'N/A'  
+      HoursOfOperation: 'N/A' 
+      AutoStop: 'True' 
     }
     kubernetesVersion: '1.22.6'
     adminGroupObjectIDs: [
@@ -80,9 +106,9 @@ module aks '../../../../../Modules/Microsoft.ContainerService/managedClusters.bi
         name: 'agentpool'
         osDiskSizeGB: 0
         count: 1
-        enableAutoScaling: true
-        minCount: 1
-        maxCount: 3
+        enableAutoScaling: false
+        //minCount: 1
+        //maxCount: 3
         vmSize: 'Standard_B4ms'
         osType: 'Linux'
         storageProfile: 'ManagedDisks'
@@ -97,14 +123,16 @@ module aks '../../../../../Modules/Microsoft.ContainerService/managedClusters.bi
         nodeLabels: {}
         nodeTaints: []
         enableNodePublicIP: false
-        tags: {}
+        tags: {
+          AutoStop: 'True'
+        }
         vnetSubnetID: agentsubnet.outputs.subnetId
       }
     ] 
     enableRBAC: true 
     enableOmsAgent: true
     omsWorkspaceId: workspace.outputs.workspaceResourceId   
-    enableSecretStoreCSIDriver: true                           
+    enableSecretStoreCSIDriver: true                          
   }    
 }
 
@@ -119,7 +147,7 @@ module keyvaultIdentity '../../../../../Modules/Microsoft.ManagedIdentity/userAs
     name: 'azurekeyvaultsecretsprovider-${clusterName}'  
     tags: {
       Environment: 'Prod'
-      HoursOfOperation: 'N/A'  
+      HoursOfOperation: 'N/A'
     } 
   }
 }

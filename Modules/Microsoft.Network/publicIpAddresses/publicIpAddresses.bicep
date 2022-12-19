@@ -19,19 +19,21 @@ param publicIpAddressVersion string
   'Dynamic'
 ])
 param publicIpAllocationMethod string
+param zones array = []
 param location string = resourceGroup().location
 param tags object = {}
 
 resource pip 'Microsoft.Network/publicIPAddresses@2020-11-01' = {
   name: name
   location: location
+  zones: zones 
   sku: {
     name: sku
     tier: tier  
   }
   properties:{
     publicIPAddressVersion: publicIpAddressVersion
-    publicIPAllocationMethod: publicIpAllocationMethod       
+    publicIPAllocationMethod: publicIpAllocationMethod        
   }  
   tags: tags 
 }
