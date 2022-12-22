@@ -3,6 +3,7 @@ targetScope = 'subscription'
 param resourceGroupName string
 param mlWorkspaceName string
 param location string
+param deployAVD bool = false
 param dnsZoneRgName string
 param dnsZoneSubscriptionId string
 param dnsVnetId string
@@ -61,7 +62,7 @@ module keyvault '../../Modules/Microsoft.KeyVaults/vaults.bicep' = {
     location: location
     name: keyVaultName
     tags: tags  
-    enableSoftDelete: true     
+    enableSoftDelete: true    
   }  
 }
 
@@ -352,40 +353,12 @@ module mlRecords 'dnsrecordLoop.bicep' = {
     azureGovernment: azureGovernment
   }
 }
-/*
-module hostPool '../../Modules/Microsoft.DesktopVirtualization/hostpools.bicep' = {
-  name: '${mlWorkspaceName}-AVD-Hostpool'
-  scope: resourceGroup(rg.name) 
-  params: {
-    loadBalancerType: 'BreadthFirst'
-    location: location
-    name: '${mlWorkspaceName}-AVD-Hostpool'
-    hostPoolType: 'Pooled'
-    preferredAppGroupType: 'Desktop'     
-  }  
-}
 
-module appGroup '../../Modules/Microsoft.DesktopVirtualization/applicationgroups.bicep' = {
-  name: '${mlWorkspaceName}-AVD-AppGroup'
+module avd 'avd.bicep' = if(deployAVD == true) {
+  name: 'AVD-Deploy'
   scope: resourceGroup(rg.name)
   params: {
-    applicationGroupType: 'Desktop'
-    hostpoolResourceId: hostPool.outputs.id
-    description: 'Desktop App Group'
     location: location
-    name: '${mlWorkspaceName}-AVD-AppGroup'    
-  }  
+    mlWorkspaceName: mlWorkspaceName  
+  }
 }
-
-module avdWorkspace '../../Modules/Microsoft.DesktopVirtualization/workspaces.bicep' = {
-  name: '${mlWorkspaceName}-AVD-Workspace'
-  scope: resourceGroup(rg.name)
-  params: {
-    description: 'Access to private ML Workspace'
-    location: location
-    name: '${mlWorkspaceName}-AVD-Workspace'
-    applicationGroupReferences: [
-      appGroup.outputs.id
-    ]     
-  }   
-}*/

@@ -3,6 +3,7 @@ targetScope = 'subscription'
 param resourceGroupName string
 param mlWorkspaceName string
 param location string
+param deployAVD bool = false
 param enableDiagnostics bool = false
 param logAnalyticsResourceId string = ''
 param azureGovernment bool = false
@@ -122,6 +123,16 @@ module mlworkspace '../../Modules/Microsoft.MachineLearningServices/workspaces.b
     v1LegacyMode: false
     applicationInsightsId: appInsights.outputs.appInsightId             
   }  
+}
+
+module rbac '../../Modules/Microsoft.Authorization/roleAssignments/roleAssignments-rg.bicep' = {
+  name: 'ML-RBAC-Reader'
+  scope: resourceGroup(rg.name)
+  params: {
+    name: '${mlWorkspaceName}-${resourceGroupName}'
+    objectId: mlworkspace.outputs.principalId
+    roleDefinitionId: 'acdd72a7-3385-48ef-bd42-f606fba81ae7'   
+  }   
 }
 
 module mlworkspacePrivateLink '../../Modules/Microsoft.Network/privateEndpoints/privateEndpoints.bicep' = {
@@ -348,39 +359,11 @@ module mlRecords 'dnsrecordLoop.bicep' = {
   }
 }
 
-module hostPool '../../Modules/Microsoft.DesktopVirtualization/hostpools.bicep' = {
-  name: '${mlWorkspaceName}-AVD-Hostpool'
-  scope: resourceGroup(rg.name) 
-  params: {
-    loadBalancerType: 'BreadthFirst'
-    location: location
-    name: '${mlWorkspaceName}-AVD-Hostpool'
-    hostPoolType: 'Pooled'
-    preferredAppGroupType: 'Desktop'     
-  }  
-}
-
-module appGroup '../../Modules/Microsoft.DesktopVirtualization/applicationgroups.bicep' = {
-  name: '${mlWorkspaceName}-AVD-AppGroup'
+module avd 'avd.bicep' = if(deployAVD == true) {
+  name: 'AVD-Deploy'
   scope: resourceGroup(rg.name)
   params: {
-    applicationGroupType: 'Desktop'
-    hostpoolResourceId: hostPool.outputs.id
-    description: 'Desktop App Group'
     location: location
-    name: '${mlWorkspaceName}-AVD-AppGroup'    
-  }  
-}
-
-module avdWorkspace '../../Modules/Microsoft.DesktopVirtualization/workspaces.bicep' = {
-  name: '${mlWorkspaceName}-AVD-Workspace'
-  scope: resourceGroup(rg.name)
-  params: {
-    description: 'Access to private ML Workspace'
-    location: location
-    name: '${mlWorkspaceName}-AVD-Workspace'
-    applicationGroupReferences: [
-      appGroup.outputs.id
-    ]     
-  }   
+    mlWorkspaceName: mlWorkspaceName  
+  }
 }

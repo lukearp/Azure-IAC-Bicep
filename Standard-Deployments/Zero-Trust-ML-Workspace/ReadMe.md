@@ -19,17 +19,41 @@ Integrated has you specifiy names of all the resources.  It also allows you to d
 
 User with contributor rights to an Azure Subscription.
 
-# Parameters
+# Sandbox Parameters
 param | type | notes
 ------|------|------
 resourceGroupName | string | Name of Resource Group that will be created for resource deployments.
 mlWorkspaceName | string | Name of ML Workspace to be deployed
 location | string | Azure Region to deploy resources to.
+deployAVD | bool | Deploy AVD Host Pool, default is False
 enableDiagnostics | bool | Enable diagnostic profiles for supported resources.  Currently only Log Analytics supported.
 logAnalyticsResourceId | string | Resource ID of target workspace.
 azureGovernment | bool | Is the ML Workspace being deployed to Azure Government
 tags | object | Tags for resources
 
+# Integrated Parameters
+param | type | notes
+------|------|------
+resourceGroupName | string | Name of Resource Group that will be created for resource deployments.
+mlWorkspaceName | string | Name of ML Workspace to be deployed
+location | string | Azure Region to deploy resources to.
+deployAVD | bool | Deploy AVD Host Pool, default is False
+dnsZoneRgName | string | Azure Resource Group that the Private DNS Zones will deploy to.
+dnsZoneSubscriptionId | string | Azure Subscription that your dnsZoneRgName is in
+dnsVnetId | string | Resource ID of the Virtual Network that the private DNS zones will be associated to
+storageAccountName | string | Name of your default Blob Storage account for ML Workspace
+appInsightsName | string | App Insights name for you ML Workspace
+keyVaultName | string | Name of the Azure Keyvault for your ML Workspace
+Azure
+acrName | string | Name of Azure Container Registery for ML Workspace
+privateLinkSubnetId | string | Resource ID of the subnet that the private link endpoints will be deployed.
+azureGovernment | bool | Set to true if deploying to Azure Government.  Default is False
+mlworkspacePrivateLinkName | string | (Optional) Name of the Private Link Endpoint for ML Workspace.  Default will be '${mlWorkspaceName}-mlWorkspacePL'
+storagePrivateLinkBlobName | string | (Optional) Name of the Private Link Endpoint for Blob Stroage.  Default will be '${mlWorkspaceName}-StorageBlobPL'
+storagePrivateLinkFileName | string | (Optional) Name of the Private Link Endpoint for File Stroage.  Default will be '${mlWorkspaceName}-StorageFilePL'
+storagePrivateLinkDfsName | string | (Optional) Name of the Private Link Endpoint for Dfs Stroage.  Default will be '${mlWorkspaceName}-StorageDfsPL'
+keyvaultPrivateLinkName | string | (Optional) Name of the Private Link Endpoint for Key Vault.  Default will be '${mlWorkspaceName}-KeyVaultPL'
+acrPrivateLinkName | string | (Optional) Name of the Private Link Endpoint for Azure Container Registry.  Default will be '${mlWorkspaceName}-AcrPL'
 # Sample Module
 
 ```Bicep
