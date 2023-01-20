@@ -303,11 +303,7 @@ var vmssProperties = customImage == false ? {
                 registrationInfoToken: json(string(hostpoolRegistration.outputs.results)).registrationKey
                 aadJoin: false
                 UseAgentDownloadEndpoint: true
-                aadJoinPreview: {
-                  hostpoolUpdateFeature: false
-                  aadJoinPreview: false 
-                  sessionHostConfigurationVersion: ''
-                }
+                aadJoinPreview: false
                 mdmId: ''
                 sessionHostConfigurationLastUpdateTime: ''
               }
