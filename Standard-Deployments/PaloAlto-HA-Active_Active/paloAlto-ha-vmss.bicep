@@ -34,6 +34,7 @@ param imageVersion string = 'latest'
 param vmSize string
 param managedIdentityId string
 param location string = resourceGroup().location
+param tags object = {}
 
 var plan = planOffer == 'vmseries-forms' ? 'bundle2-for-ms' : planName
 
@@ -135,6 +136,7 @@ resource paloAltoSet 'Microsoft.Compute/virtualMachineScaleSets@2020-12-01' = {
      name: vmSize    
   }
   zones: zones 
+  tags: tags 
   properties: {
     upgradePolicy: {
       mode: 'Rolling'
