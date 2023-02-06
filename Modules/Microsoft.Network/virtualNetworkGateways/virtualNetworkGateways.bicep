@@ -1,7 +1,7 @@
 param gatewayName string
 param targetVnetId string
 param active_active bool
-param asn int
+param asn int = 65515
 @allowed([
   'Vpn'
   'ExpressRoute'
