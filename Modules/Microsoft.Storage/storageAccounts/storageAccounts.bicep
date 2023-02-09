@@ -35,9 +35,10 @@ param serviceBusRuleId string = ''
 param storageAccountId string = ''
 */
 param workspaceId string = ''
+param publicNetworkAccess bool = true
 param tags object = {}
 
-resource storageAccount 'Microsoft.Storage/storageAccounts@2021-04-01' = {
+resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = {
   name: name
   location: location
   kind: kind 
@@ -49,6 +50,7 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2021-04-01' = {
      isHnsEnabled: enableHierarchicalNamespace 
      allowBlobPublicAccess: disablePubliAccess
      supportsHttpsTrafficOnly: supportsHttpsTrafficOnly 
+     publicNetworkAccess: publicNetworkAccess == false ? 'Disabled' : 'Enabled' 
   }   
   tags: tags
 }
