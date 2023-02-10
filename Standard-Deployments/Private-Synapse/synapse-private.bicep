@@ -3,6 +3,10 @@ param location string
 param name string
 param resourceGroupName string
 param privateLinkSubnetId string
+param initialAdmin string
+param sqlAdminUser string
+@secure()
+param sqlAdminPassword string
 param tags object = {}
 
 resource rg 'Microsoft.Resources/resourceGroups@2019-05-01' = {
@@ -22,7 +26,7 @@ module storageAccount '../../Modules/Microsoft.Storage/storageAccounts/storageAc
     enableHierarchicalNamespace: true
     sku: 'Standard_LRS'
     supportsHttpsTrafficOnly: true
-    publicNetworkAccess: false  
+    publicNetworkAccess: true  
     tags: tags        
   }  
 }
@@ -37,6 +41,10 @@ module synapse '../../Modules/Microsoft.Synapse/workspace.bicep' = {
     storageDfsEndpoint: storageAccount.outputs.endpoints.dfs
     strorageResourceId: storageAccount.outputs.storageAccountId  
     createPrivateEndpointForStorage: true
+    initialAdmin: initialAdmin
+    sqlAdminPassword: sqlAdminPassword
+    sqlAdminUser: sqlAdminUser
+    disablePublicAccess: false 
   }  
 }
 
