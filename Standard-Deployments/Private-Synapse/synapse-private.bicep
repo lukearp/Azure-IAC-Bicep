@@ -7,6 +7,10 @@ param initialAdmin string
 param sqlAdminUser string
 @secure()
 param sqlAdminPassword string
+param addDNSRecords bool = false
+param dnsSubscriptionId string = subscription().subscriptionId
+param dnsRgName string = resourceGroupName
+param azureGovernment bool = false
 param tags object = {}
 
 resource rg 'Microsoft.Resources/resourceGroups@2019-05-01' = {
@@ -14,6 +18,7 @@ resource rg 'Microsoft.Resources/resourceGroups@2019-05-01' = {
   location: location
 }
 
+var storageSuffix = azureGovernment == false ? 'core.windows.net' : 'core.usgovcloudapi.net'
 var storageName = 'dl${substring(replace(guid('${name}-${location}-${resourceGroupName}-${subscription().id}'),'-',''),0,15)}'
 module storageAccount '../../Modules/Microsoft.Storage/storageAccounts/storageAccounts.bicep' = {
   name: 'StorageAccount-Deploy'
@@ -44,7 +49,7 @@ module synapse '../../Modules/Microsoft.Synapse/workspace.bicep' = {
     initialAdmin: initialAdmin
     sqlAdminPassword: sqlAdminPassword
     sqlAdminUser: sqlAdminUser
-    disablePublicAccess: false 
+    disablePublicAccess: true 
   }  
 }
 
@@ -106,4 +111,50 @@ module privateLinkDevSynapse '../../Modules/Microsoft.Network/privateEndpoints/p
     ] 
     tags: tags  
   } 
+}
+
+module dnsZonesSql 'dnsrecordLoop.bicep' = if(addDNSRecords) {
+  name: 'Record-Synapse-SQL-Creation'
+  scope: resourceGroup(dnsSubscriptionId,dnsRgName)
+  params: {
+    azureGovernment: azureGovernment
+    records: privateLinkSqlSynapse.outputs.customerDnsConfigs  
+  }  
+}
+
+module dnsZonesDev 'dnsrecordLoop.bicep' = if(addDNSRecords) {
+  name: 'Record-Synapse-Dev-Creation'
+  scope: resourceGroup(dnsSubscriptionId,dnsRgName)
+  params: {
+    azureGovernment: azureGovernment
+    records: privateLinkDevSynapse.outputs.customerDnsConfigs  
+  }  
+}
+
+module blobDNSZone '../../Modules/Microsoft.Network/privateDnsZones/privateDnsZones.bicep' = if(addDNSRecords) {
+  name: '${name}-BlobDNSZone' 
+  scope: resourceGroup(dnsSubscriptionId,dnsRgName)
+  params: {
+    zoneName: 'privatelink.blob.${storageSuffix}' 
+    createARecord: true
+    aRecordName: split(storageAccount.outputs.storageAccountId,'/')[8]  
+    aRecordIp: privateLinkBlob.outputs.customerDnsConfigs[0].ipAddresses[0] 
+    vnetAssociations: [
+    ]
+    tags: tags 
+  }
+}
+
+module dfsDNSZone '../../Modules/Microsoft.Network/privateDnsZones/privateDnsZones.bicep' = if(addDNSRecords) {
+  name: '${name}-DfsDNSZone' 
+  scope: resourceGroup(dnsSubscriptionId,dnsRgName)
+  params: {
+    zoneName: 'privatelink.dfs.${storageSuffix}' 
+    createARecord: true
+    aRecordName: split(storageAccount.outputs.storageAccountId,'/')[8]  
+    aRecordIp: privateLinkDfs.outputs.customerDnsConfigs[0].ipAddresses[0]
+    vnetAssociations: [
+    ]
+    tags: tags 
+  }
 }
