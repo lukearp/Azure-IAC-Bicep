@@ -78,16 +78,31 @@ module privateLinkDfs '../../Modules/Microsoft.Network/privateEndpoints/privateE
   }   
 }
 
-module privateLinkSynapse '../../Modules/Microsoft.Network/privateEndpoints/privateEndpoints.bicep' = {
-  name: 'Synapse-PL-Deploy'
+module privateLinkSqlSynapse '../../Modules/Microsoft.Network/privateEndpoints/privateEndpoints.bicep' = {
+  name: 'Synapse-PL-SQL-Deploy'
   scope: resourceGroup(rg.name)
   params: {
     location: location
-    name: '${name}-pl'
+    name: '${name}-Sql-pl'
     remoteServiceResourceId: synapse.outputs.synapsId
     subnetResourceId: privateLinkSubnetId
     targetSubResource: [
       'Sql'
+    ] 
+    tags: tags  
+  } 
+}
+
+module privateLinkDevSynapse '../../Modules/Microsoft.Network/privateEndpoints/privateEndpoints.bicep' = {
+  name: 'Synapse-PL-Dev-Deploy'
+  scope: resourceGroup(rg.name)
+  params: {
+    location: location
+    name: '${name}-Dev-pl'
+    remoteServiceResourceId: synapse.outputs.synapsId
+    subnetResourceId: privateLinkSubnetId
+    targetSubResource: [
+      'Dev'
     ] 
     tags: tags  
   } 
