@@ -22,3 +22,27 @@ dnsSubscriptionId | string | Subscription to where DNS Zones and Records are to 
 dnsRgName | string | Resource Group to where the DNS Zones and Records are to be deployed
 azureGovernment | bool | Deploy in Azure Government, default: false
 tags | object | Resource Tags
+
+# Example
+
+```bicep
+targetScope = 'subscription'
+module synapse '../Standard-Deployments/Private-Synapse/synapse-private.bicep' = {
+  name: 'Synapse-Deploy'
+  params: {
+    initialAdmin: 'user@user.com'
+    location: 'eastus'
+    name: 'syanpse-workspace'
+    privateLinkSubnetId: '/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx/resourceGroups/network-rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/pl'
+    resourceGroupName: 'Synapse_RG'
+    sqlAdminPassword: 'PASSWORD'
+    sqlAdminUser: 'localadmin'
+    dnsSubscriptionId: subscription().subscriptionId
+    dnsRgName: 'DNS-RG'
+    tags: {
+      Environment: 'Test'
+    }    
+    addDNSRecords: true     
+  }  
+}
+```
