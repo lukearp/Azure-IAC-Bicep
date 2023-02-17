@@ -1,4 +1,4 @@
-param @(
+param(
     $resourceId
 )
 $connections = Get-AzPrivateEndpointConnection -PrivateLinkResourceId $resourceId | ?{$_.PrivateLinkServiceConnectionState.Status -eq "Pending"}
