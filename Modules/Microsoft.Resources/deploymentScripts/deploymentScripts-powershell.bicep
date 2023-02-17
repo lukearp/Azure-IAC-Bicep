@@ -34,4 +34,4 @@ resource deploymentScript 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
   tags: tags 
 }
 
-output results object = deploymentScript.properties.outputs
+output results object = deploymentScript.properties.outputs == null ? {} : deploymentScript.properties.outputs
