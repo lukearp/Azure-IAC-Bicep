@@ -14,6 +14,7 @@ location | string | Azure Region
 name | string | Name of Synapse Workspace
 resourceGroupName | string | Resource Group Name for Synapse Workspace
 privateLinkSubnetId | string | Resource ID Of subnet to deploy Private Link Endpoints in
+disablePublicAccess | bool | Disable public network access to the workspace
 initialAdmin | string | UPN of Synapse Admin User
 sqlAdminUser | string | Default SQL Admin User
 sqlAdminPassword | securestring | Default SQL Password

@@ -3,6 +3,7 @@ param location string
 param name string
 param resourceGroupName string
 param privateLinkSubnetId string
+param disablePublicAccess bool = false
 param initialAdmin string
 param sqlAdminUser string
 @secure()
@@ -51,7 +52,7 @@ module synapse '../../Modules/Microsoft.Synapse/workspace.bicep' = {
     initialAdmin: initialAdmin
     sqlAdminPassword: sqlAdminPassword
     sqlAdminUser: sqlAdminUser
-    disablePublicAccess: true 
+    disablePublicAccess: disablePublicAccess 
   }  
 }
 
