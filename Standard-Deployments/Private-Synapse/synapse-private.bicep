@@ -11,6 +11,8 @@ param addDNSRecords bool = false
 param dnsSubscriptionId string = subscription().subscriptionId
 param dnsRgName string = resourceGroupName
 param azureGovernment bool = false
+param autoApprovePLToStorage bool = false
+param managedIdentityId string = ''
 param tags object = {}
 
 resource rg 'Microsoft.Resources/resourceGroups@2019-05-01' = {
@@ -52,6 +54,22 @@ module synapse '../../Modules/Microsoft.Synapse/workspace.bicep' = {
     disablePublicAccess: true 
   }  
 }
+
+module autoApprove '../../Modules/Microsoft.Resources/deploymentScripts/deploymentScripts-powershell.bicep' = if(autoApprovePLToStorage) {
+  name: 'Approve-PL'
+  scope: resourceGroup(rg.name)
+  dependsOn: [
+    synapse
+  ] 
+  params: {
+     arguments: '-resourceId ${storageAccount.outputs.storageAccountId}'
+     managedIdentityId: managedIdentityId
+     name: 'Approve-Storage'
+     pscriptUri: 'https://raw.githubusercontent.com/lukearp/Azure-IAC-Bicep/master/Standard-Deployments/Private-Synapse/Script/Approve-Private.ps1'
+     location: 'eastus'
+     cleanupPreference: 'OnSuccess'     
+  }   
+} 
 
 module privateLinkBlob '../../Modules/Microsoft.Network/privateEndpoints/privateEndpoints.bicep' = {
   name: 'DL-PL-Blob-Deploy'

@@ -21,6 +21,8 @@ addDNSRecords | bool | Create Private DNS Zones and Records
 dnsSubscriptionId | string | Subscription to where DNS Zones and Records are to be deployed
 dnsRgName | string | Resource Group to where the DNS Zones and Records are to be deployed
 azureGovernment | bool | Deploy in Azure Government, default: false
+autoApprovePLToStorage | bool | Approve the PL Endpoint from Synapse on the Azure Blob Storage.  Requires a Managed Identity that has rights to approve the PL Endpoint on the storage.  
+managedIdentityId | string | Resource ID of a Managed Identity to approve the PL from Synapse.  Only needed if autoApprovePLToStorage = true
 tags | object | Resource Tags
 
 # Example
