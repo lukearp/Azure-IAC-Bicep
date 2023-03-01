@@ -10,3 +10,4 @@ resource resourceGroupDef 'Microsoft.Resources/resourceGroups@2021-04-01' = {
 }
 
 output resourceGroupId string = resourceGroupDef.id
+output resourceGroupName string = resourceGroupDef.name

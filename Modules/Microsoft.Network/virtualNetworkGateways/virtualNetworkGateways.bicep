@@ -33,9 +33,11 @@ param gatewaySku string
 ])
 param vpnType string
 param location string = resourceGroup().location
+param useExistingPublicIP bool = false
+param publicIps array = []
 param tags object = {}
 
-var ipConfigs = active_active == true && toLower(gatewayType) == 'vpn' ? [
+var ipConfigs = active_active == true && toLower(gatewayType) == 'vpn' && useExistingPublicIP == false? [
   {
     name: 'ipconfig1'
     properties:{
@@ -58,7 +60,30 @@ var ipConfigs = active_active == true && toLower(gatewayType) == 'vpn' ? [
       }
     } 
   }
-] : [
+] : active_active == true && toLower(gatewayType) == 'vpn' && useExistingPublicIP == true ? [
+  {
+    name: 'ipconfig1'
+    properties:{
+      subnet:{
+        id: '${targetVnetId}/subnets/GatewaySubnet' 
+      }
+      publicIPAddress:{
+        id: publicIps[0]
+      }
+    } 
+  }
+  {
+    name: 'ipconfig2'
+    properties:{
+      subnet:{
+        id: '${targetVnetId}/subnets/GatewaySubnet' 
+      }
+      publicIPAddress:{
+        id: publicIps[1]
+      }
+    } 
+  }
+] : toLower(gatewayType) == 'vpn' && useExistingPublicIP == false ? [
   {
     name: 'ipconfig1'
     properties:{
@@ -67,6 +92,18 @@ var ipConfigs = active_active == true && toLower(gatewayType) == 'vpn' ? [
       }
       publicIPAddress:{
         id: '${resourceGroup().id}/providers/Microsoft.Network/publicIpAddresses/${gatewayName}1-pip'
+      }
+    } 
+  } 
+] : [
+  {
+    name: 'ipconfig1'
+    properties:{
+      subnet:{
+        id: '${targetVnetId}/subnets/GatewaySubnet' 
+      }
+      publicIPAddress:{
+        id: publicIps[0]
       }
     } 
   }
@@ -97,7 +134,7 @@ var gatewayProperties = toLower(gatewayType) == 'vpn' ? {
 var pipSku = active_active == true && contains(gatewaySku, 'AZ') ? 'Standard': 'Basic'
 var pipAllocationMethod = active_active == true && contains(gatewaySku, 'AZ') ? 'Static' : 'Dynamic'
 
-module pip '../publicIpAddresses/publicIpAddresses.bicep' = [for (ip, i) in ipConfigs :{
+module pip '../publicIpAddresses/publicIpAddresses.bicep' = [for (ip, i) in ipConfigs : if(useExistingPublicIP == false ) {
   name: '${gatewayName}-pip-${i + 1}'
   params:{
     name: '${gatewayName}${i + 1}-pip'

@@ -1,6 +1,6 @@
 param name string
 param location string
-param tags object
+param tags object = {}
 param gatewayIpAddress string
 param configureBgp bool
 param localAddressPrefixes array = []
