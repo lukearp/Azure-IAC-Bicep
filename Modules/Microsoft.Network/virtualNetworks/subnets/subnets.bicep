@@ -4,6 +4,7 @@ param addressPrefix string
 param nsgName string = ''
 param routeTableName string = ''
 param serviceEndpoints array = []
+param subnetDelegation array = []
 
 /*
 serviceEndpoint object reference
@@ -27,6 +28,7 @@ var properties = nsgName == '' && routeTableName == '' ? {
     id: resourceId('Microsoft.Network/routeTables', routeTableName)
   }
   serviceEndpoints: serviceEndpoints
+  delegations: subnetDelegation
 } : {
   addressPrefix: addressPrefix
   routeTable: {
@@ -36,12 +38,15 @@ var properties = nsgName == '' && routeTableName == '' ? {
     id: resourceId('Microsoft.Network/networkSecurityGroups', nsgName)
   }
   serviceEndpoints: serviceEndpoints
+  delegations: subnetDelegation
 }
 
 resource subnet 'Microsoft.Network/virtualNetworks/subnets@2021-08-01' = {
   name: subnetName 
   parent: vnet 
-  properties: properties   
+  properties: {
+    
+  }   
 }
 
 output subnetId string = subnet.id
