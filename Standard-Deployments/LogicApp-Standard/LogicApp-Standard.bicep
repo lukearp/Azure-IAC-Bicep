@@ -2,6 +2,12 @@ param name string
 param location string
 param azureGov bool = false
 param existingAppServicePlan bool = false
+@allowed([
+  'WS1'
+  'WS2'
+  'WS3'
+])
+param appPlanSize string = 'WS1'
 param existingAppServicePlanId string = ''
 param enableVNETIntegration bool = false
 param logicAppVNETSubnetId string = ''
@@ -24,7 +30,7 @@ module appPlan '../../Modules/Microsoft.Web/serverFarms/serverFarms-StandardLogi
   params: {
      name: '${name}-Plan'
      location: location
-     skuName: 'WS1'
+     skuName: appPlanSize
      skuTier: 'WorkflowStandard'
      tags: tags    
   } 
