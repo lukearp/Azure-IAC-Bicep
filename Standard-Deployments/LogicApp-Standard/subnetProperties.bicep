@@ -9,4 +9,12 @@ resource subnet 'Microsoft.Network/virtualNetworks/subnets@2022-07-01' existing 
   parent: vnet  
 }
 
+module subnetSetup 'subnetSetup.bicep' = {
+  name: '${split(subnetId,'/')[10]}-Subnet-Setup'
+  params: {
+    subnetId: subnet.id
+    properties: subnet.properties
+  }   
+}
+
 output properties object = subnet.properties

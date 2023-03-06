@@ -1,8 +1,10 @@
 param name string
 param location string
 param azureGov bool = false
-param logicAppVNETSubnetId string = ''
+param existingAppServicePlan bool = false
+param existingAppServicePlanId string = ''
 param enableVNETIntegration bool = false
+param logicAppVNETSubnetId string = ''
 param enablePrivateLink bool = false
 param publicNetworkAccessEnabled bool = true
 param privateLinkSubnetId string = ''
@@ -15,7 +17,9 @@ param tags object = {}
 var nameSuffix = substring(replace(guid('${resourceGroup().name}-${location}-${subscription().id}'),'-',''),0,15)
 var storageSuffix = azureGov == true ? 'core.usgovcloudapi.net' : 'core.windows.net'
 var webSuffix = azureGov == true ? 'azurewebsites.us' : 'azurewebsites.net'
-module appPlan '../../Modules/Microsoft.Web/serverFarms/serverFarms-StandardLogicApps.bicep' = {
+var logicAppVnetResourceGroup = logicAppVNETSubnetId == '' ? resourceGroup().name : split(logicAppVNETSubnetId,'/')[4] 
+
+module appPlan '../../Modules/Microsoft.Web/serverFarms/serverFarms-StandardLogicApps.bicep' = if(existingAppServicePlan == false) {
   name: '${name}-Plan-Deploy' 
   params: {
      name: '${name}-Plan'
@@ -39,27 +43,19 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = {
   }    
 } 
 
-module getSubnetProperties 'subnetProperties.bicep' = if(enableVNETIntegration){
+module getSubnetProperties 'subnetProperties.bicep' = if(enableVNETIntegration == true){
   name: 'Get-Subnet-Properties'
-  scope: resourceGroup(split(logicAppVNETSubnetId,'/')[4])
+  scope: resourceGroup(logicAppVnetResourceGroup)
   params: {
     subnetId: logicAppVNETSubnetId 
   }   
 }
 
-module subnetSetup 'subnetSetup.bicep' = if(enableVNETIntegration){
-  name: '${split(logicAppVNETSubnetId,'/')[10]}-Subnet-Setup'
-  scope: resourceGroup(split(logicAppVNETSubnetId,'/')[4])
-  params: {
-    subnetId: logicAppVNETSubnetId
-    properties: getSubnetProperties.outputs.properties 
-  }   
-}
 
 module logicApp '../../Modules/Microsoft.Web/sites/sites-logicapp.bicep' = {
   name: '${name}-LogicApp-Deploy'
   params: {
-    appServicePlanId: appPlan.outputs.planId
+    appServicePlanId: existingAppServicePlan == false ? appPlan.outputs.planId : existingAppServicePlanId
     location: location
     name: name
     storageAccountConnectionString: 'DefaultEndpointsProtocol=https;AccountName=la${nameSuffix};AccountKey=${storageAccount.listKeys().keys[0].value};EndpointSuffix=${storageSuffix}' 
@@ -68,97 +64,23 @@ module logicApp '../../Modules/Microsoft.Web/sites/sites-logicapp.bicep' = {
     tags: tags    
   }
   dependsOn: [
-    subnetSetup
+    getSubnetProperties
   ]
 }
 
-module logicAppPrivateLink '../../Modules/Microsoft.Network/privateEndpoints/privateEndpoints.bicep' = if(enablePrivateLink == true){
-   name: '${name}-LogicApp-PL-Deploy'
-   params: {
+module privateLink 'privateLink.bicep' = if(enablePrivateLink == true) {
+  name: '${name}-Private-Link-Deploy'
+  params: {
+    associateDnsZonesWithVNET: associateDnsZonesWithVNET
+    azureGov: azureGov
+    dnsVnetId: dnsVnetId
+    dnsZoneRg: dnsZoneRg
+    dnsZoneSubscriptionId: dnsZoneSubscriptionId
     location: location
-    name: '${name}-LogicApp-PL'
-    remoteServiceResourceId: logicApp.outputs.resourceId
-    subnetResourceId: privateLinkSubnetId
-    tags: tags
-    targetSubResource: [
-      'sites'
-    ]       
-   }
-}
-
-module storageBlobPrivateLink '../../Modules/Microsoft.Network/privateEndpoints/privateEndpoints.bicep' = if(enablePrivateLink == true){
-  name: '${storageAccount.name}-Blob-PL-Deploy'
-  params: {
-    location: location
-    name: '${storageAccount.name}-Blob-PL'
-    remoteServiceResourceId: storageAccount.id
-    subnetResourceId: privateLinkSubnetId
-    targetSubResource: [
-      'blob'
-    ]     
-  }  
-}
-
-module storageFilePrivateLink '../../Modules/Microsoft.Network/privateEndpoints/privateEndpoints.bicep' = if(enablePrivateLink == true){
-  name: '${storageAccount.name}-File-PL-Deploy'
-  params: {
-    location: location
-    name: '${storageAccount.name}-File-PL'
-    remoteServiceResourceId: storageAccount.id
-    subnetResourceId: privateLinkSubnetId
-    targetSubResource: [
-      'file'
-    ]     
-  }  
-}
-
-module logicAppPrivateLinkDns '../../Modules/Microsoft.Network/privateDnsZones/privateDnsZones.bicep' = if(enablePrivateLink == true){
-  name: '${name}-LogicApp-DNS-Deploy'
-  scope: resourceGroup(dnsZoneSubscriptionId, dnsZoneRg)
-  params: {
-    zoneName: 'privatelink.${webSuffix}' 
-    createARecord: true
-    aRecordName: name
-    aRecordIp: logicAppPrivateLink.outputs.customerDnsConfigs[0].ipAddresses[0]
-    vnetAssociations: associateDnsZonesWithVNET == true ? [
-      {
-        id: dnsVnetId
-        registrationEnabled: false
-      }
-    ] : []
-  }  
-}
-
-module blobAppPrivateLinkDns '../../Modules/Microsoft.Network/privateDnsZones/privateDnsZones.bicep' = if(enablePrivateLink == true){
-  name: '${name}-Blob-DNS-Deploy'
-  scope: resourceGroup(dnsZoneSubscriptionId, dnsZoneRg)
-  params: {
-    zoneName: 'privatelink.blob.${storageSuffix}' 
-    createARecord: true
-    aRecordName: storageAccount.name 
-    aRecordIp: storageBlobPrivateLink.outputs.customerDnsConfigs[0].ipAddresses[0]
-    vnetAssociations: associateDnsZonesWithVNET == true ? [
-      {
-        id: dnsVnetId
-        registrationEnabled: false
-      }
-    ] : []
-  }  
-}
-
-module fileAppPrivateLinkDns '../../Modules/Microsoft.Network/privateDnsZones/privateDnsZones.bicep' = if(enablePrivateLink == true){
-  name: '${name}-File-DNS-Deploy'
-  scope: resourceGroup(dnsZoneSubscriptionId, dnsZoneRg)
-  params: {
-    zoneName: 'privatelink.file.${storageSuffix}'
-    createARecord: true
-    aRecordName: storageAccount.name
-    aRecordIp: storageFilePrivateLink.outputs.customerDnsConfigs[0].ipAddresses[0]
-    vnetAssociations: associateDnsZonesWithVNET == true ? [
-      {
-        id: dnsVnetId
-        registrationEnabled: false
-      }
-    ] : []
+    logicAppResourceId: logicApp.outputs.resourceId
+    name: name
+    privateLinkSubnetId: privateLinkSubnetId
+    storageAccountResourceId: storageAccount.id
+    tags: tags            
   }  
 }
