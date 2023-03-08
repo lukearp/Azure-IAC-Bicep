@@ -6,6 +6,8 @@ param location string
 param skuTier string
 @allowed([
   'WS1'
+  'WS2'
+  'WS3'
 ])
 param skuName string
 param tags object = {}
