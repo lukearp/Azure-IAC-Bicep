@@ -3,7 +3,7 @@ param name string
   'ASEV2'
   'ASEV3'
 ])
-param kind string = 'ASEV2'
+param kind string = 'ASEV3'
 param zoneRedundant bool = false
 param dedicatedHostCount int = 0
 param location string

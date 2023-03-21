@@ -6,8 +6,12 @@ param existingAppServicePlan bool = false
   'WS1'
   'WS2'
   'WS3'
+  'I1V2'
+  'I2V2'
+  'I3V2'
 ])
 param appPlanSize string = 'WS1'
+param aseId string = ''
 param existingAppServicePlanId string = ''
 param enableVNETIntegration bool = false
 param logicAppVNETSubnetId string = ''
@@ -31,6 +35,7 @@ module appPlan '../../Modules/Microsoft.Web/serverFarms/serverFarms-StandardLogi
      name: '${name}-Plan'
      location: location
      skuName: appPlanSize
+     aseId: aseId 
      skuTier: 'WorkflowStandard'
      tags: tags    
   } 
@@ -66,7 +71,7 @@ module logicApp '../../Modules/Microsoft.Web/sites/sites-logicapp.bicep' = {
     name: name
     storageAccountConnectionString: 'DefaultEndpointsProtocol=https;AccountName=la${nameSuffix};AccountKey=${storageAccount.listKeys().keys[0].value};EndpointSuffix=${storageSuffix}' 
     logicAppVNETSubnetId: enableVNETIntegration == false ? '' : logicAppVNETSubnetId
-    publicNetworkAccessEnabled: enablePrivateLink == true ? publicNetworkAccessEnabled == true ? 'Enabled' : 'Disabled' : 'Enabled'
+    publicNetworkAccessEnabled: enablePrivateLink == true ? publicNetworkAccessEnabled == true ? 'Enabled' : 'Disabled' : 'Enabled' 
     tags: tags    
   }
   dependsOn: [
