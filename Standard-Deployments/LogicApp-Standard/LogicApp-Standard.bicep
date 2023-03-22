@@ -28,13 +28,14 @@ var nameSuffix = substring(replace(guid('${resourceGroup().name}-${location}-${s
 var storageSuffix = azureGov == true ? 'core.usgovcloudapi.net' : 'core.windows.net'
 var webSuffix = azureGov == true ? 'azurewebsites.us' : 'azurewebsites.net'
 var logicAppVnetResourceGroup = logicAppVNETSubnetId == '' ? resourceGroup().name : split(logicAppVNETSubnetId,'/')[4] 
+var appPlanTier = aseId != '' && (appPlanSize == 'WS1' || appPlanSize == 'WS2' || appPlanSize == 'WS3') ? 'I1V2' : appPlanSize
 
 module appPlan '../../Modules/Microsoft.Web/serverFarms/serverFarms-StandardLogicApps.bicep' = if(existingAppServicePlan == false) {
   name: '${name}-Plan-Deploy' 
   params: {
      name: '${name}-Plan'
      location: location
-     skuName: appPlanSize
+     skuName: appPlanTier
      aseId: aseId 
      skuTier: 'WorkflowStandard'
      tags: tags    

@@ -13,6 +13,7 @@ azureGov | bool | False = Azure Commercial Data Center, True = Azure Government 
 existingAppServicePlan | bool | False = Deploy a new App Service Plan, True = Use existing app service plan.  Default Value is false
 existingAppServicePlanId | string | Resource ID of existing App Service plan.  Only used if existingAppServicePlan = true
 appPlanSize | string | Size of App Service Plan.  Default is WS1
+aseId | string | Resource ID of App Service Environment.  Default value is ''.  Only use if deploying Logic App to App Service Environment
 enableVNETIntegration | bool | False = No VNET Integration Enabled, True = Associate outbound traffic to Virtual Network Subnet. Default Value is false
 logicAppVNETSubnetId | string | Resource ID of VNET Integration Subnet.  Only used if enableVNETIntegration = true
 enablePrivateLink | bool | False = No private Link Endpoints created, True = private link endpoints deployed on Logic App and Storage Account. Default Value is false
