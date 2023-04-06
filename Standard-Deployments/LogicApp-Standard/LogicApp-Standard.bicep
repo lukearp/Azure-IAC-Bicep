@@ -72,7 +72,7 @@ module logicApp '../../Modules/Microsoft.Web/sites/sites-logicapp.bicep' = {
     name: name
     storageAccountConnectionString: 'DefaultEndpointsProtocol=https;AccountName=la${nameSuffix};AccountKey=${storageAccount.listKeys().keys[0].value};EndpointSuffix=${storageSuffix}' 
     logicAppVNETSubnetId: enableVNETIntegration == false ? '' : logicAppVNETSubnetId
-    publicNetworkAccessEnabled: enablePrivateLink == true ? publicNetworkAccessEnabled == true ? 'Enabled' : 'Disabled' : 'Enabled' 
+    publicNetworkAccessEnabled: enablePrivateLink == true && aseId == '' ? publicNetworkAccessEnabled == true ? 'Enabled' : 'Disabled' : 'Enabled' 
     tags: tags    
   }
   dependsOn: [
