@@ -93,6 +93,7 @@ module privateLink 'privateLink.bicep' = if(enablePrivateLink == true) {
     name: name
     privateLinkSubnetId: privateLinkSubnetId
     storageAccountResourceId: storageAccount.id
+    aseId: aseId
     tags: tags            
   }  
 }
