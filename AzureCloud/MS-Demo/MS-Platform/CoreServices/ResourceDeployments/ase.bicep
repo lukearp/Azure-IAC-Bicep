@@ -22,3 +22,17 @@ module ase '../../../../../Modules/Microsoft.Web/hostingEnvironments/hostingEnvi
     }         
   } 
 }
+
+module logicApp '../../../../../Standard-Deployments/LogicApp-Standard/LogicApp-Standard.bicep' = {
+  name: 'Logic-App-Deploy'
+  scope: resourceGroup(rg.name)
+  params: {
+    aseId: ase.outputs.aseId
+    location: 'eastus'
+    name: 'luke-ase-logicapp'
+    appPlanSize: 'I1V2'
+    tags: {
+      Environment: 'Demo'
+    }    
+  }
+}
