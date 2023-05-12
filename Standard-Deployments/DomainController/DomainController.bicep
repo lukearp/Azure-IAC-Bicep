@@ -179,83 +179,25 @@ resource rebootDc1 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
   ]    
 }
 
-resource otherDc 'Microsoft.Compute/virtualMachines@2020-12-01' = if(count > 1) {
+module OtherDCs 'otherDCs.bicep' = if(count > 1) {
+  name: 'Other-DC-Deploy'
   dependsOn: [
     rebootDc1
   ]
-  location: location
-  name: '${vmNamePrefix}-2'
-  zones: zones[1]
-  properties: vmProperties.outputs.vmProperties[1]
-}
-
-resource otherDcExtension 'Microsoft.Compute/virtualMachines/extensions@2020-12-01' = if(count > 1){
-  name: '${vmNamePrefix}-2/DC-Creation'
-  location: location
-  dependsOn: [
-    otherDc
-  ]
-  properties: {
-    publisher: 'Microsoft.Powershell'
-    type: 'DSC'
-    typeHandlerVersion: '2.73'
-    autoUpgradeMinorVersion: true
-    settings: {
-      modulesUrl: dscConfigScript
-      configurationFunction: 'DomainControllerConfig.ps1\\DomainControllerConfig'
-      properties: [
-        {
-          Name: 'creds'
-          Value: {
-            UserName: domainUserName
-            Password: 'PrivateSettingsRef:domainPassword'
-          }
-          TypeName: 'System.Management.Automation.PSCredential'
-        }
-        {
-          Name: 'domain'
-          Value: domainFqdn
-          TypeName: 'System.String'
-        }
-        {
-          Name: 'site'
-          Value: domainSite
-          TypeName: 'System.String'
-        }
-        {
-          Name: 'newForest'
-          Value: false
-          TypeName: 'System.Boolean'
-        }
-      ]
-    }
-    protectedSettings: {
-      Items: {
-        domainPassword: domainPassword
-      }
-    } 
-  }
-}
-
-resource rebootOtherVms 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
-  kind: 'AzurePowerShell'
-  location: location
-  name: '${otherDc.name}-rebootOtherVms'
-  identity: {
-    type: 'UserAssigned'
-    userAssignedIdentities: {
-      '${managedIdentityId}':{}
-    }  
-  } 
-  properties: {
-    arguments: '${array(otherDc.name)} ${resourceGroup().name} ${subscription().subscriptionId}'
-    primaryScriptUri: psScriptLocation 
-    azPowerShellVersion: '5.9'
-    retentionInterval: 'PT1H'    
-  } 
-  dependsOn: [
-    otherDcExtension     
-  ]    
+  params: {
+    count: count - 1
+    domainFqdn: domainFqdn
+    domainPassword: domainAdminPassword
+    domainSite: domainSite
+    domainUserName: domainUserName
+    dscConfigScript: dscConfigScript
+    location: location
+    managedIdentityId: managedIdentityId
+    psScriptLocation: psScriptLocation
+    vmNamePrefix: vmNamePrefix
+    vmProperties: vmProperties.outputs.vmProperties
+    zones: zones
+  }  
 }
 
 output username string = domainUserName

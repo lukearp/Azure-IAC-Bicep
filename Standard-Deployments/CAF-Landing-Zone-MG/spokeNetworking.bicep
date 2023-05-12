@@ -65,7 +65,7 @@ var subnetRt = [for subnet in subnets: subnet.routeTable == true ? {
   }
 }: {}]
 
-var subnetsConfig = [for (subnet,i) in subnets: union(subnetbase[i],subnetNsg[i],subnetRt[i])]
+var subnetsConfig = [for (subnet,i) in subnets : union(subnetbase[i],subnetNsg[i],subnetRt[i]) ]
 
 var subnetCreate = [for (subnet,i) in subnets: {
   name: subnet.name
@@ -81,14 +81,19 @@ var vnetPropertiesBase = {
     dhcpOptions: {
       dnsServers: dnsServers 
     }
-    subnets: subnetCreate 
 }
 
-resource vnet 'Microsoft.Network/virtualNetworks@2021-05-01' = {
-  name: name 
-  location: location
-  properties: vnetPropertiesBase
-  tags: tags
+resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' = {
+   name: name 
+   location: location
+   properties: vnetPropertiesBase
+   tags: tags
 }
+
+resource subnet 'Microsoft.Network/virtualNetworks/subnets@2022-11-01' = [for subnet in subnetCreate: {
+  name: subnet.name
+  parent: vnet
+  properties: subnet.properties
+}]
 
 output vnetId string = vnet.id
