@@ -32,7 +32,7 @@ module appServer 'vm.bicep' = {
   params: {
     name: 'AppServer'
     location: location
-    subnetId: '${vnet.outputs.webSubnet}'  
+    subnetId: '${vnet.outputs.appSubnet}'  
   }
  }
 
@@ -42,6 +42,6 @@ module appServer 'vm.bicep' = {
   params: {
     name: 'DBServer'
     location: location
-    subnetId: '${vnet.outputs.webSubnet}'  
+    subnetId: '${vnet.outputs.dbSubnet}'  
   }
  }
