@@ -1,4 +1,7 @@
+param deploymentRgName string
 param _artifactsLocation string = ''
+param dscArchiveFile string
+param deploymentPrefix string
 param location string
 @allowed([
   'AzureCloud'
@@ -9,8 +12,10 @@ param environment string = 'AzureCloud'
 param dnsPrefixForPublicIpAddress string
 @description('DNS name for the site deployment. It will be a custom domain (e.g. mysite.contoso.com) if using a Private IP or an SSL certificate, otherwise will be the Azure DNS <dnsPrefixForPublicIpAddress>.<location>.cloudapp.azure.com')
 param externalDnsHostName string
-@description('Resource ID of Certificate in Azure Key Vault')
-param certificateId string
+@description('Resource ID of Azure Key Vault')
+param azureKeyVaultId string
+@description('Certificate Name in Azure Key Vault')
+param certificateName string
 @description('Existing VNET Resource Group')
 param vnetRg string
 @description('Name of Existing VNET')
@@ -32,6 +37,9 @@ param imageReferences object = {
     AzureVMImageType: 0
   }
 }
+param imagePublisher string = 'esri'
+param imageOffer string = 'arcgis-enterprise'
+param imageSku string = 'byol-110'
 @description('Administrator username')
 param adminUsername string
 @description('Secure String Password, No special characters')
@@ -71,10 +79,81 @@ param arcgisServiceAccountIsDomainAccount bool = false
 param serverLicenseFileName string
 param portalLicenseFileName string
 param portalLicenseUserTypeId string = 'creatorUT'
+param tags object = {}
 
-var environmentToBlobEndpoint = {
-  AzureCloud: '.blob.core.windows.net'
-  AzureGermanCloud: '.blob.core.cloudapi.de'
-  AzureUSGovernment: '.blob.core.usgovcloudapi.net'
-  AzureChinaCloud: '.blob.core.chinacloudapi.cn'
+module storageAccount '../../Modules/Microsoft.Storage/storageAccounts/storageAccounts.bicep' = {
+  name: '${deploymentPrefix}-StorageAccount'
+  params: {
+    kind: 'StorageV2'
+    location: location
+    name: substring('${deploymentPrefix}${replace(guid(subscription().id, resourceGroup().name, location), '-', '')}', 0, 23)
+    sku: 'Standard_LRS'
+    storeKeysInKeyVault: true
+    keyVaultName: split(azureKeyVaultId, '/')[8]
+    keyVaultRg: split(azureKeyVaultId, '/')[4]
+    secretName: 'esriStorage'
+    tags: tags
+  }
+}
+
+module share '../../Modules/Microsoft.Storage/storageAccounts/share/share.bicep' = {
+  name: '${deploymentPrefix}-Share'
+  params: {
+    shareName: 'esri'
+    storageAccountName: split(storageAccount.outputs.storageAccountId, '/')[8]
+  }
+}
+
+module appGatewayPip '../../Modules/Microsoft.Network/publicIpAddresses/publicIpAddresses.bicep' = {
+  name: 'AppGateway-PublicIP'
+  params: {
+    name: 'Esri-AppGW-PIP'
+    location: location
+    publicIpAllocationMethod: 'Static'
+    sku: 'Standard'
+    publicIpAddressVersion: 'IPv4'
+    tier: 'Regional'
+    tags: tags
+  }
+}
+
+module vm '../../Modules/Microsoft.Compute/virtualMachines/virtualMachines.bicep' = {
+  name: 'VM-Deploy-Test'
+  params: {
+    adminPassword: adminPassword
+    adminUsername: adminUsername
+    imageOffer: imageOffer
+    imageSku: imageSku
+    imagePublisher: imagePublisher
+    location: location
+    name: serverVirtualMachineName
+    serverVirtualMachineOSDiskType: serverVirtualMachineOSDiskType
+    vmSize: serverVirtualMachineSize
+    subnetName: subnetName
+    vnetName: vnetName
+    vnetRg: vnetRg
+    timeZoneId: timeZoneId
+    tags: tags
+  }
+}
+
+resource keyvault 'Microsoft.KeyVault/vaults@2023-02-01' existing = {
+  name: split(azureKeyVaultId,'/')[8]
+  scope: resourceGroup(split(azureKeyVaultId,'/')[2],split(azureKeyVaultId,'/')[4]) 
+}
+
+module serverDsc 'dsc.bicep' = {
+  name: '${serverVirtualMachineName}-DSC'
+  params: {
+    _artifactsLocation: _artifactsLocation
+    vmName: serverVirtualMachineName
+    adminUsername: adminUsername
+    stroageKey: keyvault.getSecret('esriStorage')
+    deploymentPrefix: deploymentPrefix
+    dscArchiveFile: dscArchiveFile
+    externalDnsHostName: externalDnsHostName
+    location: location    
+    selfSignedSSLCertificatePassword: '1234' 
+    adminPassword: adminPassword    
+  }   
 }
