@@ -49,7 +49,8 @@ param dnsServiceIP string
 param networkPolicy string
 @description('A CIDR notation IP for Docker bridge.')
 param dockerBridgeCidr string = '172.17.0.1/16'
-
+@description('A Cidr to use for the Pods when Kubenet is used.')
+param podCidr string = ''
 @description('Name of virtual network subnet used for the ACI Connector.')
 param aciVnetSubnetName string
 
@@ -62,10 +63,25 @@ param aciConnectorLinuxEnabled bool
 param tier string
 param tags object
 
-var networkProfile = networkPolicy == 'null' ? {
+var networkProfile = networkPolicy == 'null' && networkPlugin == 'azure' ? {
   loadBalancerSku: 'standard'
   networkPlugin: networkPlugin
   networkPolicy: null
+  serviceCidr: internalAddressCider
+  dnsServiceIP: dnsServiceIP
+  dockerBridgeCidr: dockerBridgeCidr 
+} : networkPolicy == 'null' && networkPlugin != 'azure' ? {
+  loadBalancerSku: 'standard'
+  networkPlugin: networkPlugin
+  networkPolicy: null
+  serviceCidr: internalAddressCider
+  dnsServiceIP: dnsServiceIP
+  dockerBridgeCidr: dockerBridgeCidr
+  podCidr: podCidr 
+} : networkPolicy != 'null' && networkPlugin == 'azure' ? {
+  loadBalancerSku: 'standard'
+  networkPlugin: networkPlugin
+  networkPolicy: networkPolicy
   serviceCidr: internalAddressCider
   dnsServiceIP: dnsServiceIP
   dockerBridgeCidr: dockerBridgeCidr 
@@ -76,6 +92,7 @@ var networkProfile = networkPolicy == 'null' ? {
   serviceCidr: internalAddressCider
   dnsServiceIP: dnsServiceIP
   dockerBridgeCidr: dockerBridgeCidr 
+  podCidr: podCidr
 }
 
 var addonProfiles = enableOmsAgent == true && aciConnectorLinuxEnabled == true ? {
