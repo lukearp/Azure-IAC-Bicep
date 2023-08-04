@@ -41,6 +41,9 @@ param keyVaultName string = ''
 param keyVaultRg string = ''
 param keyVaultSubscription string = ''
 param secretName string = ''
+param generateSas bool = false
+param expireInDays string = '1'
+param date string = utcNow('u')
 param tags object = {}
 
 resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = {
@@ -90,6 +93,17 @@ module secret1 '../../Microsoft.KeyVaults/secrets/secrets.bicep' = if(storeKeysI
     value: storageAccount.listKeys().keys[0].value   
   } 
 }
+var expire = dateTimeAdd(date,'P1D')
+var sasToken = generateSas == true ? storageAccount.listAccountSas(storageAccount.apiVersion, {
+  signedExpiry: expire
+  signedPermission: 'r'
+  signedStart: date
+  signedServices: 'b'
+  signedResourceTypes: 's'
+  keyToSign: 'key1'
+  signedProtocol: 'https'       
+}).accountSasToken : ''
 
 output storageAccountId string = storageAccount.id
 output endpoints object = storageAccount.properties.primaryEndpoints
+output sas string = sasToken

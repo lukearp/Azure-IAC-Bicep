@@ -1,7 +1,10 @@
 param vmName string
 param location string
-//param _artifactsLocation string
-//param dscArchiveFile string
+param _artifactsLocation string
+param artifactSas string
+param dscArchiveFile string
+param serverLicenseFile string
+param portalLicenseFile string
 param adminUsername string
 @secure()
 param adminPassword string

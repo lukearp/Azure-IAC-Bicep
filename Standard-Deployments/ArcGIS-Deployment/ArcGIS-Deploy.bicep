@@ -92,6 +92,7 @@ module storageAccount '../../Modules/Microsoft.Storage/storageAccounts/storageAc
     keyVaultName: split(azureKeyVaultId, '/')[8]
     keyVaultRg: split(azureKeyVaultId, '/')[4]
     secretName: 'esriStorage'
+    generateSas: true
     tags: tags
   }
 }
@@ -146,6 +147,9 @@ module serverDsc 'dsc.bicep' = {
   name: '${serverVirtualMachineName}-DSC'
   params: {
     _artifactsLocation: _artifactsLocation
+    artifactSas: storageAccount.outputs.sas
+    portalLicenseFile: ''
+    serverLicenseFile: ''  
     vmName: serverVirtualMachineName
     adminUsername: adminUsername
     stroageKey: keyvault.getSecret('esriStorage')
