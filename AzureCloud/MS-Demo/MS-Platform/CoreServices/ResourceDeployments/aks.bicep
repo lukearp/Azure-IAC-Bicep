@@ -2,7 +2,7 @@ targetScope = 'subscription'
 var clusterName = 'aks-demo'
 var clusterLocation = 'eastus'
 resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
-  location: 'eastus'
+  location: clusterLocation
   name: 'aks-demo'
   tags: {
     Environment: 'Prod'
@@ -47,7 +47,7 @@ module workspace 'loganalytics-workspaces.bicep' = {
   name: 'AKS-Demo-Workspace-Logging'  
 }
 
-module keyVault '../../../../../Modules/Microsoft.Keyvault/vaults.bicep' = {
+module keyVault '../../../../../Modules/Microsoft.KeyVaults/vaults.bicep' = {
   name: 'AKS-Secret-Vault'
   scope: resourceGroup(rg.name)
   params: {

@@ -39,7 +39,7 @@ param storageAccountId string = ''
 param workspaceId string = ''
 param tags object = {}
 
-resource keyvault 'Microsoft.KeyVault/vaults@2021-11-01-preview' = {
+resource keyvault 'Microsoft.KeyVault/vaults@2023-02-01' = {
   name: name
   location: location
   tags: tags
