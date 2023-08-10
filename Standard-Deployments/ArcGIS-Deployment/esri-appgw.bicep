@@ -510,6 +510,9 @@ resource appGateway 'Microsoft.Network/applicationGateways@2021-02-01' = {
   location: location
   name: name
   zones: zoneArray
+  dependsOn: [
+    appGatewayPip
+  ]
   properties: {
     trustedRootCertificates: [
       {
