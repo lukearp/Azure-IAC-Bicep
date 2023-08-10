@@ -52,6 +52,7 @@ serverLicenseFileName | string | Name of Server license file that is in your art
 portalLicenseFileName | string | Name of Portal license file that is in your artifacts location
 artifactSas | string | If using Azure Blob for artifacts, the SAS token of that artifacts directory.  Needs Object Read
 portalLicenseUserTypeId | string | User License ID Type for Portal
+certName | string | Name of certificate in Artifacts directory 
 tags | object | Azure Resource Manager Tags
 
 # Example
@@ -98,7 +99,8 @@ module argis '../../Standard-Deployments/ArcGIS-Deployment/ArcGIS-Deploy.bicep' 
     artifactSas: keyvault.getsecret('artifactSas')
     artifactsLocation: 'https://mystorage.blob.core.windows.net/bicep'
     serviceUserName: 'gis'
-    servicePassword: keyvault.getsecret('servicePass') 
+    servicePassword: keyvault.getsecret('servicePass')  
+    certName: 'mycert.pfx' 
   }  
 }
 ```

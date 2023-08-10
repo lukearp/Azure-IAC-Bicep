@@ -96,6 +96,8 @@ param timeZoneId string = 'Eastern Standard Time'
 param serverLicenseFileName string
 @description('Name of Portal License File in your Artifacts location')
 param portalLicenseFileName string
+@description('Name of PFX in Artifacts Location')
+param certName string
 @description('SAS Token if Artificats location is in blob storage')
 param artifactSas string
 @description('Portal License User Type ID')
@@ -195,7 +197,8 @@ module serverDsc 'serverdsc.bicep' = {
     vmName: serverVirtualMachineName
     serviceUserName: serviceUserName
     servicePassword: servicePassword 
-    storageSuffix: storageSuffix           
+    storageSuffix: storageSuffix  
+    certName: certName         
   }
 }
 
@@ -241,7 +244,8 @@ module portalDsc 'portaldsc.bicep' = {
     servicePassword: servicePassword
     serviceUserName: serviceUserName
     storageKey: keyvault.getSecret('esriStorage')
-    storageSuffix: storageSuffix           
+    storageSuffix: storageSuffix 
+    certName: certName          
   }
 }
 

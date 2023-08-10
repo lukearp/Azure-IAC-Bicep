@@ -16,6 +16,7 @@ param deploymentPrefix string
 param storageKey string
 param storageSuffix string
 param serverName string
+param certName string
 
 resource serverDsc 'Microsoft.Compute/virtualMachines/extensions@2023-03-01' = {
   name: '${vmName}/DSCConfiguration'
@@ -34,7 +35,7 @@ resource serverDsc 'Microsoft.Compute/virtualMachines/extensions@2023-03-01' = {
       }
       configurationArguments: {
         ServiceCredentialIsDomainAccount: false
-        PublicKeySSLCertificateFileUrl: '${artifactsLocation}/trusted-wildcard-lukesprojects.com.pfx${artifactSas}'
+        PublicKeySSLCertificateFileUrl: '${artifactsLocation}/${certName}${artifactSas}'
         PortalLicenseFileUrl: '${artifactsLocation}/${portalLicenseFile}${artifactSas}'
         PortalLicenseUserTypeId: portalLicenseType
         ServerMachineNames: serverName
