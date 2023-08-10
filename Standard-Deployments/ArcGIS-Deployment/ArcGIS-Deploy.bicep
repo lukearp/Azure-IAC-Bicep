@@ -140,7 +140,7 @@ module appGateway 'esri-appgw.bicep' = {
     serverNicId: server.outputs.networkInterfaceId
     serverVirtualMachineName: serverVirtualMachineName
     portalVirtualMachineName: portalVirtualMachineName
-    location: 'eastus'
+    location: location
     autoScaleMax: 10
     skuName: 'Standard_v2'
     enableHttp2: false
