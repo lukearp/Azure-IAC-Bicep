@@ -43,7 +43,6 @@ resource serverDsc 'Microsoft.Compute/virtualMachines/extensions@2023-03-01' = {
         ExternalDNSHostName: externalDnsHostName
         UseCloudStorage: true
         UseAzureFiles: true
-        EnableLogHarvesterPlugin: false
         ServerContext: 'server'
         PortalContext: 'portal'
         FileShareMachineName: 'Test'
@@ -54,7 +53,7 @@ resource serverDsc 'Microsoft.Compute/virtualMachines/extensions@2023-03-01' = {
     }
     protectedSettings: {
       configurationArguments: {
-        ServerInternalCertificateData: selfsignedCertData
+        PortalInternalCertificateData: selfsignedCertData
       //  certPassword: certPass
         StorageAccountCredential: {
           userName: '${substring('${deploymentPrefix}${replace(guid(subscription().id, resourceGroup().name, location), '-', '')}', 0, 23)}.${storageSuffix}'

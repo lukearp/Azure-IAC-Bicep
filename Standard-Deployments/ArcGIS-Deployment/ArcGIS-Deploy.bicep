@@ -37,7 +37,13 @@ param imageReferences object = {
     AzureVMImageType: 0
   }
 }*/
+@allowed([
+  'esri'
+])
 param imagePublisher string = 'esri'
+@allowed([
+  'arcgis-enterprise'
+])
 param imageOffer string = 'arcgis-enterprise'
 param imageSku string = 'byol-110'
 @description('Administrator username')
@@ -150,6 +156,7 @@ module serverDsc 'serverdsc.bicep' = {
   name: 'Server-DSC-Setup'
   dependsOn: [
     server
+    share
   ]
   params: {
     artifactsLocation: artifactsLocation

@@ -36,7 +36,6 @@ resource serverDsc 'Microsoft.Compute/virtualMachines/extensions@2023-03-01' = {
         ExternalDNSHostName: externalDnsHostName
         UseCloudStorage: true
         UseAzureFiles: true
-        EnableLogHarvesterPlugin: false
         FileShareMachineName: 'Test'
         OSDiskSize: 128
         EnableDataDisk: false
@@ -56,10 +55,6 @@ resource serverDsc 'Microsoft.Compute/virtualMachines/extensions@2023-03-01' = {
         ServiceCredential: {
           userName: serviceUserName
           password: servicePassword
-        }
-        ServerInternalCertificatePassword: {
-          userName: 'Placeholder'
-          password: '12345'
         }
       }
     }
