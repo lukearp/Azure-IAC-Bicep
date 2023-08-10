@@ -1,12 +1,16 @@
-param deploymentRgName string
+//param deploymentRgName string
 param artifactsLocation string = ''
+@description('Name of ZIP file for DCS package')
 param dscArchiveFile string
+@description('String used to radmonize naming')
 param deploymentPrefix string
+@description('Azure Region to deploy')
 param location string
 @allowed([
   'AzureCloud'
   'AzureUSGovernment'
 ])
+@description('Cloud to deploy in.')
 param environment string = 'AzureCloud'
 @description('DNS name for the site deployment. It will be a custom domain (e.g. mysite.contoso.com) if using a Private IP or an SSL certificate, otherwise will be the Azure DNS <dnsPrefixForPublicIpAddress>.<location>.cloudapp.azure.com')
 param externalDnsHostName string
@@ -14,13 +18,15 @@ param externalDnsHostName string
 param azureKeyVaultId string
 @description('Certificate Name in Azure Key Vault')
 param certificateName string
+@description('Secret holding the Root CA Cert as a Base64 String')
 param rootCert string
+@description('Certificate name in Azure Key Vault for backend comminucations')
 param selfSignedCert string
 @description('Existing VNET Resource Group')
 param vnetRg string
 @description('Name of Existing VNET')
 param vnetName string
-@description('Target Subnet for deployment')
+@description('Target Subnet for VM deployment')
 param subnetName string
 @description('App Gateway Subnet')
 param appGatewaySubnetName string
@@ -45,27 +51,40 @@ param imagePublisher string = 'esri'
   'arcgis-enterprise'
 ])
 param imageOffer string = 'arcgis-enterprise'
+@allowed([
+  'byol-110'
+])
 param imageSku string = 'byol-110'
 @description('Administrator username')
 param adminUsername string
 @description('Secure String Password, No special characters')
 @secure()
 param adminPassword string
+@description('Service/Default Site Username')
 param serviceUserName string
 @secure()
+@description('Service/Default Site Password')
 param servicePassword string
+@description('Server VM Name')
 param serverVirtualMachineName string
+@description('Server VM Instance Size')
 param serverVirtualMachineSize string = 'Standard_DS3_v2'
+@description('Portal VM Name')
 param portalVirtualMachineName string
+@description('Portal VM Instance Size')
 param portalVirtualMachineSize string = 'Standard_DS3_v2'
+@description('Datastore/Tilecache VM Name')
 param dataStoreVirtualMachineName string
+@description('Datastore/Tilecache VM Instance Size')
 param dataStoreVirtualMachineSize string = 'Standard_DS3_v2'
 @allowed([
   'Premium_LRS'
   'Standard_LRS'
   'StandardSSD_LRS'
 ])
+@description('OS Disk Sku')
 param osDiskType string = 'Premium_LRS'
+@description('Time Zone ID')
 param timeZoneId string = 'Eastern Standard Time'
 //param joinWindowsDomain bool = false
 //param windowsDomainName string
@@ -73,10 +92,15 @@ param timeZoneId string = 'Eastern Standard Time'
 //@secure()
 //param joinDomainAccountPassword string
 //param arcgisServiceAccountIsDomainAccount bool = false
+@description('Name of Server License File in your Artifacts location')
 param serverLicenseFileName string
+@description('Name of Portal License File in your Artifacts location')
 param portalLicenseFileName string
+@description('SAS Token if Artificats location is in blob storage')
 param artifactSas string
+@description('Portal License User Type ID')
 param portalLicenseUserTypeId string = 'creatorUT'
+@description('Azure Resource Tags')
 param tags object = {}
 
 var storageSuffix = environment == 'AzureCloud' ? 'blob.core.windows.net' : 'blob.core.usgovcloudapi.net'

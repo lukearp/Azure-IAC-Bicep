@@ -85,7 +85,6 @@ module argis '../../Standard-Deployments/ArcGIS-Deployment/ArcGIS-Deploy.bicep' 
     certificateName: 'wildcard-lukesprojects-com5d8c74b1-780e-437a-8624-f5483ed800f1'
     dataStoreVirtualMachineName: 'datastore'
     deploymentPrefix: 'gis1'
-    deploymentRgName: rg.name
     dscArchiveFile: 'DSC.zip'
     externalDnsHostName: 'lukeesri.mytest.com'
     location: 'eastus'
