@@ -58,7 +58,7 @@ resource serverDsc 'Microsoft.Compute/virtualMachines/extensions@2023-03-01' = {
         }
         SiteAdministratorCredential: {
           userName: serviceUserName
-          password: serviceUserName
+          password: servicePassword
         }
         ServiceCredential: {
           userName: serviceUserName

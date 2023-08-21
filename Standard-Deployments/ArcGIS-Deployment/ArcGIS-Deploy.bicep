@@ -245,7 +245,9 @@ module portalDsc 'portaldsc.bicep' = {
     serviceUserName: serviceUserName
     storageKey: keyvault.getSecret('esriStorage')
     storageSuffix: storageSuffix 
-    certName: certName          
+    certName: certName
+    serverNicId: server.outputs.networkInterfaceId
+    rootCertData: keyvault.getSecret(rootCert)        
   }
 }
 
