@@ -30,7 +30,7 @@ module storageAccount '../../Modules/Microsoft.Storage/storageAccounts/storageAc
     kind: 'StorageV2'
     location: location
     name: storageName
-    disablePubliAccess: true
+    disablePublicAccess: true
     enableHierarchicalNamespace: true
     sku: 'Standard_LRS'
     supportsHttpsTrafficOnly: true
