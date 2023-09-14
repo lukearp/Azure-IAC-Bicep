@@ -11,8 +11,9 @@ param paloNamePrefix string
 @allowed([
   'vmseries1'
   'vmseries-forms'
+  'vmseries-flex'
 ])
-param planOffer string
+param planOffer string = 'vmseries-flex'
 @allowed([
   'bundle1'
   'bundle2'
