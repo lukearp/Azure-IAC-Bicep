@@ -42,7 +42,9 @@ param keyVaultRg string = ''
 param keyVaultSubscription string = ''
 param secretName string = ''
 param generateSas bool = false
-param expireInDays string = '1'
+@maxValue(10)
+@minValue(1)
+param expireInDays int = 1
 param date string = utcNow('u')
 param tags object = {}
 
@@ -93,13 +95,13 @@ module secret1 '../../Microsoft.KeyVaults/secrets/secrets.bicep' = if(storeKeysI
     value: storageAccount.listKeys().keys[0].value   
   } 
 }
-var expire = dateTimeAdd(date,'P1D')
+var expire = dateTimeAdd(date,'P${string(expireInDays)}D')
 var sasToken = generateSas == true ? storageAccount.listAccountSas(storageAccount.apiVersion, {
   signedExpiry: expire
   signedPermission: 'r'
-  signedStart: date
+//  signedStart: date
   signedServices: 'b'
-  signedResourceTypes: 's'
+  signedResourceTypes: 'soc'
   keyToSign: 'key1'
   signedProtocol: 'https'       
 }).accountSasToken : ''

@@ -17,9 +17,10 @@ param serverVirtualMachineOSDiskType string
 param vnetRg string
 param vnetName string
 param subnetName string
+param dnsServers array = []
 param tags object
 
-resource networkInterface 'Microsoft.Network/networkInterfaces@2022-11-01' = {
+resource networkInterface 'Microsoft.Network/networkInterfaces@2023-04-01' = {
   name: '${name}-nic'
   location: location  
   properties: {
@@ -30,10 +31,13 @@ resource networkInterface 'Microsoft.Network/networkInterfaces@2022-11-01' = {
           subnet: {
              id: resourceId(vnetRg, 'Microsoft.Network/virtualNetworks/subnets', vnetName, subnetName)
           }
-          primary: true   
+          primary: true    
         }  
       }
     ]  
+    dnsSettings: {
+      dnsServers: dnsServers 
+    } 
   }
 }
 
@@ -87,3 +91,5 @@ resource serverVm 'Microsoft.Compute/virtualMachines@2023-03-01' = {
   }
   tags: tags    
 }
+
+output networkInterfaceId string = networkInterface.id

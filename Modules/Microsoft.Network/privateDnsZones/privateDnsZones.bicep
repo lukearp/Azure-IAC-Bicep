@@ -21,7 +21,7 @@ resource privateDns 'Microsoft.Network/privateDnsZones@2020-06-01' = {
 }
 
 module records 'DNSRecord/dnsRecord.bicep' = if(createARecord) {
-  name: '${aRecordName}-${aRecordIp}-record'
+  name: 'A-${aRecordIp}-record'
   dependsOn: [
     privateDns
   ]
