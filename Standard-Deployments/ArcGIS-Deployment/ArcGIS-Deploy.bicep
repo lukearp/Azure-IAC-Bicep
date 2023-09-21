@@ -178,9 +178,9 @@ module server '../../Modules/Microsoft.Compute/virtualMachines/virtualMachines.b
     vnetName: vnetName
     vnetRg: vnetRg
     timeZoneId: timeZoneId
-    dnsServers: [
-      '168.63.129.16'
-    ] 
+    //dnsServers: [
+    //  '168.63.129.16'
+    //] 
     tags: tags 
   }
 }
@@ -227,9 +227,9 @@ module portal '../../Modules/Microsoft.Compute/virtualMachines/virtualMachines.b
     vnetRg: vnetRg
     timeZoneId: timeZoneId
     tags: tags
-    dnsServers: [
-      '168.63.129.16'
-    ] 
+    //dnsServers: [
+    //  '168.63.129.16'
+    //] 
   }
 }
 
@@ -278,9 +278,9 @@ module data '../../Modules/Microsoft.Compute/virtualMachines/virtualMachines.bic
     vnetName: vnetName
     vnetRg: vnetRg
     timeZoneId: timeZoneId
-    dnsServers: [
-      '168.63.129.16'
-    ]
+    //dnsServers: [
+     // '168.63.129.16'
+    //]
     tags: tags
   }
 }

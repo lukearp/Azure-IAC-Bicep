@@ -56,22 +56,27 @@ certName | string | Name of certificate in Artifacts directory
 tags | object | Azure Resource Manager Tags
 
 # Setup Instructions
+The following steps can be performed in the [Azure Cloud Shell](https://learn.microsoft.com/en-us/azure/cloud-shell/quickstart?tabs=powershell) or your local machine if you have the Powershell Modules installed:
+```powershell
+Install-Module -Name Az
+```
+The script snippets given in Step 6 will not work in the Azure Cloud Shell due to not having access to the New-SelfSignedCertificate commandlet.  Those tasks will need to be performed on your own machine, or you can use other means of generating the certificates.  
 
 1. Accept terms of Esri ArcGIS Images.  Sku Name can be byol-110 for 11.0 and byol-111 for 11.1
 ```powershell
 Set-AzMarketplaceTerms -Publisher esri -Product arcgis-enterprise -Name <skuName> -Accept
 ```
-2. Deploy an Azure Key Vault
+2. Deploy an [Azure Key Vault](https://learn.microsoft.com/en-us/azure/key-vault/general/quick-create-portal) with a secret called esriStorage.  The esriStorage secret is what we use to store the Storage Account Key for the SMB connections. This secret must be present if you are using an existing Keyvault.  If you are creating a new Key Vault in the Azure Portal, be sure to enable Azure Resource Manager for template deployment.  
 ```powershell
 Select-AzSubscription <subscriptionId>
 $keyVault = New-AzKeyVault -Name <keyVaultName> -ResourceGroupName <resourceGroupName> -Location <region> -EnabledForTemplateDeployment -Sku Standard
 $secret = Set-AzKeyVaultSecret -VaultName $keyVault.VaultName -Name 'esriStorage' -SecretValue $(ConvertTo-SecureString -String 'hold' -AsPlainText -Force)
-$keyVault.Id
+$keyVault.ResourceId | Out-File .\keyVaultResourceId.txt
 ```
-3. Add user that will be deploying the Template to the Key Vault Access Policy.  The user will need Secret Get, List, Set and Certificate Get, List
-4. Save the KeyVault ID Output, it will be used as a parameter in the template
-5. Add a Publicly Trusted SSL Certificate to the Azure Key Vault's Certificates (PFX), This certificate should have the ExternalDNS name in it's Subject Alternate Names
-6. Add a Self Signed Certificate to the Azure Key Vault's Certificates (PFX), This certificate should be a wild card for you Azure Environments Internal DNS Label.  If a VM already exists in your target virtual network, you can run the below script to generate the SelfSigned PFX and RootCA Cert.
+3. Add user that will be deploying the Template to the Key Vault Access Policy.  The user will need Secret Get, List, Set and Certificate Get, List, Create, Import
+4. Save the KeyVault ID Output, it will be used as a parameter in the template.
+5. [Add a Publicly Trusted SSL Certificate to the Azure Key Vault's Certificates (PFX)](https://learn.microsoft.com/en-us/azure/key-vault/certificates/tutorial-import-certificate?tabs=azure-portal), This certificate should have the ExternalDNS name in it's Subject Alternate Name or be a wildcard certificate for the domain suffix.
+6. [Add a Self Signed Certificate to the Azure Key Vault's Certificates (PFX)](https://learn.microsoft.com/en-us/azure/key-vault/certificates/tutorial-import-certificate?tabs=azure-portal), This certificate should be a wild card for you Azure Environments Internal DNS Label.  If a VM already exists in your target virtual network, you can run the below script to generate the SelfSigned PFX and RootCA Cert.  If you do not have a VM in the target VNET, you will need to deploy one in order to get the DNS Suffix of that VNET.
 ```powershell
 $vm = Get-AzVM -name <vmname> -resourcegroupname <resourceGroupName>
 $nic = Get-AzNetworkInterface -Name $($vm[0].NetworkProfile.NetworkInterfaces[0].Id.Split("/")[8]) -ResourceGroupName $($vm[0].NetworkProfile.NetworkInterfaces[0].Id.Split("/")[4])
@@ -84,19 +89,19 @@ Export-PfxCertificate -Cert $cert -Password $secureString -FilePath $(".\esri-se
 $rootByte = Get-Content $(".\EsriSelfSigned.cer") -AsByteStream
 [System.Convert]::ToBase64String($rootByte) | Out-File "RootBase64.txt"
 ```
-7. Add a Secret for the Root CA Cert, Copy the contents of RootBase64.txt and save as a secret in the key vault.
-8. Create an Azure Storage Account and Container.
+7. [Add a Secret for the Root CA Cert](https://learn.microsoft.com/en-us/azure/key-vault/secrets/quick-create-portal). If you used the commands above, you can copy the contents of RootBase64.txt and save as a secret in the key vault.  If not, just convert your Root CA file into a single line base64 string.
+8. [Create an Azure Storage Account](https://learn.microsoft.com/en-us/azure/storage/common/storage-account-create?tabs=azure-portal) and [Container](https://learn.microsoft.com/en-us/azure/storage/blobs/storage-quickstart-blobs-portal#create-a-container).  A Blob or General Purpose v2 and Standard LRS account is fine.  This will just be used to store the artifacts needed to configure ArcGIS
 ```powershell
 $storage = New-AzStorageAccount -Name <storageAccountName> -ResourceGroupName <resourceGroupName> -SkuName Standard_LRS -Location <region> -Kind StorageV2
 $artifactsContainer = New-AzStorageContainer -Name "artifacts" -Context $storage.Context
 ```
-9. Copy your Esri Server License File, Portal License File, and the [DSC.zip](https://github.com/lukearp/Azure-IAC-Bicep/releases/tag/DSC) package for your ESRI Version.
+9. [Upload](https://learn.microsoft.com/en-us/azure/storage/blobs/storage-quickstart-blobs-portal#upload-a-block-blob) your Esri Server License File, Portal License File, and the [DSC.zip](https://github.com/lukearp/Azure-IAC-Bicep/releases/tag/DSC) package for your ESRI Version.
 10. Generate a SAS Token that will allow us to access the files within the artifacts directory.
 ```powershell
 $storage = Get-AzStorageAccount -Name <storageAccountName> -ResourceGroupName <resourceGroupName>
 New-AzStorageAccountSASToken -Service Blob -ResourceType Container,Object -Permission "rl" -ExpiryTime (Get-Date).AddDays(1) -Context $storage.Context | Out-File sasToken.txt
 ```
-11. You should now have all the prerequisets to deploy the template.  
+11. You should now have all the prerequisets to deploy the template. You can download the [latest built JSON here](https://github.com/lukearp/Azure-IAC-Bicep/releases/download/DSC/ArcGIS-Deploy.json) and [Deploy a custom template](https://learn.microsoft.com/en-us/azure/azure-resource-manager/templates/quickstart-create-templates-use-the-portal) in the portal. 
 
 # Example
 
