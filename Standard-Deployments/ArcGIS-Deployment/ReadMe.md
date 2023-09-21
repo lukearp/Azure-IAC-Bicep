@@ -63,13 +63,15 @@ Set-AzMarketplaceTerms -Publisher esri -Product arcgis-enterprise -Name <skuName
 ```
 2. Deploy an Azure Key Vault
 ```powershell
+Select-AzSubscription <subscriptionId>
 $keyVault = New-AzKeyVault -Name <keyVaultName> -ResourceGroupName <resourceGroupName> -Location <region> -EnabledForTemplateDeployment -Sku Standard
 $secret = Set-AzKeyVaultSecret -VaultName $keyVault.VaultName -Name 'esriStorage' -SecretValue $(ConvertTo-SecureString -String 'hold' -AsPlainText -Force)
 $keyVault.Id
 ```
-3. Save the KeyVault ID Output, it will be used as a parameter in the template
-4. Add a Publicly Trusted SSL Certificate to the Azure Key Vault's Certificates (PFX), This certificate should have the ExternalDNS name in it's Subject Alternate Names
-5. Add a Self Signed Certificate to the Azure Key Vault's Certificates (PFX), This certificate should be a wild card for you Azure Environments Internal DNS Label.  If a VM already exists in your target virtual network, you can run the below script to generate the SelfSigned PFX and RootCA Cert.
+3. Add user that will be deploying the Template to the Key Vault Access Policy.  The user will need Secret Get, List, Set and Certificate Get, List
+4. Save the KeyVault ID Output, it will be used as a parameter in the template
+5. Add a Publicly Trusted SSL Certificate to the Azure Key Vault's Certificates (PFX), This certificate should have the ExternalDNS name in it's Subject Alternate Names
+6. Add a Self Signed Certificate to the Azure Key Vault's Certificates (PFX), This certificate should be a wild card for you Azure Environments Internal DNS Label.  If a VM already exists in your target virtual network, you can run the below script to generate the SelfSigned PFX and RootCA Cert.
 ```powershell
 $vm = Get-AzVM -name <vmname> -resourcegroupname <resourceGroupName>
 $nic = Get-AzNetworkInterface -Name $($vm[0].NetworkProfile.NetworkInterfaces[0].Id.Split("/")[8]) -ResourceGroupName $($vm[0].NetworkProfile.NetworkInterfaces[0].Id.Split("/")[4])
@@ -82,19 +84,19 @@ Export-PfxCertificate -Cert $cert -Password $secureString -FilePath $(".\esri-se
 $rootByte = Get-Content $(".\EsriSelfSigned.cer") -AsByteStream
 [System.Convert]::ToBase64String($rootByte) | Out-File "RootBase64.txt"
 ```
-6. Add a Secret for the Root CA Cert, Copy the contents of RootBase64.txt and save as a secret in the key vault.
-7. Create an Azure Storage Account and Container.
+7. Add a Secret for the Root CA Cert, Copy the contents of RootBase64.txt and save as a secret in the key vault.
+8. Create an Azure Storage Account and Container.
 ```powershell
 $storage = New-AzStorageAccount -Name <storageAccountName> -ResourceGroupName <resourceGroupName> -SkuName Standard_LRS -Location <region> -Kind StorageV2
 $artifactsContainer = New-AzStorageContainer -Name "artifacts" -Context $storage.Context
 ```
-8. Copy your Esri Server License File, Portal License File, and the [DSC.zip](https://github.com/lukearp/Azure-IAC-Bicep/releases/tag/DSC) package for your ESRI Version.
-9. Generate a SAS Token that will allow us to access the files within the artifacts directory.
+9. Copy your Esri Server License File, Portal License File, and the [DSC.zip](https://github.com/lukearp/Azure-IAC-Bicep/releases/tag/DSC) package for your ESRI Version.
+10. Generate a SAS Token that will allow us to access the files within the artifacts directory.
 ```powershell
 $storage = Get-AzStorageAccount -Name <storageAccountName> -ResourceGroupName <resourceGroupName>
 New-AzStorageAccountSASToken -Service Blob -ResourceType Container,Object -Permission "rl" -ExpiryTime (Get-Date).AddDays(1) -Context $storage.Context | Out-File sasToken.txt
 ```
-10. You should now have all the prerequisets to deploy the template.  
+11. You should now have all the prerequisets to deploy the template.  
 
 # Example
 
