@@ -4,7 +4,9 @@ param(
     [Parameter(Mandatory=$true)]
     [array]$DNSNames,
     [Parameter(Mandatory=$true)]
-    [string]$certPassword
+    [string]$certPassword,
+    [switch]$UploadToKeyVault,
+    [string]$keyVaultResourceId = ''
 )
 $certsBase64 = @()
 
@@ -29,6 +31,17 @@ foreach($cert in $certs)
     $certsBase64 += New-Object -TypeName psobject -Property @{
         certname = $cert.SubjectName
         base64 = [System.Convert]::ToBase64String($certContent)
+    }
+}
+
+if($UploadToKeyVault)
+{
+    $infraContext = Connect-AzAccount -Identity -ContextName "infra" -SubscriptionId $keyVaultResourceId.Split("/")[2];
+    $keyVaultName = $keyVaultResourceId.Split("/")[8]
+    Set-AzKeyVaultSecret -VaultName $keyVaultName -Name $RootcertName -SecretValue $(ConvertTo-SecureString -AsPlainText -String ($rootcertContent = get-content ".\$($RootcertName).cer" -Encoding Byte) -Force);
+    foreach($cert in $certs)
+    {
+        Import-AzKeyVaultCertificate -VaultName $keyVaultName -Name $cert.SubjectName -FilePath ".\$($cert.SubjectName).pfx" -Password $secureString
     }
 }
 
