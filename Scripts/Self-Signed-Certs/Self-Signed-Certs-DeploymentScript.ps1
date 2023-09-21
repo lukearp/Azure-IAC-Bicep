@@ -9,6 +9,7 @@ param(
     [string]$keyVaultResourceId = ''
 )
 $certsBase64 = @()
+Install-Module pki
 
 $rootcert = New-SelfSignedCertificate -CertStoreLocation cert:\CurrentUser\My -DnsName $RootcertName -KeyUsage CertSign
 Export-Certificate -Cert $rootcert -FilePath ".\$($RootcertName).cer"
