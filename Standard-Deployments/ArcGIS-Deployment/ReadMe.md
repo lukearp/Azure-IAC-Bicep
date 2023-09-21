@@ -55,6 +55,38 @@ portalLicenseUserTypeId | string | User License ID Type for Portal
 certName | string | Name of certificate in Artifacts directory 
 tags | object | Azure Resource Manager Tags
 
+# Setup Instructions
+
+1. Accept terms of Esri ArcGIS Images.  Sku Name can be byol-110 for 11.0 and byol-111 for 11.1
+```powershell
+Set-AzMarketplaceTerms -Publisher esri -Product arcgis-enterprise -Name <skuName> -Accept
+```
+2. Deploy an Azure Key Vault
+```powershell
+$keyVault = New-AzKeyVault -Name <keyVaultName> -ResourceGroupName <resourceGroupName> -Location <region> -EnabledForTemplateDeployment -Sku Standard
+$secret = Set-AzKeyVaultSecret -VaultName $keyVault.VaultName -Name 'esriStorage' -SecretValue $(ConvertTo-SecureString -String 'hold' -AsPlainText -Force)
+$keyVault.Id
+```
+3. Save the KeyVault ID Output, it will be used as a parameter in the template
+4. Add a Publicly Trusted SSL Certificate to the Azure Key Vault's Certificates (PFX)
+   a. This certificate should have the ExternalDNS name in it's Subject Alternate Names
+5. Add a Self Signed Certificate to the Azure Key Vault's Certificates (PFX)
+   a. This certificate should be a wild card for you Azure Environments Internal DNS Label
+```powershell
+$vm = Get-AzVM
+$nic = Get-AzNetworkInterface -Name $($vm[0].NetworkProfile.NetworkInterfaces[0].Id.Split("/")[8]) -ResourceGroupName $($vm[0].NetworkProfile.NetworkInterfaces[0].Id.Split("/")[4])
+$dnsName = "*." + (ConvertFrom-Json -InputObject $nic.DnsSettingsText).InternalDomainNameSuffix
+$rootcert = New-SelfSignedCertificate -CertStoreLocation cert:\CurrentUser\My -DnsName "EsriSelfSigned" -KeyUsage CertSign
+Export-Certificate -Cert $rootcert -FilePath $(".\EsriSelfSigned.cer")
+$cert = New-SelfSignedCertificate -certstorelocation cert:\CurrentUser\My -dnsname $dnsName -Signer $rootcert
+$secureString = ConvertTo-SecureString -String "esri" -Force -AsPlainText
+Export-PfxCertificate -Cert $cert -Password $secureString -FilePath $(".\esri-selfsigned.pfx") -CryptoAlgorithmOption TripleDES_SHA1
+$rootByte = Get-Content $(".\EsriSelfSigned.cer") -AsByteStream
+[System.Convert]::ToBase64String($rootByte) | Out-File "RootBase64.txt"
+```
+6. Add a Secret for the Root CA Cert
+   a. Coppy the contents of RootBase64.txt and save as a secret in the key vault.
+
 # Example
 
 ```bicep
