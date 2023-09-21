@@ -16,12 +16,12 @@ param deploymentPrefix string
 param storageKey string
 param storageSuffix string
 param serverName string
-param certName string
-@secure()
-param rootCertData string
-param serverNicId string
+//param certName string
+//@secure()
+//param rootCertData string
+//param serverNicId string
 
-var serverIntDomain = '${serverName}.${reference(serverNicId, '2023-04-01', 'FULL').properties.dnsSettings.internalDomainNameSuffix}'
+//var serverIntDomain = '${serverName}.${reference(serverNicId, '2023-04-01', 'FULL').properties.dnsSettings.internalDomainNameSuffix}'
 
 resource serverDsc 'Microsoft.Compute/virtualMachines/extensions@2023-03-01' = {
   name: '${vmName}/DSCConfiguration'
@@ -40,8 +40,8 @@ resource serverDsc 'Microsoft.Compute/virtualMachines/extensions@2023-03-01' = {
       }
       configurationArguments: {
         ServiceCredentialIsDomainAccount: false
-        PublicKeySSLCertificateFileUrl: '${artifactsLocation}/${certName}${artifactSas}'
-        PrivateDNSHostName: serverIntDomain
+      //  PublicKeySSLCertificateFileUrl: '${artifactsLocation}/${certName}${artifactSas}'
+      //  PrivateDNSHostName: serverIntDomain
         PortalLicenseFileUrl: '${artifactsLocation}/${portalLicenseFile}${artifactSas}'
         PortalLicenseUserTypeId: portalLicenseType
         ServerMachineNames: serverName
@@ -61,7 +61,7 @@ resource serverDsc 'Microsoft.Compute/virtualMachines/extensions@2023-03-01' = {
     protectedSettings: {
       configurationArguments: {
         PortalInternalCertificateData: selfsignedCertData
-        RootInternalCertificateData: rootCertData
+      //  RootInternalCertificateData: rootCertData
       //  certPassword: certPass
         StorageAccountCredential: {
           userName: '${substring('${deploymentPrefix}${replace(guid(subscription().id, resourceGroup().name, location), '-', '')}', 0, 23)}.${storageSuffix}'

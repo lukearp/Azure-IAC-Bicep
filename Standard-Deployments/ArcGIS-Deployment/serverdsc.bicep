@@ -14,7 +14,7 @@ param deploymentPrefix string
 @secure()
 param storageKey string
 param storageSuffix string
-param certName string
+//param certName string
 
 resource serverDsc 'Microsoft.Compute/virtualMachines/extensions@2023-03-01' = {
   name: '${vmName}/DSCConfiguration'
@@ -33,7 +33,7 @@ resource serverDsc 'Microsoft.Compute/virtualMachines/extensions@2023-03-01' = {
       }
       configurationArguments: {
         ServiceCredentialIsDomainAccount: false
-        PublicKeySSLCertificateFileUrl: '${artifactsLocation}/${certName}${artifactSas}'
+        //PublicKeySSLCertificateFileUrl: '${artifactsLocation}/${certName}${artifactSas}'
         ServerLicenseFileUrl: '${artifactsLocation}/${serverLicenseFile}${artifactSas}'
         ServerMachineNames: vmName
         FileShareName: 'esri'

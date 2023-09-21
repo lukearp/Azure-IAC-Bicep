@@ -440,7 +440,7 @@ var backendHttpSettings = [
         id: '${subscription().id}/resourceGroups/${resourceGroup().name}/providers/Microsoft.Network/applicationGateways/${name}/probes/gisServerProbeName'
       }
       protocol: 'Https'
-      requestTimeout: 180
+      requestTimeout: 300
       trustedRootCertificates: [
         {
           id: '${subscription().id}/resourceGroups/${resourceGroup().name}/providers/Microsoft.Network/applicationGateways/${name}/trustedRootCertificates/trustedRoot'
@@ -459,7 +459,7 @@ var backendHttpSettings = [
 module appGatewayPip '../../Modules/Microsoft.Network/publicIpAddresses/publicIpAddresses.bicep' = {
   name: 'AppGateway-PublicIP'
   params: {
-    name: 'Esri-AppGW-PIP'
+    name: 'Esri-${name}-PIP'
     location: location
     publicIpAllocationMethod: 'Static'
     sku: 'Standard'
@@ -566,3 +566,5 @@ resource appGateway 'Microsoft.Network/applicationGateways@2021-02-01' = {
   }
   tags: tags
 }
+
+output publicIp string = appGatewayPip.outputs.ipAddress

@@ -34,15 +34,6 @@ param appGatewaySubnetName string
 param appGatewayName string
 @description('Resource Group name for App Gateway')
 param appGatewayResourceGroupName string
-/*@description('ArcGIS Image Info')
-param imageReferences object = {
-  '0': {
-    Publisher: 'esri'
-    Offer: 'arcgis-enterprise'
-    SKU: 'byol-110'
-    AzureVMImageType: 0
-  }
-}*/
 @allowed([
   'esri'
 ])
@@ -52,9 +43,10 @@ param imagePublisher string = 'esri'
 ])
 param imageOffer string = 'arcgis-enterprise'
 @allowed([
+  'byol-111'
   'byol-110'
 ])
-param imageSku string = 'byol-110'
+param imageSku string = 'byol-111'
 @description('Administrator username')
 param adminUsername string
 @description('Secure String Password, No special characters')
@@ -96,8 +88,8 @@ param timeZoneId string = 'Eastern Standard Time'
 param serverLicenseFileName string
 @description('Name of Portal License File in your Artifacts location')
 param portalLicenseFileName string
-@description('Name of PFX in Artifacts Location')
-param certName string
+//@description('Name of PFX in Artifacts Location')
+//param certName string
 @description('SAS Token if Artificats location is in blob storage')
 param artifactSas string
 @description('Portal License User Type ID')
@@ -158,6 +150,18 @@ module appGateway 'esri-appgw.bicep' = {
   ]
 }
 
+module DNSZone 'dnsZone.bicep' = {
+  name: 'ExternalZone'
+  params: {
+    zoneName: externalDnsHostName
+    aRecordIp: appGateway.outputs.publicIp
+    aRecordName: '@'
+    createARecord: true
+    tags: tags
+    vnetAssociation: resourceId(vnetRg,'Microsoft.Network/virtualNetworks', vnetName)   
+  } 
+}
+
 module server '../../Modules/Microsoft.Compute/virtualMachines/virtualMachines.bicep' = {
   name: 'Server-Deploy'
   params: {
@@ -174,7 +178,10 @@ module server '../../Modules/Microsoft.Compute/virtualMachines/virtualMachines.b
     vnetName: vnetName
     vnetRg: vnetRg
     timeZoneId: timeZoneId
-    tags: tags
+    dnsServers: [
+      '168.63.129.16'
+    ] 
+    tags: tags 
   }
 }
 
@@ -183,6 +190,7 @@ module serverDsc 'serverdsc.bicep' = {
   dependsOn: [
     server
     share
+    DNSZone
   ]
   params: {
     artifactsLocation: artifactsLocation
@@ -198,7 +206,7 @@ module serverDsc 'serverdsc.bicep' = {
     serviceUserName: serviceUserName
     servicePassword: servicePassword 
     storageSuffix: storageSuffix  
-    certName: certName         
+    //certName: certName         
   }
 }
 
@@ -219,6 +227,9 @@ module portal '../../Modules/Microsoft.Compute/virtualMachines/virtualMachines.b
     vnetRg: vnetRg
     timeZoneId: timeZoneId
     tags: tags
+    dnsServers: [
+      '168.63.129.16'
+    ] 
   }
 }
 
@@ -245,9 +256,9 @@ module portalDsc 'portaldsc.bicep' = {
     serviceUserName: serviceUserName
     storageKey: keyvault.getSecret('esriStorage')
     storageSuffix: storageSuffix 
-    certName: certName
-    serverNicId: server.outputs.networkInterfaceId
-    rootCertData: keyvault.getSecret(rootCert)        
+    //certName: certName
+    //serverNicId: server.outputs.networkInterfaceId
+    //rootCertData: keyvault.getSecret(rootCert)        
   }
 }
 
@@ -267,6 +278,9 @@ module data '../../Modules/Microsoft.Compute/virtualMachines/virtualMachines.bic
     vnetName: vnetName
     vnetRg: vnetRg
     timeZoneId: timeZoneId
+    dnsServers: [
+      '168.63.129.16'
+    ]
     tags: tags
   }
 }
