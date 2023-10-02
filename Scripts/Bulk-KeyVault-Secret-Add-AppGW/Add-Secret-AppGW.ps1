@@ -14,10 +14,12 @@ foreach ($applicationGateway in $applicationGateways) {
     if ($appGw.Identity -eq $null) {
         Set-AzApplicationGatewayIdentity -ApplicationGateway $appGw -UserAssignedIdentityId $managedIdentity
     }
+    $existCount = 0;
     foreach ($keyVaultSecret in $keyVaultSecrets) {
-        if ($appGw.SslCertificates.Count -ge 0) {
+        if ($appGw.SslCertificates.Count -gt 0) {
             if ($appGw.SslCertificates.Name.ToUpper().contains($($keyVaultSecret.Split("/")[4] + "-kv").ToUpper())) {
                 Write-Host "Cert already assigned";
+                $existCount++;
             }
             else {
                 Add-AzApplicationGatewaySslCertificate -ApplicationGateway $appGw -Name $($keyVaultSecret.Split("/")[4] + "-kv").ToUpper() -KeyVaultSecretId $keyVaultSecret
@@ -27,5 +29,9 @@ foreach ($applicationGateway in $applicationGateways) {
             Add-AzApplicationGatewaySslCertificate -ApplicationGateway $appGw -Name $($keyVaultSecret.Split("/")[4] + "-kv").ToUpper() -KeyVaultSecretId $keyVaultSecret
         }
     }
-    Set-AzApplicationGateway -ApplicationGateway $appGw
+    if($existCount -ne $keyVaultSecrets.Count)
+    {
+        Set-AzApplicationGateway -ApplicationGateway $appGw
+    }
+    $existCount = 0;
 }
