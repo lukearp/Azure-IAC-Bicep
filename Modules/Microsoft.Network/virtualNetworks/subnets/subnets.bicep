@@ -44,9 +44,7 @@ var properties = nsgName == '' && routeTableName == '' ? {
 resource subnet 'Microsoft.Network/virtualNetworks/subnets@2021-08-01' = {
   name: subnetName 
   parent: vnet 
-  properties: {
-    
-  }   
+  properties: properties  
 }
 
 output subnetId string = subnet.id
