@@ -42,5 +42,6 @@ foreach($rule in $rules)
     $name = $("Rule" + $count)
     $condition = New-AzFrontDoorCdnRuleHostNameConditionObject -Name 'HostName' -ParameterMatchValue $rule.hostname -ParameterOperator 'Equal'
     $action = New-AzFrontDoorCdnRuleUrlRedirectActionObject -Name 'UrlRedirect' -ParameterRedirectType 'PermanentRedirect' -ParameterDestinationProtocol 'MatchRequest' -ParameterCustomHostname $rule.redirectTarget.Split("://")[1]
-    New-AzFrontDoorCdnRule -Name $name -ProfileName $frontDoor.Name -ResourceGroupName $frontDoor.ResourceGroupName -SetName $ruleSet.Name -Action $action -Condition $condition
+    New-AzFrontDoorCdnRule -Name $name -ProfileName $frontDoor.Name -ResourceGroupName $frontDoor.ResourceGroupName -SetName $ruleSet.Name -Action $action -Condition $condition -Order $count
+    $count++;
 }
