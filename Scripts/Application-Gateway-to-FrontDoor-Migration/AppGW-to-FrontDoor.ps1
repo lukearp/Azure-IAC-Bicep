@@ -2,7 +2,8 @@ param (
     [string]$appGatewayName,
     [string]$appGatewayRg,
     [string]$frontDoorName,
-    [string]$frontDoorRg
+    [string]$frontDoorRg,
+    [string]$csvPath
 )
 
 $appGateway = Get-AzApplicationGateway -Name $appGatewayName -ResourceGroupName $appGatewayRg
@@ -11,11 +12,19 @@ $endpoint = Get-AzFrontDoorCdnEndpoint -ProfileName $frontDoor.Name -ResourceGro
 $hostNames = $appGateway.HttpListeners.HostNames
 $hostNames += $appGateway.HttpListeners.HostName
 $hostNames = $hostNames | Select -Unique
-
-foreach($hostName in $hostNames)
+Add-Content -Path $csvPath -Value "TXTRcrd,Value"
+foreach($hostName in $hostNames[0..99])
 {
-    New-AzFrontDoorCdnCustomDomain -CustomDomainName $hostName.Split(".")[0] -ProfileName $frontDoor.Name -ResourceGroupName $frontDoor.ResourceGroupName -HostName $hostName -AsJob
+    $token = $null
+    $token = (New-AzFrontDoorCdnCustomDomain -CustomDomainName $hostName.Split(".")[0] -ProfileName $frontDoor.Name -ResourceGroupName $frontDoor.ResourceGroupName -HostName $hostName).ValidationPropertyValidationToken
+    Add-Content -Path $csvPath -Value "_dnsauth.$($hostName),$($token)" 
 }
+
+if($hostNames.Count -gt 100)
+{
+    Add-Content -Path ".\log.txt" -Value $($hostNames[100..$($hostNames.Count)] -join "`n")
+}
+
 $ruleSet = New-AzFrontDoorCdnRuleSet -Name "RedirectRules" -ProfileName $frontDoor.Name -ResourceGroupName $frontDoor.ResourceGroupName
 $origionGroup = Get-AzFrontDoorCdnOriginGroup -ProfileName $frontDoor.Name -ResourceGroupName $frontDoor.ResourceGroupName
 $rules = @()
@@ -41,7 +50,14 @@ foreach($rule in $rules)
 {
     $name = $("Rule" + $count)
     $condition = New-AzFrontDoorCdnRuleHostNameConditionObject -Name 'HostName' -ParameterMatchValue $rule.hostname -ParameterOperator 'Equal'
-    $action = New-AzFrontDoorCdnRuleUrlRedirectActionObject -Name 'UrlRedirect' -ParameterRedirectType 'PermanentRedirect' -ParameterDestinationProtocol 'MatchRequest' -ParameterCustomHostname $rule.redirectTarget.Split("://")[1]
+    $targetHost = $rule.redirectTarget.Split("://")[1].split("/")[0]
+    $targetPath = "/" + $($rule.redirectTarget.Split("://")[1].split("/")[1..$($rule.redirectTarget.Split("://").split("/").count - 1) ] -join "/")
+    if($rule.redirectTarget.Split("://")[1].split("/").count -gt 0) {
+        $action = New-AzFrontDoorCdnRuleUrlRedirectActionObject -Name 'UrlRedirect' -ParameterRedirectType 'PermanentRedirect' -ParameterDestinationProtocol 'MatchRequest' -ParameterCustomHostname $targetHost -ParameterCustomPath $targetPath
+    }
+    else {
+        $action = New-AzFrontDoorCdnRuleUrlRedirectActionObject -Name 'UrlRedirect' -ParameterRedirectType 'PermanentRedirect' -ParameterDestinationProtocol 'MatchRequest' -ParameterCustomHostname $targetHost
+    }
     New-AzFrontDoorCdnRule -Name $name -ProfileName $frontDoor.Name -ResourceGroupName $frontDoor.ResourceGroupName -SetName $ruleSet.Name -Action $action -Condition $condition -Order $count
     $count++;
 }
