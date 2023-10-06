@@ -70,4 +70,4 @@ foreach ($rule in $rules) {
     New-AzFrontDoorCdnRule -Name $name -ProfileName $frontDoor.Name -ResourceGroupName $frontDoor.ResourceGroupName -SetName $ruleSet.Name -Action $action -Condition $condition -Order $count
     $count++;
 }
-Out-File -FilePath ".\over100.json" -InputObject $(ConvertTo-Json -InputObject $rulesOver100)
+Out-File -FilePath ".\over100-$((Get-Date -f s).Replace(":","-")).json" -InputObject $(ConvertTo-Json -InputObject $rulesOver100)
