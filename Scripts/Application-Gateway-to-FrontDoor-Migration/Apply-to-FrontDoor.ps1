@@ -57,7 +57,7 @@ foreach($hostName in $hostNames)
         else {
             $action = New-AzFrontDoorCdnRuleUrlRedirectActionObject -Name 'UrlRedirect' -ParameterRedirectType 'PermanentRedirect' -ParameterDestinationProtocol 'MatchRequest' -ParameterCustomHostname $targetHost
         }
-        New-AzFrontDoorCdnRule -Name $name -ProfileName $frontDoor.Name -ResourceGroupName $frontDoor.ResourceGroupName -SetName $ruleSet.Name -Action $action -Condition $condition -Order $count
+        New-AzFrontDoorCdnRule -Name $name -ProfileName $frontDoor.Name -ResourceGroupName $frontDoor.ResourceGroupName -SetName $ruleSet.Name -Action $action -Condition $condition -Order $ruleCount
         $ruleCount++;
     }
     $count++
