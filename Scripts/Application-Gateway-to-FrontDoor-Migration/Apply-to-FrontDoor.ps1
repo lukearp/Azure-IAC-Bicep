@@ -60,6 +60,7 @@ foreach($hostName in $hostNames)
         New-AzFrontDoorCdnRule -Name $name -ProfileName $frontDoor.Name -ResourceGroupName $frontDoor.ResourceGroupName -SetName $ruleSet.Name -Action $action -Condition $condition -Order $count
         $ruleCount++;
     }
+    $count++
 }
 <#
 $ruleSet = New-AzFrontDoorCdnRuleSet -Name "RedirectRules" -ProfileName $frontDoor.Name -ResourceGroupName $frontDoor.ResourceGroupName
