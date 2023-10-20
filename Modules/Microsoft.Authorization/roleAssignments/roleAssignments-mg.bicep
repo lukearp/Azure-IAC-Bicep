@@ -5,9 +5,9 @@ param objectId string
 param managementGroupName string
 
 resource roleAssignment 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
-  name: guid(tenantResourceId('Microsoft.Management/managementGroups',managementGroupName),name)
+  name: guid(managementGroupName,name)
   properties: { 
-    roleDefinitionId: '/providers/Microsoft.Authorization/roleDefinitions/${roleDefinitionId}'
+    roleDefinitionId: roleDefinitionId
     principalId: objectId 
   }
 }
