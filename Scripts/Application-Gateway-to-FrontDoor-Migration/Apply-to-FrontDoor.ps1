@@ -1,7 +1,8 @@
 param (
     [string]$frontDoorName,
     [string]$frontDoorRg,
-    [string]$csvPath
+    [string]$csvPath,
+    [string]$dnsCsvPath = ".\dnsTXT.csv"
 )
 
 $frontDoor = Get-AzFrontDoorCdnProfile -Name $frontDoorName -ResourceGroupName $frontDoorRg
@@ -39,6 +40,7 @@ $count = 0
 foreach($hostName in $hostNames)
 {
     $frontdoorHost = New-AzFrontDoorCdnCustomDomain -CustomDomainName $("Domain-" + $count) -ProfileName $frontDoor.Name -ResourceGroupName $frontDoor.ResourceGroupName -HostName $hostName
+    Add-Content -Path $dnsCsvPath -Value "_dnsauth.$($hostName),$($frontdoorhost.ValidationPropertyValidationToken)"
     $ruleSet = New-AzFrontDoorCdnRuleSet -Name $("Domain" + $count) -ProfileName $frontDoor.Name -ResourceGroupName $frontDoor.ResourceGroupName
     New-AzFrontDoorCdnRoute -EndpointName $endpoint.Name -Name $("Domain-" + $count) -ProfileName $frontDoor.Name -ResourceGroupName $frontDoor.ResourceGroupName -RuleSet $ruleSet -ForwardingProtocol 'MatchRequest' -HttpsRedirect 'Disabled' -CustomDomain $frontdoorHost -OriginGroupId $origionGroup.Id
     $rules = $hostNameBatch | ?{$_.hostName -eq $hostName}
