@@ -14,7 +14,7 @@ $appGateway = Get-AzApplicationGateway -Name $appGatewayName -ResourceGroupName 
 $hostNames = $appGateway.HttpListeners.HostNames
 $hostNames += $appGateway.HttpListeners.HostName
 $hostNames = $hostNames | Select -Unique
-Add-Content -Path $csvPath -Value "AppGateway,Listner,HostName,RedirectTarget"
+Add-Content -Path $csvPath -Value "AppGateway,Listener,HostName,RedirectTarget"
 foreach ($listener in $appGateway.HttpListeners) {   
     $listenerHostNames = @() 
     $appGwRoutingRule = $appGateway.RequestRoutingRules | ? { $_.HttpListener.Id.Split("/")[-1] -eq $listener.Name }
