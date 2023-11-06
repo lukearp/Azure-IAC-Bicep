@@ -1,0 +1,13 @@
+﻿
+[ClassVersion("1.0.0.0"), FriendlyName("ArcGIS_GeoEvent")]
+class ArcGIS_GeoEvent : OMI_BaseResource
+{
+	[Write] String ServerHostName;
+	[Write] String Version;
+	[Key] String Name;
+	[Write, EmbeddedInstance("MSFT_Credential")] String SiteAdministrator;	
+	[Write] String WebSocketContextUrl;
+    [Write] String SiteAdminUrl;	
+	[Write, ValueMap{"Present","Absent"}, Values{"Present","Absent"}] String Ensure;
+};
+

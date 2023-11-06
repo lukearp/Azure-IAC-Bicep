@@ -10,12 +10,16 @@ param serviceUserName string
 param servicePassword string
 @secure()
 param selfsignedCertData string
+@secure()
+param ssroot string
 param externalDnsHostName string
-param deploymentPrefix string
+param storageAccountName string
 @secure()
 param storageKey string
 param storageSuffix string
 param serverName string
+
+var dscUrl = length(split(dscArchiveFile,'/')) > 0 ? dscArchiveFile : '${artifactsLocation}/${dscArchiveFile}${artifactSas}'
 
 resource serverDsc 'Microsoft.Compute/virtualMachines/extensions@2023-03-01' = {
   name: '${vmName}/DSCConfiguration'
@@ -28,7 +32,7 @@ resource serverDsc 'Microsoft.Compute/virtualMachines/extensions@2023-03-01' = {
     settings: {
       wmfVersion: 'latest'
       configuration: {
-        url: '${artifactsLocation}/${dscArchiveFile}${artifactSas}'
+        url: dscUrl
         function: 'PortalConfiguration'
         script: 'PortalConfiguration.ps1'
       }
@@ -52,8 +56,9 @@ resource serverDsc 'Microsoft.Compute/virtualMachines/extensions@2023-03-01' = {
     protectedSettings: {
       configurationArguments: {
         PortalInternalCertificateData: selfsignedCertData
+        rootCertificateData: ssroot
         StorageAccountCredential: {
-          userName: '${substring('${deploymentPrefix}${replace(guid(subscription().id, resourceGroup().name, location), '-', '')}', 0, 23)}.${storageSuffix}'
+          userName: '${storageAccountName}.${storageSuffix}'
           password: storageKey
         }
         SiteAdministratorCredential: {

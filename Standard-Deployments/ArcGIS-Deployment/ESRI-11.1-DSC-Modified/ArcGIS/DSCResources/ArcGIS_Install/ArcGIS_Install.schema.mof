@@ -1,0 +1,21 @@
+﻿
+[ClassVersion("1.0.0.0"), FriendlyName("ArcGIS_Install")]
+class ArcGIS_Install : OMI_BaseResource
+{
+	[Key] String Name;
+	[Key] String Version;
+	[Write] String ProductId;
+	[Write] String Path;
+	[Write] Boolean Extract;
+	[Write] String Arguments;
+	[Write] String FeatureSet[];
+	[Write] String WebAdaptorContext;
+	[Write] String WebAdaptorDotnetHostingBundlePath;
+	[Write] String WebAdaptorWebDeployPath;
+	[Write] String ProDotnetDesktopRuntimePath;
+	[Write, EmbeddedInstance("MSFT_Credential")] String ServiceCredential;
+	[Write] Boolean ServiceCredentialIsDomainAccount;
+	[Write] Boolean ServiceCredentialIsMSA;
+	[Write] Boolean EnableMSILogging;
+	[Write, ValueMap{"Present","Absent"}, Values{"Present","Absent"}] String Ensure;
+};

@@ -43,6 +43,9 @@ resource networkInterface 'Microsoft.Network/networkInterfaces@2023-04-01' = {
 
 resource serverVm 'Microsoft.Compute/virtualMachines@2023-03-01' = {
   name: name
+  identity: {
+    type: 'SystemAssigned' 
+  } 
   location: location
   plan: {
     publisher: imagePublisher
@@ -93,3 +96,4 @@ resource serverVm 'Microsoft.Compute/virtualMachines@2023-03-01' = {
 }
 
 output networkInterfaceId string = networkInterface.id
+output servicePrincipalId string = serverVm.identity.principalId

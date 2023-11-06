@@ -1,0 +1,13 @@
+﻿
+[ClassVersion("1.0.0.0"), FriendlyName("ArcGIS_WaitForComponent")]
+class ArcGIS_WaitForComponent : OMI_BaseResource
+{
+	[Key, ValueMap{"Server","NotebookServer","MissionServer","Portal","ServerWA","PortalWA","DataStore","SpatioTemporal","TileCache","GraphStore","ObjectStore","UnregisterPortal"}, Values{"Server","NotebookServer","MissionServer","Portal","ServerWA","PortalWA","DataStore","SpatioTemporal","TileCache","GraphStore","ObjectStore","UnregisterPortal"}] String Component;
+	[Key, ValueMap{"Server","NotebookServer","MissionServer","Portal","WebAdaptor","DataStore","PortalUpgrade"}, Values{"Server","NotebookServer","MissionServer","Portal","WebAdaptor","DataStore","PortalUpgrade"}] String InvokingComponent;
+	[Key] String ComponentHostName;
+	[Key] String ComponentContext;
+	[Write, ValueMap{"Present","Absent"}, Values{"Present","Absent"}] String Ensure;    
+	[Write, EmbeddedInstance("MSFT_Credential")] String Credential;    
+	[Write,Description("Interval in seconds for retries.")] Uint32 RetryIntervalSec;
+	[Write,Description("Number of times to retry.")] Uint32 RetryCount;
+};

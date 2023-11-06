@@ -12,9 +12,9 @@ A valid ArcGis server and portal license in public artifacts location (can be Az
 Currently, a Public DNS record is required that matches the external hostname pointing to the Public IP address of the App Gateway.  Portal will not finish successfully is the record is not in place.  Will be changing this soon.
 
 The DSC Extension Package hosted here uploaded to your artificats location:
-[ArcGis-DSC](https://github.com/lukearp/Azure-IAC-Bicep/releases/download/DSC/ArcGis-DSC.zip)
+[ArcGis-DSC](https://github.com/lukearp/Azure-IAC-Bicep/releases)
 
-# Parameters
+# Parameters (ADVANCED DEPLOY)
 param | type | notes
 ------|------|------
 artifactsLocation | string | public storage location for
@@ -55,7 +55,11 @@ portalLicenseUserTypeId | string | User License ID Type for Portal
 certName | string | Name of certificate in Artifacts directory 
 tags | object | Azure Resource Manager Tags
 
-# Setup Instructions
+# Setup Instructions (LEGACY)
+
+Get User Object ID in Azure Cloud Shell:
+Connect-AzAccount -UseDeviceAuthentication;(Get-AzADUser -ObjectId ((get-AzContext).Account).Id).Id;
+
 The following steps can be performed in the [Azure Cloud Shell](https://learn.microsoft.com/en-us/azure/cloud-shell/quickstart?tabs=powershell) or your local machine if you have the Powershell Modules installed:
 ```powershell
 Install-Module -Name Az

@@ -411,7 +411,7 @@ var backendHttpSettings = [
         id: '${subscription().id}/resourceGroups/${resourceGroup().name}/providers/Microsoft.Network/applicationGateways/${name}/probes/gisPortalProbeName'
       }
       protocol: 'Https'
-      requestTimeout: 180
+      requestTimeout: 600
       trustedRootCertificates: [
         {
           id: '${subscription().id}/resourceGroups/${resourceGroup().name}/providers/Microsoft.Network/applicationGateways/${name}/trustedRootCertificates/trustedRoot'
@@ -440,7 +440,7 @@ var backendHttpSettings = [
         id: '${subscription().id}/resourceGroups/${resourceGroup().name}/providers/Microsoft.Network/applicationGateways/${name}/probes/gisServerProbeName'
       }
       protocol: 'Https'
-      requestTimeout: 300
+      requestTimeout: 600
       trustedRootCertificates: [
         {
           id: '${subscription().id}/resourceGroups/${resourceGroup().name}/providers/Microsoft.Network/applicationGateways/${name}/trustedRootCertificates/trustedRoot'

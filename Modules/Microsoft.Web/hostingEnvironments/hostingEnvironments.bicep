@@ -3,6 +3,7 @@ param name string
   'ASEV2'
   'ASEV3'
 ])
+@description('ASE Type')
 param kind string = 'ASEV3'
 param zoneRedundant bool = false
 param dedicatedHostCount int = 0

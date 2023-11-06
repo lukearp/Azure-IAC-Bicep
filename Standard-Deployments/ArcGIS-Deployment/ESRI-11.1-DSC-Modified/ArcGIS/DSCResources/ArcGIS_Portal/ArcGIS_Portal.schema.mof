@@ -1,0 +1,25 @@
+﻿
+[ClassVersion("1.0.0.0"), FriendlyName("ArcGIS_Portal")]
+class ArcGIS_Portal : OMI_BaseResource
+{
+	[Key] String PortalHostName;
+	[Write] String Version;
+	[Write, ValueMap{"Present","Absent"}, Values{"Present","Absent"}] String Ensure;
+	[Write] String LicenseFilePath;
+	[Write] String UserLicenseTypeId;
+	[Write, EmbeddedInstance("MSFT_Credential")] String PortalAdministrator;
+	[Write] String AdminEmail;
+	[Write] String AdminFullName;
+	[Write] String AdminDescription;
+	[Write] Uint8 AdminSecurityQuestionIndex;
+	[Write] String AdminSecurityAnswer;
+	[Write, Description("Is Joining Existing site")] Boolean Join;
+	[Write, Description("Is HA Portal")] Boolean IsHAPortal;
+	[Write, Description("Set logging to debug")] Boolean EnableDebugLogging;
+	[Write, Description("LogLevel")] String LogLevel;
+	[Write] String PeerMachineHostName;
+	[Write] String ContentDirectoryLocation;
+    [Write] String ContentDirectoryCloudConnectionString;
+    [Write] String ContentDirectoryCloudContainerName;
+};
+

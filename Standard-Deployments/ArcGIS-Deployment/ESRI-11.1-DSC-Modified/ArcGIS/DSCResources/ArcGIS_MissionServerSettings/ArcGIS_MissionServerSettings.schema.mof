@@ -1,0 +1,10 @@
+﻿
+[ClassVersion("1.0.0.0"), FriendlyName("ArcGIS_MissionServerSettings")]
+class ArcGIS_MissionServerSettings : OMI_BaseResource
+{
+    [Write] String ServerHostName;
+    [Key] String WebContextURL;
+    [Write] String WebSocketContextURL;
+	[Write, EmbeddedInstance("MSFT_Credential")] String SiteAdministrator;
+    [Write, Description("Is Service Directory Disabled")] Boolean DisableServiceDirectory;
+};

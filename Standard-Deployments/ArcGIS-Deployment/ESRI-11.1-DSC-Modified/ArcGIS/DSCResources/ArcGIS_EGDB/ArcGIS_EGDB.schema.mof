@@ -1,0 +1,16 @@
+﻿
+[ClassVersion("1.0.0.0"), FriendlyName("ArcGIS_EGDB")]
+class ArcGIS_EGDB : OMI_BaseResource
+{
+	[Key] String DatabaseServer;
+	[Key] String DatabaseName;
+	[Write, EmbeddedInstance("MSFT_Credential")] String ServerSiteAdministrator;
+	[Write, EmbeddedInstance("MSFT_Credential")] String DatabaseServerAdministrator;
+	[Write, EmbeddedInstance("MSFT_Credential")] String SDEUser;
+	[Write, EmbeddedInstance("MSFT_Credential")] String DatabaseUser;
+	[Write] Boolean IsManaged;
+	[Write] Boolean EnableGeodatabase;
+	[Write, ValueMap{"AzureSQLDatabase","SQLServerDatabase","AzurePostgreSQLDatabase","AzureMISQLDatabase"}] String DatabaseType;
+	[Write, ValueMap{"Present","Absent"}, Values{"Present","Absent"}] String Ensure;
+};
+

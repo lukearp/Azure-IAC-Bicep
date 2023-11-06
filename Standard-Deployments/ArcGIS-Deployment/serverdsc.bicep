@@ -7,14 +7,20 @@ param serverLicenseFile string
 param serviceUserName string
 @secure()
 param servicePassword string
-@secure()
-param selfsignedCertData string
+//@secure()
+//param selfsignedCertData string
 param externalDnsHostName string
-param deploymentPrefix string
+param storageAccountName string
 @secure()
 param storageKey string
 param storageSuffix string
+param networkInterfaceId string
+param keyVaultName string
+param cloudEnvironment string
 //param certName string
+
+var dscUrl = length(split(dscArchiveFile,'/')) > 0 ? dscArchiveFile : '${artifactsLocation}/${dscArchiveFile}${artifactSas}'
+var internalWildcard = '*.${reference(networkInterfaceId, '2023-04-01', 'FULL').properties.dnsSettings.internalDomainNameSuffix}'
 
 resource serverDsc 'Microsoft.Compute/virtualMachines/extensions@2023-03-01' = {
   name: '${vmName}/DSCConfiguration'
@@ -27,12 +33,15 @@ resource serverDsc 'Microsoft.Compute/virtualMachines/extensions@2023-03-01' = {
     settings: {
       wmfVersion: 'latest'
       configuration: {
-        url: '${artifactsLocation}/${dscArchiveFile}${artifactSas}'
+        url: dscUrl
         function: 'ServerConfiguration'
         script: 'ServerConfiguration.ps1'
       }
       configurationArguments: {
         ServiceCredentialIsDomainAccount: false
+        InternalDnsName: internalWildcard
+        azureCloud: cloudEnvironment
+        keyVaultName: keyVaultName
         //PublicKeySSLCertificateFileUrl: '${artifactsLocation}/${certName}${artifactSas}'
         ServerLicenseFileUrl: '${artifactsLocation}/${serverLicenseFile}${artifactSas}'
         ServerMachineNames: vmName
@@ -50,10 +59,10 @@ resource serverDsc 'Microsoft.Compute/virtualMachines/extensions@2023-03-01' = {
     }
     protectedSettings: {
       configurationArguments: {
-        ServerInternalCertificateData: selfsignedCertData
+      //  ServerInternalCertificateData: selfsignedCertData
       //  certPassword: certPass
         StorageAccountCredential: {
-          userName: '${substring('${deploymentPrefix}${replace(guid(subscription().id, resourceGroup().name, location), '-', '')}', 0, 23)}.${storageSuffix}'
+          userName: '${storageAccountName}.${storageSuffix}'
           password: storageKey
         }
         SiteAdministratorCredential: {

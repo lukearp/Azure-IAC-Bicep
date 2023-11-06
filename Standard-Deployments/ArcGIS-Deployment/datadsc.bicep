@@ -4,6 +4,7 @@ param location string
 param artifactsLocation string
 param artifactSas string
 param dscArchiveFile string
+param storageAccountName string
 param externalDnsHostName string
 param serviceUserName string
 @secure()
@@ -12,6 +13,8 @@ param deploymentPrefix string
 @secure()
 param storageKey string
 param storageSuffix string
+
+var dscUrl = length(split(dscArchiveFile,'/')) > 0 ? dscArchiveFile : '${artifactsLocation}/${dscArchiveFile}${artifactSas}'
 
 resource serverDsc 'Microsoft.Compute/virtualMachines/extensions@2023-03-01' = {
   name: '${vmName}/DSCConfiguration'
@@ -24,7 +27,7 @@ resource serverDsc 'Microsoft.Compute/virtualMachines/extensions@2023-03-01' = {
     settings: {
       wmfVersion: 'latest'
       configuration: {
-        url: '${artifactsLocation}/${dscArchiveFile}${artifactSas}'
+        url: dscUrl
         function: 'DataStoreConfiguration'
         script: 'DataStoreConfiguration.ps1'
       }
@@ -45,7 +48,7 @@ resource serverDsc 'Microsoft.Compute/virtualMachines/extensions@2023-03-01' = {
     protectedSettings: {
       configurationArguments: {
         StorageAccountCredential: {
-          userName: '${substring('${deploymentPrefix}${replace(guid(subscription().id, resourceGroup().name, location), '-', '')}', 0, 23)}.${storageSuffix}'
+          userName: '${storageAccountName}.${storageSuffix}'
           password: storageKey
         }
         SiteAdministratorCredential: {
