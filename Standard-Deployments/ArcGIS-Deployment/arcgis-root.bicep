@@ -190,11 +190,43 @@ module appGateway 'esri-appgw.bicep' = {
   ]
 }
 
+var azRegions = [
+  'eastus'
+  'eastus2'
+  'centralus'
+  'southcentralus'
+  'usgovvirginia'
+  'westus2'
+  'westus3'
+]
+
+var zones = []
+
+var zoneArray = contains(azRegions, location) ? zones == [] ? [
+  '1'
+  '2'
+  '3'
+] : zones : []
+
+module appGatewayPip '../../Modules/Microsoft.Network/publicIpAddresses/publicIpAddresses.bicep' = {
+  name: 'AppGateway-PublicIP'
+  params: {
+    name: 'Esri-${appGatewayName}-PIP'
+    location: location
+    publicIpAllocationMethod: 'Static'
+    sku: 'Standard'
+    publicIpAddressVersion: 'IPv4'
+    tier: 'Regional'
+    tags: tags
+    zones: zoneArray 
+  }
+}
+
 module DNSZone 'dnsZone.bicep' = {
   name: 'ExternalZone'
   params: {
     zoneName: externalDnsHostName
-    aRecordIp: appGateway.outputs.publicIp
+    aRecordIp: appGatewayPip.outputs.ipAddress
     aRecordName: '@'
     createARecord: true
     tags: tags
@@ -204,6 +236,9 @@ module DNSZone 'dnsZone.bicep' = {
 
 module server '../../Modules/Microsoft.Compute/virtualMachines/virtualMachines.bicep' = {
   name: 'Server-Deploy'
+  dependsOn: [
+    DNSZone
+  ]
   params: {
     adminPassword: keyvault.getSecret(adminPassword)
     adminUsername: adminUsername
@@ -262,6 +297,9 @@ module serverDsc 'serverdsc.bicep' = {
 
 module portal '../../Modules/Microsoft.Compute/virtualMachines/virtualMachines.bicep' = {
   name: 'Portal-Deploy'
+  dependsOn: [
+    DNSZone
+  ]
   params: {
     adminPassword: keyvault.getSecret(adminPassword)
     adminUsername: adminUsername
@@ -316,6 +354,9 @@ module portalDsc 'portaldsc.bicep' = {
 
 module data '../../Modules/Microsoft.Compute/virtualMachines/virtualMachines.bicep' = {
   name: 'Data-Deploy'
+  dependsOn: [
+    DNSZone
+  ]
   params: {
     adminPassword: keyvault.getSecret(adminPassword)
     adminUsername: adminUsername

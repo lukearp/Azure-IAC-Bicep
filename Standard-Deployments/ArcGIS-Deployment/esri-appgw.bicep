@@ -456,18 +456,8 @@ var backendHttpSettings = [
   }
 ]
 
-module appGatewayPip '../../Modules/Microsoft.Network/publicIpAddresses/publicIpAddresses.bicep' = {
-  name: 'AppGateway-PublicIP'
-  params: {
-    name: 'Esri-${name}-PIP'
-    location: location
-    publicIpAllocationMethod: 'Static'
-    sku: 'Standard'
-    publicIpAddressVersion: 'IPv4'
-    tier: 'Regional'
-    tags: tags
-    zones: zoneArray 
-  }
+resource appGatewayPip 'Microsoft.Network/publicIPAddresses@2023-05-01' existing = {
+  name: 'Esri-${name}-PIP'
 }
 
 var frontEndIpConfigs = [
@@ -484,7 +474,7 @@ var frontEndIpConfigs = [
       ]
       privateIPAllocationMethod: 'Dynamic'
       publicIPAddress: {
-        id: appGatewayPip.outputs.pipid
+        id: appGatewayPip.id
       }
     }
     type: 'Microsoft.Network/applicationGateways/frontendIPConfigurations'
@@ -567,4 +557,4 @@ resource appGateway 'Microsoft.Network/applicationGateways@2021-02-01' = {
   tags: tags
 }
 
-output publicIp string = appGatewayPip.outputs.ipAddress
+output publicIp string = appGatewayPip.properties.ipAddress
