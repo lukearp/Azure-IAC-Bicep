@@ -78,7 +78,7 @@ var serviceUserName = 'gis'
 var vnetName = substring('VN-${replace(guid(subscription().id, resourceGroup().name, AzureRegion), '-', '')}', 0, 15)
 var appGatewayName = 'AppGW-Esri'
 
-module keyVault 'keyvault.bicep' = if(environment().name == cloudEnvironment){
+module keyVault 'keyvault.bicep' = {
   name: 'KeyVault-Deploy'
   params: {
     deploymentPrefix: deploymentPrefix
@@ -88,7 +88,7 @@ module keyVault 'keyvault.bicep' = if(environment().name == cloudEnvironment){
   } 
 }
 
-module arcGisCore 'arcgis-root.bicep' = if(environment().name == cloudEnvironment) {
+module arcGisCore 'arcgis-root.bicep' = {
   name: 'Core-ArcGis-Deploy'
   params: {
     adminPassword: keyVault.outputs.adminPasswordName
@@ -125,5 +125,3 @@ module arcGisCore 'arcgis-root.bicep' = if(environment().name == cloudEnvironmen
     tags: tags                             
   } 
 }
-
-output result string = environment().name == cloudEnvironment ? 'Azure Region Matches Azure Cloud' : 'Azure Region Does Not Match Azure Cloud'
