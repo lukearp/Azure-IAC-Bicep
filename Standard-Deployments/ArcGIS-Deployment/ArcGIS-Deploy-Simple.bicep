@@ -3,8 +3,8 @@
 param deploymentPrefix string = 'esri'
 @description('User Object ID that is deploying the ARM Template.  This is for KeyVault RBAC Assignment')
 param userObjectId string
-@description('Azure Region to deploy')
-param location string
+@description('Azure Region to deploy. Example: eastus')
+param AzureRegion string
 @allowed([
   'AzureCloud'
   'AzureUSGovernment'
@@ -70,25 +70,25 @@ param tags object = {}
 
 var storageSuffix = cloudEnvironment == 'AzureCloud' ? 'blob.core.windows.net' : 'blob.core.usgovcloudapi.net'
 var portalLicenseUserTypeId = 'creatorUT'
-var keyVaultName = substring('KV-${replace(guid(subscription().id, resourceGroup().name, location), '-', '')}', 0, 15)
+var keyVaultName = substring('KV-${replace(guid(subscription().id, resourceGroup().name, AzureRegion), '-', '')}', 0, 15)
 var dscArchiveFile = 'https://github.com/lukearp/Azure-IAC-Bicep/releases/download/DSC/ArcGIS-DSC-11.1.zip'
 var virtualMachineSize = 'Standard_D4ads_v5'
 var adminUsername = 'localadmin'
 var serviceUserName = 'gis'
-var vnetName = substring('VN-${replace(guid(subscription().id, resourceGroup().name, location), '-', '')}', 0, 15)
+var vnetName = substring('VN-${replace(guid(subscription().id, resourceGroup().name, AzureRegion), '-', '')}', 0, 15)
 var appGatewayName = 'AppGW-Esri'
 
-module keyVault 'keyvault.bicep' = {
+module keyVault 'keyvault.bicep' = if(environment().name == cloudEnvironment){
   name: 'KeyVault-Deploy'
   params: {
     deploymentPrefix: deploymentPrefix
     keyVaultName: keyVaultName
-    location: location
+    location: AzureRegion
     userObjectId: userObjectId    
   } 
 }
 
-module arcGisCore 'arcgis-root.bicep' = {
+module arcGisCore 'arcgis-root.bicep' = if(environment().name == cloudEnvironment) {
   name: 'Core-ArcGis-Deploy'
   params: {
     adminPassword: keyVault.outputs.adminPasswordName
@@ -106,7 +106,7 @@ module arcGisCore 'arcgis-root.bicep' = {
     imageSku: imageSku
     internalCertName: keyVault.outputs.internalName
     keyVaultName: keyVaultName
-    location: location
+    location: AzureRegion
     osDiskType: osDiskType
     portalLicenseFileName: portalLicenseFileName
     portalLicenseUserTypeId: portalLicenseUserTypeId
@@ -125,3 +125,5 @@ module arcGisCore 'arcgis-root.bicep' = {
     tags: tags                             
   } 
 }
+
+output result string = environment().name == cloudEnvironment ? 'Azure Region Matches Azure Cloud' : 'Azure Region Does Not Match Azure Cloud'
