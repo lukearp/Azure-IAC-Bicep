@@ -1,4 +1,5 @@
 param vmName string
+param name string = 'CustomScriptExtension'
 param scriptName string
 param arguments string
 param fileUri string
@@ -39,7 +40,7 @@ var protectedSettings = storageAccountName == '' ? {
 
 resource extension 'Microsoft.Compute/virtualMachines/extensions@2023-07-01' = {
   parent: vm
-  name: 'Script'
+  name: name
   location: location
   properties: {
     publisher: publisher
