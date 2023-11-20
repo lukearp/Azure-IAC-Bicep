@@ -76,11 +76,22 @@ module init 'init-cfg.bicep' = {
   name: 'Build-Init-cfg'
 }
 
-var trustSubnetAddress = split(split(reference(concat(vnet.id, '/subnets/', trustSubnetName),'2020-11-01', 'Full').properties.addressPrefix,'/')[0],'.')
+resource trustSubnet 'Microsoft.Network/virtualNetworks/subnets@2023-05-01' existing = {
+  parent: vnet
+  name: trustSubnetName 
+}
+
+resource untrustSubnet 'Microsoft.Network/virtualNetworks/subnets@2023-05-01' existing = {
+  parent: vnet
+  name: untrustSubnetName 
+}
+
+var trustSubnetAddress = split(split(trustSubnet.properties.addressPrefixes[0],'/')[0],'.')
 var trustDefaultGateway = concat(trustSubnetAddress[0],'.',trustSubnetAddress[1],'.',trustSubnetAddress[2],'.',string(int(trustSubnetAddress[3])+1))
 
-var untrustSubnetAddress = split(split(reference(concat(vnet.id, '/subnets/', untrustSubnetName),'2020-11-01', 'Full').properties.addressPrefix,'/')[0],'.')
+var untrustSubnetAddress = split(split(untrustSubnet.properties.addressPrefixes[0],'/')[0],'.')
 var untrustDefaultGateway = concat(untrustSubnetAddress[0],'.',untrustSubnetAddress[1],'.',untrustSubnetAddress[2],'.',string(int(untrustSubnetAddress[3])+1))
+
 module bootstrapXml 'bootstrapxml.bicep' = {
   name: 'Build-BootstrapConfig'
   params: {
@@ -117,7 +128,225 @@ var zones = location == 'eastus' || location == 'eastus2' || location == 'centra
   '3'
 ] : []
 
-var zoneLb = zones == [] ? false : true
+var zoneLb = zones == [] ? {
+  upgradePolicy: {
+    mode: 'Rolling'
+    automaticOSUpgradePolicy: {
+      enableAutomaticOSUpgrade: false 
+    } 
+    rollingUpgradePolicy: {
+      prioritizeUnhealthyInstances: true 
+    }  
+  } 
+  virtualMachineProfile: { 
+    osProfile: {
+      computerNamePrefix: paloNamePrefix 
+      adminUsername: adminUserName
+      adminPassword: adminPasswordSecret 
+      linuxConfiguration: {}
+      customData: base64(customData)  
+    }
+    networkProfile: {
+      healthProbe: {
+        id: resourceId('Microsoft.Network/loadBalancers/probes', concat('Palo-Trust-',paloNamePrefix), 'trust') 
+      } 
+      networkInterfaceConfigurations: [
+        {
+          name: 'mgmt-nic'
+          properties: {
+            ipConfigurations: [
+              {
+                name: 'mgmt'
+                properties: {
+                  subnet: {
+                    id: concat(vnet.id, '/subnets/', managementSubnetName)
+                  }
+                  loadBalancerBackendAddressPools: [
+                    {
+                      id: concat(trustLb.id,'/backendAddressPools/mgmt') 
+                    } 
+                  ] 
+                }
+              }
+            ]              
+            primary: true 
+          } 
+        }
+        {
+          name: 'untrust-nic'
+          properties: {
+            enableIPForwarding: true 
+            enableAcceleratedNetworking: true 
+            ipConfigurations: [
+              {
+                name: 'trust'
+                properties: {
+                  subnet: {
+                    id: concat(vnet.id, '/subnets/', untrustSubnetName)
+                  }
+                  loadBalancerBackendAddressPools: [
+                    {
+                      id: concat(untrustLb.id,'/backendAddressPools/untrust') 
+                    } 
+                  ]  
+                }
+              }
+            ]
+          }
+        }
+        {
+          name: 'trust-nic'
+          properties: {
+            enableIPForwarding: true
+            enableAcceleratedNetworking: true 
+            ipConfigurations: [
+              {
+                name: 'trust'
+                properties: {
+                  subnet: {
+                    id: concat(vnet.id, '/subnets/', trustSubnetName)
+                  }
+                  loadBalancerBackendAddressPools: [
+                    {
+                      id: concat(trustLb.id,'/backendAddressPools/trust') 
+                    } 
+                  ] 
+                }
+              }
+            ]
+          }
+        }
+      ]   
+    }
+    storageProfile: {
+      imageReference: {
+        publisher: 'paloaltonetworks'
+        offer: planOffer
+        sku: plan
+        version: imageVersion     
+      }
+      osDisk: {
+        createOption: 'FromImage' 
+      }  
+    }
+    diagnosticsProfile: {
+      bootDiagnostics: {
+        enabled: true
+        storageUri: bootstrapStorage.properties.primaryEndpoints.blob  
+      } 
+    }       
+  }    
+} : {
+  upgradePolicy: {
+    mode: 'Rolling'
+    automaticOSUpgradePolicy: {
+      enableAutomaticOSUpgrade: false 
+    } 
+    rollingUpgradePolicy: {
+      prioritizeUnhealthyInstances: true
+      enableCrossZoneUpgrade: true  
+    }  
+  } 
+  zoneBalance: true
+  virtualMachineProfile: { 
+    osProfile: {
+      computerNamePrefix: paloNamePrefix 
+      adminUsername: adminUserName
+      adminPassword: adminPasswordSecret 
+      linuxConfiguration: {}
+      customData: base64(customData)  
+    }
+    networkProfile: {
+      healthProbe: {
+        id: resourceId('Microsoft.Network/loadBalancers/probes', concat('Palo-Trust-',paloNamePrefix), 'trust') 
+      } 
+      networkInterfaceConfigurations: [
+        {
+          name: 'mgmt-nic'
+          properties: {
+            ipConfigurations: [
+              {
+                name: 'mgmt'
+                properties: {
+                  subnet: {
+                    id: concat(vnet.id, '/subnets/', managementSubnetName)
+                  }
+                  loadBalancerBackendAddressPools: [
+                    {
+                      id: concat(trustLb.id,'/backendAddressPools/mgmt') 
+                    } 
+                  ] 
+                }
+              }
+            ]              
+            primary: true 
+          } 
+        }
+        {
+          name: 'untrust-nic'
+          properties: {
+            enableIPForwarding: true 
+            enableAcceleratedNetworking: true 
+            ipConfigurations: [
+              {
+                name: 'trust'
+                properties: {
+                  subnet: {
+                    id: concat(vnet.id, '/subnets/', untrustSubnetName)
+                  }
+                  loadBalancerBackendAddressPools: [
+                    {
+                      id: concat(untrustLb.id,'/backendAddressPools/untrust') 
+                    } 
+                  ]  
+                }
+              }
+            ]
+          }
+        }
+        {
+          name: 'trust-nic'
+          properties: {
+            enableIPForwarding: true
+            enableAcceleratedNetworking: true 
+            ipConfigurations: [
+              {
+                name: 'trust'
+                properties: {
+                  subnet: {
+                    id: concat(vnet.id, '/subnets/', trustSubnetName)
+                  }
+                  loadBalancerBackendAddressPools: [
+                    {
+                      id: concat(trustLb.id,'/backendAddressPools/trust') 
+                    } 
+                  ] 
+                }
+              }
+            ]
+          }
+        }
+      ]   
+    }
+    storageProfile: {
+      imageReference: {
+        publisher: 'paloaltonetworks'
+        offer: planOffer
+        sku: plan
+        version: imageVersion     
+      }
+      osDisk: {
+        createOption: 'FromImage' 
+      }  
+    }
+    diagnosticsProfile: {
+      bootDiagnostics: {
+        enabled: true
+        storageUri: bootstrapStorage.properties.primaryEndpoints.blob  
+      } 
+    }       
+  }    
+}
 
 resource paloAltoSet 'Microsoft.Compute/virtualMachineScaleSets@2020-12-01' = {
   name: paloNamePrefix
@@ -137,117 +366,7 @@ resource paloAltoSet 'Microsoft.Compute/virtualMachineScaleSets@2020-12-01' = {
   }
   zones: zones 
   tags: tags 
-  properties: {
-    upgradePolicy: {
-      mode: 'Rolling'
-      automaticOSUpgradePolicy: {
-        enableAutomaticOSUpgrade: false 
-      } 
-      rollingUpgradePolicy: {
-        prioritizeUnhealthyInstances: true
-        enableCrossZoneUpgrade: true  
-      }  
-    } 
-    zoneBalance: zoneLb
-    virtualMachineProfile: { 
-      osProfile: {
-        computerNamePrefix: paloNamePrefix 
-        adminUsername: adminUserName
-        adminPassword: adminPasswordSecret 
-        linuxConfiguration: {}
-        customData: base64(customData)  
-      }
-      networkProfile: {
-        healthProbe: {
-          id: resourceId('Microsoft.Network/loadBalancers/probes', concat('Palo-Trust-',paloNamePrefix), 'trust') 
-        } 
-        networkInterfaceConfigurations: [
-          {
-            name: 'mgmt-nic'
-            properties: {
-              ipConfigurations: [
-                {
-                  name: 'mgmt'
-                  properties: {
-                    subnet: {
-                      id: concat(vnet.id, '/subnets/', managementSubnetName)
-                    }
-                    loadBalancerBackendAddressPools: [
-                      {
-                        id: concat(trustLb.id,'/backendAddressPools/mgmt') 
-                      } 
-                    ] 
-                  }
-                }
-              ]              
-              primary: true 
-            } 
-          }
-          {
-            name: 'untrust-nic'
-            properties: {
-              enableIPForwarding: true 
-              enableAcceleratedNetworking: true 
-              ipConfigurations: [
-                {
-                  name: 'trust'
-                  properties: {
-                    subnet: {
-                      id: concat(vnet.id, '/subnets/', untrustSubnetName)
-                    }
-                    loadBalancerBackendAddressPools: [
-                      {
-                        id: concat(untrustLb.id,'/backendAddressPools/untrust') 
-                      } 
-                    ]  
-                  }
-                }
-              ]
-            }
-          }
-          {
-            name: 'trust-nic'
-            properties: {
-              enableIPForwarding: true
-              enableAcceleratedNetworking: true 
-              ipConfigurations: [
-                {
-                  name: 'trust'
-                  properties: {
-                    subnet: {
-                      id: concat(vnet.id, '/subnets/', trustSubnetName)
-                    }
-                    loadBalancerBackendAddressPools: [
-                      {
-                        id: concat(trustLb.id,'/backendAddressPools/trust') 
-                      } 
-                    ] 
-                  }
-                }
-              ]
-            }
-          }
-        ]   
-      }
-      storageProfile: {
-        imageReference: {
-          publisher: 'paloaltonetworks'
-          offer: planOffer
-          sku: plan
-          version: imageVersion     
-        }
-        osDisk: {
-          createOption: 'FromImage' 
-        }  
-      }
-      diagnosticsProfile: {
-        bootDiagnostics: {
-          enabled: true
-          storageUri: bootstrapStorage.properties.primaryEndpoints.blob  
-        } 
-      }       
-    }    
-  }   
+  properties: zoneLb  
 }
 
 resource publicIp 'Microsoft.Network/publicIPAddresses@2020-11-01' = {
