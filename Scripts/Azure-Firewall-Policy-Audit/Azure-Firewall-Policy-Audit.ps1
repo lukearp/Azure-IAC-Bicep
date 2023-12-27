@@ -31,10 +31,17 @@ foreach($policy in $firewallPolicies)
             {
                 $sourceAddressPrefixes = @()
                 $destAddressPrefixes = @()
-                $source = ""
-                $destination = ""
-                if($rule.SourceIpGroups.Count -gt 0) {   
-                    $source = $rule.SourceIpGroups.split("/")[8] -join ";"                 
+                $source =  @()
+                foreach($sourceIpGroup in $rule.SourceIpGroups)
+                {
+                    $source += $sourceIpGroup.split("/")[8]
+                }
+                $destination = @()
+                foreach($destinationIpGroup in $rule.DestinationIPGroup)
+                {
+                    $destination += destinationIpGroup.split("/")[8]
+                }
+                if($rule.SourceIpGroups.Count -gt 0) {                                    
                     foreach($group in $rule.SourceIpGroups)
                     {
                         $sourceAddressPrefixes += ($ipGroupFull | ?{$_.name -eq $group.split("/")[8]}).ipAddresses
@@ -43,7 +50,7 @@ foreach($policy in $firewallPolicies)
                     $sourceAddressPrefixes = $rule.SourceAddresses
                 }
                 if($rule.DestinationIpGroups.Count -gt 0) {  
-                    $destination = $rule.DestinationIpGroups.split("/")[8] -join ";"                  
+                                      
                     foreach($group in $rule.DestinationIpGroups)
                     {
                         $destAddressPrefixes += ($ipGroupFull | ?{$_.name -eq $group.split("/")[8]}).ipAddresses
@@ -51,7 +58,7 @@ foreach($policy in $firewallPolicies)
                 } else {
                     $destAddressPrefixes = $rule.DestinationAddresses
                 }
-                Add-Content -Path $csvPath -Value "$($collection.Name),$($collection.Priority),$($ruleGroup.Id.split("/")[10]),$($fullRuleGroup.Properties.Priority),$($rule.name),$($source),$($sourceAddressPrefixes -join ";"),$($destination),$($destAddressPrefixes -join ";"),$($rule.DestinationPorts -join ";"),$($collection.Action.Type)"
+                Add-Content -Path $csvPath -Value "$($collection.Name),$($collection.Priority),$($ruleGroup.Id.split("/")[10]),$($fullRuleGroup.Properties.Priority),$($rule.name),$($source -join ";"),$($sourceAddressPrefixes -join ";"),$($destination -join ";"),$($destAddressPrefixes -join ";"),$($rule.DestinationPorts -join ";"),$($collection.Action.Type)"
             }
         }
     }
