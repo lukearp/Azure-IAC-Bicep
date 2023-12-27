@@ -2,7 +2,7 @@ param (
     [string]$localPath
 )
 
-$ipGroups = Get-AzResource -ResourceType "Microsoft.Network/ipGroups" | ?{$_.ResourceId.Split("/") -contains (Get-AzContext).Subscription.Id}
+$ipGroups = Get-AzResource -ResourceType "Microsoft.Network/ipGroups" | ?{$_.ResourceId.Split("/")}
 $ipGroupFull = @()
 foreach($group in $ipGroups)
 {
