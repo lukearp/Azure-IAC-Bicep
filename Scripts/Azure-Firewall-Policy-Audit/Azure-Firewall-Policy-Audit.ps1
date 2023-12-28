@@ -23,7 +23,7 @@ foreach ($sub in $($subscriptions | Select -Unique)) {
     }
 }
 
-$firewallPolicies = Get-AzResource -ResourceType "Microsoft.Network/firewallPolicies" 
+$firewallPolicies = Search-AzGraph -Query "resources | where type =~ `"Microsoft.Network/firewallPolicies`"" -First $maxIpGroups
 $resourceIds = $firewallPolicies.ResourceId
 $subscriptions = @()
 foreach ($resourceId in $resourceIds) {
@@ -37,7 +37,7 @@ foreach ($sub in $($subscriptions | Select -Unique)) {
     foreach ($policy in $firewallPolicies) {
         $csvPath = "$($localPath)\$($policy.Name)_$($csvSuffix)_$($count).csv"
         Add-Content -Path $csvPath -Value "RuleCollection,CollectionPriority,CollectionGroup,GroupPriority,RuleName,SourceIPGroup,SourceIPs,DestinationIPGroup,DestinationIPs,DestinationPort,Action"
-        $fullPolicy = Get-AzFirewallPolicy -Name $policy.Name -ResourceGroupName $policy.ResourceGroupName
+        $fullPolicy = Get-AzFirewallPolicy -Name $policy.Name -ResourceGroupName $policy.ResourceGroup
         foreach ($ruleGroup in $fullPolicy.RuleCollectionGroups) {
             $fullRuleGroup = Get-AzFirewallPolicyRuleCollectionGroup -Name $ruleGroup.Id.Split("/")[10] -ResourceGroupName $ruleGroup.Id.Split("/")[4] -AzureFirewallPolicyName $policy.Name
             foreach ($collection in $fullRuleGroup.Properties.RuleCollection | Sort-object Priority) {
