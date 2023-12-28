@@ -1,8 +1,9 @@
 param (
-    [string]$localPath
+    [string]$localPath,
+    [int]$maxIpGroups = 1000
 )
 
-$ipGroups = Search-AzGraph -Query "resources | where type =~ `"Microsoft.Network/ipGroups`""
+$ipGroups = Search-AzGraph -Query "resources | where type =~ `"Microsoft.Network/ipGroups`"" -First $maxIpGroups
 $resourceIds = $ipGroups.ResourceId
 $subscriptions = @()
 foreach ($resourceId in $resourceIds) {
