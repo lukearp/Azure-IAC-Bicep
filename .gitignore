@@ -1,4 +1,6 @@
 *.json
 Test-Functions/*
+Azure-Functions/*
 *.zip
 Kube-Deployments/*
+Scripts/Environment-Health-Checks/*.log

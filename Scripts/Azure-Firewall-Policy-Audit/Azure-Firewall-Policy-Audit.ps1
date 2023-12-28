@@ -11,7 +11,7 @@ foreach ($resourceId in $resourceIds) {
 $ipGroupFull = @()
 foreach ($sub in $($subscriptions | Select -Unique)) {
     Select-AzSubscription -Subscription $sub
-    foreach ($group in $ipGroups) {
+    foreach ($group in $($ipGroups | ?{$_.ResourceId -like "*/$($sub)/*"})) {
         $fullGroup = $null
         $fullGroup = Get-AzIpGroup -Name $group.Name -ResourceGroupName $group.ResourceGroupName
         $ipGroupFull += New-Object -TypeName psobject -Property @{
