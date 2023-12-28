@@ -14,12 +14,12 @@ foreach($ipGroup in $ipGroups)
 {
     $resourceId = $null
     
-    $resourceId = Get-AzResource -Name $ipGroup -ResourceType "Microsoft.Network/ipGroups" #Get-AzIpGroup -Name $ipGroup -ResourceGroupName $resourceGroup -ErrorAction SilentlyContinue
-    if($null -eq $resourceId)
+    $resourceId = Search-AzGraph -Query "resources | where type =~ `"Microsoft.Network/ipGroups`" and name =~ `"$($ipGroup)`"" #Get-AzIpGroup -Name $ipGroup -ResourceGroupName $resourceGroup -ErrorAction SilentlyContinue
+    if("" -eq $resourceId)
     {
         $resourceId = Get-AzResource -Name $ipGroup.Replace("_","-") -ResourceType "Microsoft.Network/ipGroups" #Get-AzIpGroup -name $ipGroup.Replace("_","-") -ResourceGroupName $resourceGroup
     } 
-    $firewallPolicyTemplate.parameters."ipGroups_$($ipGroup)_externalid" | Add-Member -MemberType NoteProperty -Name "defaultValue" -Value $resourceId.Id 
+    $firewallPolicyTemplate.parameters."ipGroups_$($ipGroup)_externalid" | Add-Member -MemberType NoteProperty -Name "defaultValue" -Value $resourceId.ResourceId 
 }
 $count = 0
 $groups = @()

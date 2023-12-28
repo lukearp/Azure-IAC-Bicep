@@ -69,7 +69,7 @@ foreach ($sub in $($subscriptions | Select -Unique)) {
                     else {
                         $destAddressPrefixes = $rule.DestinationAddresses
                     }
-                    Add-Content -Path $csvPath -Value "$($collection.Name),$($collection.Priority),$($ruleGroup.Id.split("/")[10]),$($fullRuleGroup.Properties.Priority),$($rule.name),$($source -join ";"),$($sourceAddressPrefixes -join ";"),$($destination -join ";"),$($destAddressPrefixes -join ";"),$($rule.DestinationPorts -join ";"),$($collection.Action.Type)"
+                    Add-Content -Path $csvPath -Value "$($collection.Name),$($collection.Priority),$($ruleGroup.Id.split("/")[10]),$($fullRuleGroup.Properties.Priority),$($rule.name.Replace(",","_")),$($source -join ";"),$($sourceAddressPrefixes -join ";"),$($destination -join ";"),$($destAddressPrefixes -join ";"),$($rule.DestinationPorts -join ";"),$($collection.Action.Type)"
                 }
             }
         }
