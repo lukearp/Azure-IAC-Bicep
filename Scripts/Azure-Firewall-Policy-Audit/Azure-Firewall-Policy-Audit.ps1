@@ -2,7 +2,7 @@ param (
     [string]$localPath
 )
 
-$ipGroups = Get-AzResource -ResourceType "Microsoft.Network/ipGroups" | ?{$_.ResourceId.Split("/")}
+$ipGroups = Get-AzResource -ResourceType "Microsoft.Network/ipGroups"
 $ipGroupFull = @()
 foreach($group in $ipGroups)
 {
@@ -37,9 +37,9 @@ foreach($policy in $firewallPolicies)
                     $source += $sourceIpGroup.split("/")[8]
                 }
                 $destination = @()
-                foreach($destinationIpGroup in $rule.DestinationIPGroup)
+                foreach($destinationIpGroup in $rule.DestinationIPGroups)
                 {
-                    $destination += destinationIpGroup.split("/")[8]
+                    $destination += $destinationIpGroup.split("/")[8]
                 }
                 if($rule.SourceIpGroups.Count -gt 0) {                                    
                     foreach($group in $rule.SourceIpGroups)
