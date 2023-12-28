@@ -2,7 +2,7 @@ param (
     [string]$localPath
 )
 
-$ipGroups = Get-AzResource -ResourceType "Microsoft.Network/ipGroups"
+$ipGroups = Search-AzGraph -Query "resources | where type =~ `"Microsoft.Network/ipGroups`""
 $resourceIds = $ipGroups.ResourceId
 $subscriptions = @()
 foreach ($resourceId in $resourceIds) {
