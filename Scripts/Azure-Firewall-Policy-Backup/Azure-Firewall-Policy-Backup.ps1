@@ -5,8 +5,8 @@ param (
 
 $resourceGroup = $firewallPolicyId.Split("/")[4]
 $policyName = $firewallPolicyId.Split("/")[8]
-Export-AzResourceGroup -ResourceGroupName $resourceGroup -Resource $firewallPolicyId -Path ".\$($fileName)" #$eventGridEvent.data.resourceUri
-$firewallPolicyTemplate = ConvertFrom-Json -InputObject $((Get-Content -Path "./$($fileName)") -join "")
+Export-AzResourceGroup -ResourceGroupName $resourceGroup -Resource $firewallPolicyId -Path "$($PSScriptRoot)\$($fileName)" #$eventGridEvent.data.resourceUri
+$firewallPolicyTemplate = ConvertFrom-Json -InputObject $((Get-Content -Path "$($PSScriptRoot)\$($fileName)") -join "")
 $firewallPolicyTemplate.parameters.firewallPolicies_Parent_Policy_name | Add-Member -MemberType Noteproperty -Name "defaultValue" -Value $policyName
 $ipGroups = @()
 $ipGroups += ($firewallPolicyTemplate.parameters | Get-Member | ?{$_.MemberType -eq "NoteProperty" -and $_.Name -like "ipGroups_*_externalid"}).Name.Split("ipGroups_")[1].Split("_externalid")[0]
@@ -14,10 +14,10 @@ foreach($ipGroup in $ipGroups)
 {
     $resourceId = $null
     
-    $resourceId = Get-AzIpGroup -Name $ipGroup -ResourceGroupName $resourceGroup -ErrorAction SilentlyContinue
+    $resourceId = Get-AzResource -Name $ipGroup -ResourceType "Microsoft.Network/ipGroups" #Get-AzIpGroup -Name $ipGroup -ResourceGroupName $resourceGroup -ErrorAction SilentlyContinue
     if($null -eq $resourceId)
     {
-        $resourceId = Get-AzIpGroup -name $ipGroup.Replace("_","-") -ResourceGroupName $resourceGroup
+        $resourceId = Get-AzResource -Name $ipGroup.Replace("_","-") -ResourceType "Microsoft.Network/ipGroups" #Get-AzIpGroup -name $ipGroup.Replace("_","-") -ResourceGroupName $resourceGroup
     } 
     $firewallPolicyTemplate.parameters."ipGroups_$($ipGroup)_externalid" | Add-Member -MemberType NoteProperty -Name "defaultValue" -Value $resourceId.Id 
 }
@@ -35,4 +35,4 @@ foreach($ruleGroup in $firewallPolicyTemplate.resources | ?{$_.type -eq "Microso
     $count++
 }
 
-ConvertTo-Json -InputObject $firewallPolicyTemplate -Depth 100 | Out-File ".\$($fileName)"
+ConvertTo-Json -InputObject $firewallPolicyTemplate -Depth 100 | Out-File "$($PSScriptRoot)\$($fileName)"
