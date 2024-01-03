@@ -1,6 +1,18 @@
 *.json
+!Azure-Functions/Automatic-FirewallPolicy-Backup/*.json
+!Azure-Functions/Automatic-FirewallPolicy-Backup/Firewall-Backup/*.json
 Test-Functions/*
-Azure-Functions/*
 *.zip
 Kube-Deployments/*
 Scripts/Environment-Health-Checks/*.log
+
+# Azure Functions artifacts
+bin
+obj
+appsettings.json
+local.settings.json
+
+# Azurite artifacts
+__blobstorage__
+__queuestorage__
+__azurite_db*__.json
