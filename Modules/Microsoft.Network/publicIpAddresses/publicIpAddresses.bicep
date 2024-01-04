@@ -39,4 +39,4 @@ resource pip 'Microsoft.Network/publicIPAddresses@2020-11-01' = {
 }
 
 output pipid string = pip.id
-output ipAddress string = pip.properties.ipAddress
+//output ipAddress string = pip.properties.ipAddress

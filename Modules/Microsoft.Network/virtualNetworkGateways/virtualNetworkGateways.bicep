@@ -109,12 +109,21 @@ var ipConfigs = active_active == true && toLower(gatewayType) == 'vpn' && useExi
   }
 ]
 
-var gatewayProperties = toLower(gatewayType) == 'vpn' ? {
+var gatewayProperties = toLower(gatewayType) == 'vpn' ? gatewaySku != 'Basic' ? {
   activeActive: active_active
   enableBgp: true 
   bgpSettings: {
     asn: asn
   }
+  ipConfigurations: ipConfigs 
+  gatewayType: gatewayType
+  sku:{
+     name: gatewaySku
+     tier: gatewaySku 
+  }
+  vpnType: vpnType       
+} : {
+  activeActive: active_active
   ipConfigurations: ipConfigs 
   gatewayType: gatewayType
   sku:{
@@ -129,7 +138,7 @@ var gatewayProperties = toLower(gatewayType) == 'vpn' ? {
      name: gatewaySku
      tier: gatewaySku 
   }
-}
+} 
 
 var pipSku = active_active == true && contains(gatewaySku, 'AZ') ? 'Standard': 'Basic'
 var pipAllocationMethod = active_active == true && contains(gatewaySku, 'AZ') ? 'Static' : 'Dynamic'
