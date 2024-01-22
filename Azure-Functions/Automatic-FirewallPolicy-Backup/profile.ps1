@@ -12,6 +12,12 @@
 # Authenticate with Azure PowerShell using MSI.
 # Remove this if you are not planning on using MSI or Azure PowerShell.
 if ($env:MSI_SECRET) {
+    # $commands = Get-Command -Module 'Az.ResourceGraph' -CommandType 'Cmdlet'
+    # if($commands.count -eq 0)
+    # {
+    #     Install-Module -Name Az.ResourceGraph -Force -Confirm:$false
+    # }
+    #Import-Module -Name Az.ResourceGraph
     Disable-AzContextAutosave -Scope Process | Out-Null
     Connect-AzAccount -Identity
 }

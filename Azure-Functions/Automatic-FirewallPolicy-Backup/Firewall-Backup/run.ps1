@@ -1,11 +1,18 @@
 param($eventGridEvent, $TriggerMetadata)
 
 # Set Vars
-$ContainerName = ""
-$StorageAccountName = ""
-$StorageAccountResourceGroupName = "" 
+# $ContainerName = ""
+# $StorageAccountName = ""
+# $StorageAccountResourceGroupName = "" 
+# $testing = $true
+# $testFirewallPolicyId = ""
+
+
+$ContainerName = "firewall"
+$StorageAccountName = "lukecslukeint" #"eastusnetworkingsa"
+$StorageAccountResourceGroupName = "cloud-shell" #"EASTUS-CORE-NETWORKING-RG"
 $testing = $true
-$testFirewallPolicyId = ""
+$testFirewallPolicyId = "/subscriptions/32eb88b4-4029-4094-85e3-ec8b7ce1fc00/resourceGroups/firewall-policies/providers/Microsoft.Network/firewallPolicies/Parent-Policy"
 
 # Make sure to pass hashtables to Out-String so they're logged correctly
 $firewallPolicyId = ""
@@ -35,10 +42,12 @@ foreach($ipGroup in $ipGroups)
 {
     $resourceId = $null
     $ipGroupName = $ipGroup.Name.Split("ipGroups_")[1].Split("_externalid")[0]
-    $resourceId = Get-AzIpGroup -Name $ipGroupName -ResourceGroupName $resourceGroup -ErrorAction SilentlyContinue
+    $graphQuery = "resources | where type == `"microsoft.network/ipgroups`" | where name =~ `"$($ipGroupName)`" | project id"
+    $resourceId = Search-AzGraph -Query $graphQuery
     if($null -eq $resourceId)
     {
-        $resourceId = Get-AzIpGroup -name $ipGroupName.Replace("_","-") -ResourceGroupName $resourceGroup
+        $graphQuery = "resources | where type == `"microsoft.network/ipgroups`" | where name =~ `"$($ipGroupName.Replace("_","-"))`" | project id"
+        $resourceId = Search-AzGraph -Query $graphQuery    
     } 
     $firewallPolicyTemplate.parameters."ipGroups_$($ipGroupName)_externalid" | Add-Member -MemberType NoteProperty -Name "defaultValue" -Value $resourceId.id
 }
