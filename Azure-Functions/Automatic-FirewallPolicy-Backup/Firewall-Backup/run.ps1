@@ -7,13 +7,6 @@ param($eventGridEvent, $TriggerMetadata)
 # $testing = $true
 # $testFirewallPolicyId = ""
 
-
-$ContainerName = "firewall"
-$StorageAccountName = "lukecslukeint" #"eastusnetworkingsa"
-$StorageAccountResourceGroupName = "cloud-shell" #"EASTUS-CORE-NETWORKING-RG"
-$testing = $true
-$testFirewallPolicyId = "/subscriptions/32eb88b4-4029-4094-85e3-ec8b7ce1fc00/resourceGroups/firewall-policies/providers/Microsoft.Network/firewallPolicies/Parent-Policy"
-
 # Make sure to pass hashtables to Out-String so they're logged correctly
 $firewallPolicyId = ""
 if($testing -eq $false) {
