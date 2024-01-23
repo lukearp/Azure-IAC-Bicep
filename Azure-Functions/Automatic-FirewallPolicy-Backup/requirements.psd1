@@ -3,6 +3,9 @@
 #
 @{
     # For latest supported version, go to 'https://www.powershellgallery.com/packages/Az'. Uncomment the next line and replace the MAJOR_VERSION, e.g., 'Az' = '5.*'
-    'Az' = '11.*'
-    'Az.ResourceGraph' = '0.*'
+    'Az.Accounts' = '2.13.1'
+    'Az.Network' = '6.1.1'
+    'Az.Storage' = '5.9.0'
+    'Az.ResourceGraph' = '0.13.0'
+    'Az.Resources' = '6.9.0'
 }

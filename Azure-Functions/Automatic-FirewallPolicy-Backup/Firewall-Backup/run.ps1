@@ -1,11 +1,11 @@
 param($eventGridEvent, $TriggerMetadata)
 
 # Set Vars
-# $ContainerName = ""
-# $StorageAccountName = ""
-# $StorageAccountResourceGroupName = "" 
-# $testing = $true
-# $testFirewallPolicyId = ""
+$ContainerName = ""
+$StorageAccountName = ""
+$StorageAccountResourceGroupName = "" 
+$testing = $true
+$testFirewallPolicyId = ""
 
 # Make sure to pass hashtables to Out-String so they're logged correctly
 $firewallPolicyId = ""
