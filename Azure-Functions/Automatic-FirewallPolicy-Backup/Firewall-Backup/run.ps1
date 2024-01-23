@@ -37,7 +37,7 @@ foreach($ipGroup in $ipGroups)
     $ipGroupName = $ipGroup.Name.Split("ipGroups_")[1].Split("_externalid")[0]
     $graphQuery = "resources | where type == `"microsoft.network/ipgroups`" | where name =~ `"$($ipGroupName)`" | project id"
     $resourceId = Search-AzGraph -Query $graphQuery
-    if($null -eq $resourceId)
+    if("" -eq $resourceId)
     {
         $graphQuery = "resources | where type == `"microsoft.network/ipgroups`" | where name =~ `"$($ipGroupName.Replace("_","-"))`" | project id"
         $resourceId = Search-AzGraph -Query $graphQuery    
