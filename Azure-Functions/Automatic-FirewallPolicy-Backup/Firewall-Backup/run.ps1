@@ -1,11 +1,11 @@
 param($eventGridEvent, $TriggerMetadata)
 
-# Set Vars
-$ContainerName = ""
-$StorageAccountName = ""
-$StorageAccountResourceGroupName = "" 
-$testing = $true
-$testFirewallPolicyId = ""
+$ContainerName = $env:ContainerName #"Storage Container Name"
+$StorageAccountName = $env:StorageAccountName #"Storage Account Name"
+$StorageAccountResourceGroupName = $env:StorageAccountResourceGroupName #Resource Group of Storage Account"
+$StorageAccountSubscription = $env:StorageAccountSubscription #"Subscription of storage account"
+$testing = $env:Testing #$true for True $false for False
+$testFirewallPolicyId = $env:TestFirewallPolicy # Resource ID of test firewall policy
 
 # Make sure to pass hashtables to Out-String so they're logged correctly
 $firewallPolicyId = ""
@@ -27,22 +27,23 @@ Export-AzResourceGroup -ResourceGroupName $resourceGroup -Resource $firewallPoli
 $content = (Get-Content -Path "$($tempFile.FullName).json") -join ""
 Write-Output $content
 $firewallPolicyTemplate = ConvertFrom-Json -InputObject $content
-$firewallPolicyTemplate.parameters | Get-Member | ?{$_.Name -like "firewallPolicies_*_name"} | Add-Member -MemberType Noteproperty -Name "defaultValue" -Value $policyName
+$firewallPolicyTemplate.parameters."firewallPolicies_$($policyName.Replace("-","_"))_name" | Add-Member -MemberType Noteproperty -Name "defaultValue" -Value "$($policyName)-Backup"
 $firewallPolicyTemplate.variables | Add-Member -MemberType NoteProperty -name "User" -Value $user
 $ipGroups = @()
+$graphQuery = "resources | where type == `"microsoft.network/ipgroups`" | project id,name"
+$ipGroupResourceIds = Search-AzGraph -Query $graphQuery -First 1000
 $ipGroups += ($firewallPolicyTemplate.parameters | Get-Member | ?{$_.MemberType -eq "NoteProperty" -and $_.Name -like "ipGroups_*_externalid"})
 foreach($ipGroup in $ipGroups)
 {
     $resourceId = $null
     $ipGroupName = $ipGroup.Name.Split("ipGroups_")[1].Split("_externalid")[0]
-    $graphQuery = "resources | where type == `"microsoft.network/ipgroups`" | where name =~ `"$($ipGroupName)`" | project id"
-    $resourceId = Search-AzGraph -Query $graphQuery
-    if("" -eq $resourceId)
+    $resourceId = ($ipGroupResourceIds | ?{$_.name -eq $ipGroupName}).id
+    if("" -eq $resourceId -or $null -eq $resourceId)
     {
-        $graphQuery = "resources | where type == `"microsoft.network/ipgroups`" | where name =~ `"$($ipGroupName.Replace("_","-"))`" | project id"
-        $resourceId = Search-AzGraph -Query $graphQuery    
-    } 
-    $firewallPolicyTemplate.parameters."ipGroups_$($ipGroupName)_externalid" | Add-Member -MemberType NoteProperty -Name "defaultValue" -Value $resourceId.id
+        $resourceId =  ($ipGroupResourceIds | ?{$_.name -eq $($ipGroupName.Replace("_","-"))}).id
+    }
+    $firewallPolicyTemplate.parameters."ipGroups_$($ipGroupName)_externalid" | Add-Member -MemberType NoteProperty -Name "defaultValue" -Value $resourceId
+    Write-Output $firewallPolicyTemplate.parameters."ipGroups_$($ipGroupName)_externalid".defaultValue
 }
 $count = 0
 $dependsOn = @()
@@ -58,6 +59,8 @@ foreach($ruleGroup in $firewallPolicyTemplate.resources | ?{$_.type -eq "Microso
 }
 
 $(ConvertTo-Json -InputObject $firewallPolicyTemplate -Depth 100) | Out-File -FilePath $tempFile.FullName
+
+Select-AzSubscription -Subscription $StorageAccountSubscription
 
 $context = (Get-AzStorageAccount -Name $StorageAccountName -ResourceGroupName $StorageAccountResourceGroupName).Context
 
