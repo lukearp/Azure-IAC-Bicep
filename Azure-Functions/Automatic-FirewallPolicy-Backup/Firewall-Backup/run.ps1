@@ -36,12 +36,8 @@ $ipGroups += ($firewallPolicyTemplate.parameters | Get-Member | ?{$_.MemberType 
 foreach($ipGroup in $ipGroups)
 {
     $resourceId = $null
-    $ipGroupName = $ipGroup.Name.Split("ipGroups_")[1].Split("_externalid")[0]
-    $resourceId = ($ipGroupResourceIds | ?{$_.name -eq $ipGroupName}).id
-    if("" -eq $resourceId -or $null -eq $resourceId)
-    {
-        $resourceId =  ($ipGroupResourceIds | ?{$_.name -eq $($ipGroupName.Replace("_","-"))}).id
-    }
+    $ipGroupName = $ipGroup.Name.Split("ipGroups_")[1].Split("_externalid")[0]    
+    $resourceId = ($ipGroupResourceIds | ?{$_.name -like $ipGroupName.Replace("_","*")}).id
     $firewallPolicyTemplate.parameters."ipGroups_$($ipGroupName)_externalid" | Add-Member -MemberType NoteProperty -Name "defaultValue" -Value $resourceId
     Write-Output $firewallPolicyTemplate.parameters."ipGroups_$($ipGroupName)_externalid".defaultValue
 }
