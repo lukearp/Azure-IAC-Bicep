@@ -38,6 +38,10 @@ foreach($ipGroup in $ipGroups)
     $resourceId = $null
     $ipGroupName = $ipGroup.Name.Split("ipGroups_")[1].Split("_externalid")[0]    
     $resourceId = ($ipGroupResourceIds | ?{$_.name -match $ipGroupName.Replace("_","[\-_\.]") -and $_.name.Length -eq $ipGroupName.Length}).id
+    if($resourceId.count -gt 1)
+    {
+        $resourceId = $resourceId | ?{$_ -like "/subscriptions/$($subscription)/*"}
+    }
     $firewallPolicyTemplate.parameters."ipGroups_$($ipGroupName)_externalid" | Add-Member -MemberType NoteProperty -Name "defaultValue" -Value $resourceId
     Write-Output $firewallPolicyTemplate.parameters."ipGroups_$($ipGroupName)_externalid".defaultValue
 }
