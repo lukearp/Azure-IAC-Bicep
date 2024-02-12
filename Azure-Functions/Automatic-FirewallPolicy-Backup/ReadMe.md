@@ -6,7 +6,7 @@ Backs up the Azure Firewall Policy when an update to the policy is successfully 
 
 An Azure Event Grid Subscription monitoring Microsoft.Resources.ResourceWriteSuccess filtered on subject:
 
-!(./img/EventGrid-AdvanacedFilter.png)
+![alt text](image ./img/EventGrid-AdvanacedFilter.png "Advanced Filter")
 
 An Azure Function App with System Managed Identity with Reader access to the Firewall Policies that will be backed up and Reader access to all IP Groups referenced in the policy.
 
