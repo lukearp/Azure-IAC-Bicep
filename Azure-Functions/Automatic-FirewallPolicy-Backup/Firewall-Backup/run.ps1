@@ -47,7 +47,7 @@ foreach($ipGroup in $ipGroups)
 }
 $count = 0
 $dependsOn = @()
-$stringDepends = "[resourceId('Microsoft.Network/firewallPolicies/ruleCollectionGroups',parameters('firewallPolicies_Parent_Policy_name'),'{0}')]"
+$stringDepends = "[resourceId('Microsoft.Network/firewallPolicies/ruleCollectionGroups',parameters('firewallPolicies_$($policyName.Replace("-","_"))_name'),'{0}')]"
 foreach($ruleGroup in $firewallPolicyTemplate.resources | ?{$_.type -eq "Microsoft.Network/firewallPolicies/ruleCollectionGroups"})
 {    
     if($count -gt 0)
