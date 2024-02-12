@@ -12,3 +12,15 @@ An Azure Function App with System Managed Identity with Reader access to the Fir
 
 Target Azure Storage account with Blob versioning enabled.
 
+# App Settings
+
+In the App Settings configuration of the Function app, add the following values:
+
+| App Setting | Description |
+| --| -- |
+| ContainerName | Name of Azure Storage Container |
+|StorageAccountName | Name of Azure Storage Account |
+|StorageAccountResourceGroupName | Resource Group Name of Storage Account |
+|StorageAccountSubscription | Subscription ID of Storage Account |
+|Testing | true or false | 
+|TestFirewallPolicy | Resource ID of policy you are |wanting to test with.  Only used with Testing is set to true |
