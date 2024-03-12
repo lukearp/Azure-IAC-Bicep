@@ -72,6 +72,7 @@ try {
 	[string]$TimeZoneId = $RqtParams.TimeZoneId
 	[string]$BeginPeakTime = $RqtParams.BeginPeakTime
 	[int]$FullPeakHrOffset = $RqtParams.FullPeakHrOffset
+	[int]$UserOffset = $RqtParams.UserOffset
 	[int]$RampDownOffSet = $RqtParams.RampDownOffSet
 	[string]$EndPeakTime = $RqtParams.EndPeakTime
 	[double]$SessionThresholdPerCPU = $RqtParams.SessionThresholdPerCPU
@@ -230,8 +231,8 @@ try {
 		}
 		#try {
 		#$AzAuth = Connect-AzAccount -Identity #-SubscriptionId cfaf9ba2-223d-42e6-ac55-03daf3f7cd87 # -ApplicationId $Connection.ApplicationId -CertificateThumbprint $Connection.CertificateThumbprint -TenantId $Connection.TenantId -SubscriptionId $Connection.SubscriptionId -ServicePrincipal
-		Connect-AzAccount -ApplicationId $WVDConnection.ApplicationId -CertificateThumbprint $WVDConnection.CertificateThumbprint -TenantId $WVDConnection.TenantId -SubscriptionId $WVDConnection.SubscriptionId -ServicePrincipal
-		#$WvdAuth = Connect-AzAccount -ApplicationId "5fa8b6bd-3a2e-4013-be2f-4b75c9bfa2c8" -CertificateThumbprint "6CA6FE92B16EA690BA51770AA17007DBACD6D9A1" -TenantId "f1b15770-c72f-44d1-ac7f-e65ecb4d0c54" -SubscriptionId "6fb24f41-2cb9-4242-861c-413a3775d97b" -ServicePrincipal
+		#Connect-AzAccount -ApplicationId $WVDConnection.ApplicationId -CertificateThumbprint $WVDConnection.CertificateThumbprint -TenantId $WVDConnection.TenantId -SubscriptionId $WVDConnection.SubscriptionId -ServicePrincipal
+		$WvdAuth = Connect-AzAccount -ApplicationId "5fa8b6bd-3a2e-4013-be2f-4b75c9bfa2c8" -CertificateThumbprint "6CA6FE92B16EA690BA51770AA17007DBACD6D9A1" -TenantId "f1b15770-c72f-44d1-ac7f-e65ecb4d0c54" -SubscriptionId "6fb24f41-2cb9-4242-861c-413a3775d97b" -ServicePrincipal
 			
 		$AzContext = $WvdAuth.Context
 		Write-Log "$($AzContext)" 
@@ -344,8 +345,7 @@ try {
 		$offPeak = $false
 		$rampDown = $false
 	}
-	elseif($RampDownDateTime -le $CurrentDateTime -and $CurrentDateTime -le $EndPeakDateTime)
-	{
+	elseif ($RampDownDateTime -le $CurrentDateTime -and $CurrentDateTime -le $EndPeakDateTime) {
 		Write-Log "In Ramp Down"
 		$fullPeak = $false
 		$peak = $false
@@ -469,30 +469,41 @@ try {
 	#region determine number of session hosts to start if any
 
 	# Now that we have all the info about the session hosts & their usage, figure how many session hosts to start/stop depending on in/off peak hours and the demand
-	if($fullPeak) {
+	if ($fullPeak) {
 		$nCoresToStart = $totalCores
-		if($HostPool.LoadBalancerType -ne 'DepthFirst')
-		{
+		if ($HostPool.LoadBalancerType -ne 'DepthFirst') {
 			$HostPool = Update-AzWvdHostPool -Name $HostPoolName -ResourceGroupName $ResourceGroupName -LoadBalancerType 'DepthFirst'
 		}
 	}
 	elseif ($peak) {
 		# In peak hours: check if current capacity is meeting the user demands
 		if ($nUserSessions -gt $SessionThresholdCapacity) {
-			$nCoresToStart = [math]::Ceiling(($nUserSessions - $SessionThresholdCapacity) / $SessionThresholdPerCPU)
+			$nCoresToStart = [math]::Ceiling((($nUserSessions + $userOffset) - $SessionThresholdCapacity) / $SessionThresholdPerCPU)
 			Write-Log "[In peak hours] Number of user sessions is more than the threshold capacity. Need to start $nCoresToStart cores"
 		}
-		if($HostPool.LoadBalancerType -eq 'DepthFirst')
-		{
+		elseif ($nUserSessions -lt $SessionThresholdCapacity) {
+			[double]$MaxSessionsThreshold = 0.9
+			[int]$MaxSessionsThresholdCapacity = [math]::Floor($MinRunningVMs * $HostPool.MaxSessionLimit * $MaxSessionsThreshold)
+			if ($nUserSessions -ge $MaxSessionsThresholdCapacity) {
+				$MinRunningVMs = [math]::Ceiling(($nUserSessions + $userOffset) / ($HostPool.MaxSessionLimit * $MaxSessionsThreshold))
+				Write-Log "[Peak] Number of user sessions is more than $($MaxSessionsThreshold * 100) % of the max number of sessions allowed with minimum number of session hosts ($MaxSessionsThresholdCapacity). Adjusting minimum number of session hosts required to $MinRunningVMs"
+			}
+		}
+		if ($HostPool.LoadBalancerType -eq 'DepthFirst') {
 			$HostPool = Update-AzWvdHostPool -Name $HostPoolName -ResourceGroupName $ResourceGroupName -LoadBalancerType 'BreadthFirst'
 		}
+		[double]$MaxSessionsThreshold = 0.9
+		$MinRunningVMs = [math]::Ceiling(($nUserSessions + $userOffset) / ($HostPool.MaxSessionLimit * $MaxSessionsThreshold))
 	}
-	elseif($rampDown)
-	{
-		#Logoff all users
-				
-		if($HostPool.LoadBalancerType -ne 'DepthFirst')
-		{
+	elseif ($rampDown) {
+		#Logoff all users mpDown
+		if ($HostPool.LoadBalancerType -ne 'DepthFirst') {
+			[double]$MaxSessionsThreshold = 0.9
+			[int]$MaxSessionsThresholdCapacity = [math]::Floor($MinRunningVMs * $HostPool.MaxSessionLimit * $MaxSessionsThreshold)
+			if ($nUserSessions -ge $MaxSessionsThresholdCapacity) {
+				$MinRunningVMs = [math]::Ceiling(($nUserSessions + $userOffset) / ($HostPool.MaxSessionLimit * $MaxSessionsThreshold))
+				Write-Log "[Ramp-Down] Number of user sessions is more than $($MaxSessionsThreshold * 100) % of the max number of sessions allowed with minimum number of session hosts ($MaxSessionsThresholdCapacity). Adjusting minimum number of session hosts required to $MinRunningVMs"
+			}
 			$HostPool = Update-AzWvdHostPool -Name $HostPoolName -ResourceGroupName $ResourceGroupName -LoadBalancerType 'DepthFirst'
 		}
 	}
@@ -501,11 +512,10 @@ try {
 		[double]$MaxSessionsThreshold = 0.9
 		[int]$MaxSessionsThresholdCapacity = [math]::Floor($MinRunningVMs * $HostPool.MaxSessionLimit * $MaxSessionsThreshold)
 		if ($nUserSessions -ge $MaxSessionsThresholdCapacity) {
-			$MinRunningVMs = [math]::Ceiling($nUserSessions / ($HostPool.MaxSessionLimit * $MaxSessionsThreshold))
+			$MinRunningVMs = [math]::Ceiling(($nUserSessions + $userOffset) / ($HostPool.MaxSessionLimit * $MaxSessionsThreshold))
 			Write-Log "[Off peak hours] Number of user sessions is more than $($MaxSessionsThreshold * 100) % of the max number of sessions allowed with minimum number of session hosts ($MaxSessionsThresholdCapacity). Adjusting minimum number of session hosts required to $MinRunningVMs"
 		}
-		if($HostPool.LoadBalancerType -ne 'DepthFirst')
-		{
+		if ($HostPool.LoadBalancerType -ne 'DepthFirst') {
 			$HostPool = Update-AzWvdHostPool -Name $HostPoolName -ResourceGroupName $ResourceGroupName -LoadBalancerType 'DepthFirst'
 		}
 	}
@@ -610,22 +620,22 @@ try {
 	#region determine number of session hosts to stop if any
 
 	# If in peak hours, exit because no session hosts will need to be stopped
-	if ($BeginPeakDateTime -le $CurrentDateTime -and $CurrentDateTime -le $EndPeakDateTime) {
-		Write-Log '[In peak hours] no need to start any session hosts'
+	if ($fullPeak) {
+		Write-Log '[In full peak hours] no need to start any session hosts'
 		Write-Log 'End'
 		return
 	}
 
 	# Off peak hours, already running minimum number of session hosts, exit
 	if ($nRunningVMs -le $MinRunningVMs) {
-		Write-Log '[Off peak hours] no need to start/stop any session hosts'
+		Write-Log 'No need to start/stop any session hosts'
 		Write-Log 'End'
 		return
 	}
 	
 	# Calculate the number of session hosts to stop
 	[int]$nVMsToStop = $nRunningVMs - $MinRunningVMs
-	Write-Log "[Off peak hours] Number of running session host is greater than minimum required. Need to stop $nVMsToStop VMs"
+	Write-Log "Number of running session host is greater than minimum required. Need to stop $nVMsToStop VMs"
 
 	#endregion
 
@@ -639,80 +649,160 @@ try {
 	[array]$VMsToStopAfterLogOffTimeOut = @()
 
 	Write-Log 'Find session hosts that are running, sort them by number of user sessions'
-	foreach ($VM in ($VMs.Values | Where-Object { $_.Instance.PowerState -eq 'VM running' } | Sort-Object { $_.SessionHost.Session })) {
-		if (!$nVMsToStop) {
-			# Done with stopping session hosts that needed to be
-			break
-		}
-		$SessionHost = $VM.SessionHost
-		$SessionHostName = $VM.SessionHostName
-		
-		if ($SessionHost.Session -and !$LimitSecondsToForceLogOffUser) {
-			Write-Log -Warn "Session host '$SessionHostName' has $($SessionHost.Session) sessions but limit seconds to force log off user is set to 0, so will not stop any more session hosts (https://aka.ms/wvdscale#how-the-scaling-tool-works)"
-			# Note: why break ? Because the list this loop iterates through is sorted by number of sessions, if it hits this, the rest of items in the loop will also hit this
-			break
-		}
-		
-		Set-AzContext -Context $WvdContext
-		if ($SessionHost.AllowNewSession) {
-			Write-Log "Session host '$SessionHostName' has $($SessionHost.Session) sessions. Set it to disallow new sessions"
-			if ($PSCmdlet.ShouldProcess($SessionHostName, 'Set session host to disallow new sessions')) {
-				try {
-					$VM.SessionHost = $SessionHost = Update-AzWvdSessionHost -HostPoolName $HostPoolName -ResourceGroupName $ResourceGroupName -Name $SessionHostName -AllowNewSession:$false
-				}
-				catch {
-					throw [System.Exception]::new("Failed to set it to disallow new sessions on session host: '$SessionHostName'", $PSItem.Exception)
-				}
-
-				if ($SessionHost.Session -and !$LimitSecondsToForceLogOffUser) {
-					Write-Log -Warn "Session host '$SessionHostName' has $($SessionHost.Session) sessions but limit seconds to force log off user is set to 0, so will not stop any more session hosts (https://aka.ms/wvdscale#how-the-scaling-tool-works)"
-					Update-SessionHostToAllowNewSession -SessionHost $SessionHost
-					continue
-				}
+	if ($peak) {
+		foreach ($VM in ($VMs.Values | Where-Object { $_.Instance.PowerState -eq 'VM running' -and $_.SessionHost.Session -eq 0 })) {
+			if (!$nVMsToStop) {
+				# Done with stopping session hosts that needed to be
+				break
 			}
-		}
-
-		if ($SessionHost.Session) {
-			[array]$VM.UserSessions = @()
-			Write-Log "Get all user sessions from session host '$SessionHostName'"
-			try {
-				$VM.UserSessions = @(Get-AzWvdUserSession -HostPoolName $HostPoolName -ResourceGroupName $ResourceGroupName -SessionHostName $SessionHostName)
+			$SessionHost = $VM.SessionHost
+			$SessionHostName = $VM.SessionHostName
+			
+			if ($SessionHost.Session -and !$LimitSecondsToForceLogOffUser) {
+				Write-Log -Warn "Session host '$SessionHostName' has $($SessionHost.Session) sessions but limit seconds to force log off user is set to 0, so will not stop any more session hosts (https://aka.ms/wvdscale#how-the-scaling-tool-works)"
+				# Note: why break ? Because the list this loop iterates through is sorted by number of sessions, if it hits this, the rest of items in the loop will also hit this
+				break
 			}
-			catch {
-				throw [System.Exception]::new("Failed to retrieve user sessions of session host: '$SessionHostName'", $PSItem.Exception)
-			}
-
-			Write-Log "Send log off message to active user sessions on session host: '$SessionHostName'"
-			foreach ($Session in $VM.UserSessions) {
-				if ($Session.SessionState -ne "Active") {
-					continue
-				}
-				$SessionID = $Session.Name.Split('/')[-1]
-				try {
-					Write-Log "Send a log off message to user: '$($Session.ActiveDirectoryUserName)', session ID: $SessionID"
-					if ($PSCmdlet.ShouldProcess($Session.ActiveDirectoryUserName, 'Send a log off message to user')) {
-						# //todo what if user logged off by this time
-						Send-AzWvdUserSessionMessage -HostPoolName $HostPoolName -ResourceGroupName $ResourceGroupName -SessionHostName $SessionHostName -UserSessionId $SessionID -MessageTitle $LogOffMessageTitle -MessageBody "$LogOffMessageBody You will be logged off in $LimitSecondsToForceLogOffUser seconds"
+			
+			Set-AzContext -Context $WvdContext
+			if ($SessionHost.AllowNewSession) {
+				Write-Log "Session host '$SessionHostName' has $($SessionHost.Session) sessions. Set it to disallow new sessions"
+				if ($PSCmdlet.ShouldProcess($SessionHostName, 'Set session host to disallow new sessions')) {
+					try {
+						$VM.SessionHost = $SessionHost = Update-AzWvdSessionHost -HostPoolName $HostPoolName -ResourceGroupName $ResourceGroupName -Name $SessionHostName -AllowNewSession:$false
+					}
+					catch {
+						throw [System.Exception]::new("Failed to set it to disallow new sessions on session host: '$SessionHostName'", $PSItem.Exception)
+					}
+	
+					if ($SessionHost.Session -and !$LimitSecondsToForceLogOffUser) {
+						Write-Log -Warn "Session host '$SessionHostName' has $($SessionHost.Session) sessions but limit seconds to force log off user is set to 0, so will not stop any more session hosts (https://aka.ms/wvdscale#how-the-scaling-tool-works)"
+						Update-SessionHostToAllowNewSession -SessionHost $SessionHost
+						continue
 					}
 				}
+			}
+	
+			if ($SessionHost.Session) {
+				[array]$VM.UserSessions = @()
+				Write-Log "Get all user sessions from session host '$SessionHostName'"
+				try {
+					$VM.UserSessions = @(Get-AzWvdUserSession -HostPoolName $HostPoolName -ResourceGroupName $ResourceGroupName -SessionHostName $SessionHostName)
+				}
 				catch {
-					throw [System.Exception]::new("Failed to send a log off message to user: '$($Session.ActiveDirectoryUserName)', session ID: $SessionID", $PSItem.Exception)
+					throw [System.Exception]::new("Failed to retrieve user sessions of session host: '$SessionHostName'", $PSItem.Exception)
+				}
+	
+				Write-Log "Send log off message to active user sessions on session host: '$SessionHostName'"
+				foreach ($Session in $VM.UserSessions) {
+					if ($Session.SessionState -ne "Active") {
+						continue
+					}
+					$SessionID = $Session.Name.Split('/')[-1]
+					try {
+						Write-Log "Send a log off message to user: '$($Session.ActiveDirectoryUserName)', session ID: $SessionID"
+						if ($PSCmdlet.ShouldProcess($Session.ActiveDirectoryUserName, 'Send a log off message to user')) {
+							# //todo what if user logged off by this time
+							Send-AzWvdUserSessionMessage -HostPoolName $HostPoolName -ResourceGroupName $ResourceGroupName -SessionHostName $SessionHostName -UserSessionId $SessionID -MessageTitle $LogOffMessageTitle -MessageBody "$LogOffMessageBody You will be logged off in $LimitSecondsToForceLogOffUser seconds"
+						}
+					}
+					catch {
+						throw [System.Exception]::new("Failed to send a log off message to user: '$($Session.ActiveDirectoryUserName)', session ID: $SessionID", $PSItem.Exception)
+					}
+				}
+				$VMsToStopAfterLogOffTimeOut += $VM
+			}
+			else {
+				Set-AzContext -Context $AzContext
+				Write-Log "Stop session host '$SessionHostName' as a background job"
+				if ($PSCmdlet.ShouldProcess($SessionHostName, 'Stop session host as a background job')) {
+					$StopSessionHostFullNames.Add($SessionHost.Name, $null)
+					$StopVMjobs += ($VM.Instance | Stop-AzVM -Force -AsJob)
 				}
 			}
-			$VMsToStopAfterLogOffTimeOut += $VM
-		}
-		else {
-			Set-AzContext -Context $AzContext
-			Write-Log "Stop session host '$SessionHostName' as a background job"
-			if ($PSCmdlet.ShouldProcess($SessionHostName, 'Stop session host as a background job')) {
-				$StopSessionHostFullNames.Add($SessionHost.Name, $null)
-				$StopVMjobs += ($VM.Instance | Stop-AzVM -Force -AsJob)
+	
+			--$nVMsToStop
+			if ($nVMsToStop -lt 0) {
+				$nVMsToStop = 0
 			}
 		}
+	}
+	else {
+		foreach ($VM in ($VMs.Values | Where-Object { $_.Instance.PowerState -eq 'VM running' } | Sort-Object { $_.SessionHost.Session })) {
+			if (!$nVMsToStop) {
+				# Done with stopping session hosts that needed to be
+				break
+			}
+			$SessionHost = $VM.SessionHost
+			$SessionHostName = $VM.SessionHostName
+		
+			if ($SessionHost.Session -and !$LimitSecondsToForceLogOffUser) {
+				Write-Log -Warn "Session host '$SessionHostName' has $($SessionHost.Session) sessions but limit seconds to force log off user is set to 0, so will not stop any more session hosts (https://aka.ms/wvdscale#how-the-scaling-tool-works)"
+				# Note: why break ? Because the list this loop iterates through is sorted by number of sessions, if it hits this, the rest of items in the loop will also hit this
+				break
+			}
+		
+			Set-AzContext -Context $WvdContext
+			if ($SessionHost.AllowNewSession) {
+				Write-Log "Session host '$SessionHostName' has $($SessionHost.Session) sessions. Set it to disallow new sessions"
+				if ($PSCmdlet.ShouldProcess($SessionHostName, 'Set session host to disallow new sessions')) {
+					try {
+						$VM.SessionHost = $SessionHost = Update-AzWvdSessionHost -HostPoolName $HostPoolName -ResourceGroupName $ResourceGroupName -Name $SessionHostName -AllowNewSession:$false
+					}
+					catch {
+						throw [System.Exception]::new("Failed to set it to disallow new sessions on session host: '$SessionHostName'", $PSItem.Exception)
+					}
 
-		--$nVMsToStop
-		if ($nVMsToStop -lt 0) {
-			$nVMsToStop = 0
+					if ($SessionHost.Session -and !$LimitSecondsToForceLogOffUser) {
+						Write-Log -Warn "Session host '$SessionHostName' has $($SessionHost.Session) sessions but limit seconds to force log off user is set to 0, so will not stop any more session hosts (https://aka.ms/wvdscale#how-the-scaling-tool-works)"
+						Update-SessionHostToAllowNewSession -SessionHost $SessionHost
+						continue
+					}
+				}
+			}
+
+			if ($SessionHost.Session) {
+				[array]$VM.UserSessions = @()
+				Write-Log "Get all user sessions from session host '$SessionHostName'"
+				try {
+					$VM.UserSessions = @(Get-AzWvdUserSession -HostPoolName $HostPoolName -ResourceGroupName $ResourceGroupName -SessionHostName $SessionHostName)
+				}
+				catch {
+					throw [System.Exception]::new("Failed to retrieve user sessions of session host: '$SessionHostName'", $PSItem.Exception)
+				}
+
+				Write-Log "Send log off message to active user sessions on session host: '$SessionHostName'"
+				foreach ($Session in $VM.UserSessions) {
+					if ($Session.SessionState -ne "Active") {
+						continue
+					}
+					$SessionID = $Session.Name.Split('/')[-1]
+					try {
+						Write-Log "Send a log off message to user: '$($Session.ActiveDirectoryUserName)', session ID: $SessionID"
+						if ($PSCmdlet.ShouldProcess($Session.ActiveDirectoryUserName, 'Send a log off message to user')) {
+							# //todo what if user logged off by this time
+							Send-AzWvdUserSessionMessage -HostPoolName $HostPoolName -ResourceGroupName $ResourceGroupName -SessionHostName $SessionHostName -UserSessionId $SessionID -MessageTitle $LogOffMessageTitle -MessageBody "$LogOffMessageBody You will be logged off in $LimitSecondsToForceLogOffUser seconds"
+						}
+					}
+					catch {
+						throw [System.Exception]::new("Failed to send a log off message to user: '$($Session.ActiveDirectoryUserName)', session ID: $SessionID", $PSItem.Exception)
+					}
+				}
+				$VMsToStopAfterLogOffTimeOut += $VM
+			}
+			else {
+				Set-AzContext -Context $AzContext
+				Write-Log "Stop session host '$SessionHostName' as a background job"
+				if ($PSCmdlet.ShouldProcess($SessionHostName, 'Stop session host as a background job')) {
+					$StopSessionHostFullNames.Add($SessionHost.Name, $null)
+					$StopVMjobs += ($VM.Instance | Stop-AzVM -Force -AsJob)
+				}
+			}
+
+			--$nVMsToStop
+			if ($nVMsToStop -lt 0) {
+				$nVMsToStop = 0
+			}
 		}
 	}
 

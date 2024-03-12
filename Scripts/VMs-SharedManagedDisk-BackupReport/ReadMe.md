@@ -8,7 +8,7 @@ If the Disk is already configured for Backups in the Backup Vault, the Tag is se
 
 # What is required?
 
-Reader access to the Backup Vaults, Disks, and VMs. Also, the Powershell Module 'Az.ResourceGraph' installed.
+Reader access to the Backup Vaults, Disks, and VMs.  Tag Contributor on Disks, and the Powershell Module 'Az.ResourceGraph' installed.
 
 ```
 Install-Module -Name Az.ResourceGraph

@@ -61,6 +61,12 @@ param aciConnectorLinuxEnabled bool
   'Free'
 ])
 param tier string
+@allowed([
+  'SMI'
+  'UMI'
+])
+param managedIdentityType string = 'SMI'
+param userIdentity string = ''
 param tags object
 
 var networkProfile = networkPolicy == 'null' && networkPlugin == 'azure' ? {
@@ -161,12 +167,28 @@ var addonProfiles = enableOmsAgent == true && aciConnectorLinuxEnabled == true ?
   }
 }
 
+var identity = managedIdentityType == 'SMI' ? {
+  type: 'SystemAssigned' 
+} : {
+  type: 'UserAssigned'
+  userAssignedIdentities: {
+   '${userIdentity}': {
+     
+   } 
+  }   
+}
+
 resource aks 'Microsoft.ContainerService/managedClusters@2022-03-02-preview' = {
  name: name
  location: location  
  identity: {
-   type: 'SystemAssigned' 
- }
+  type: 'UserAssigned'
+  userAssignedIdentities: {
+   '${userIdentity}': {
+     
+   } 
+  }   
+}
  sku: {
    name: 'Basic'
    tier: tier  
