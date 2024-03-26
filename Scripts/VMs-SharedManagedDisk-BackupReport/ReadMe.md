@@ -13,3 +13,9 @@ Reader access to the Backup Vaults, Disks, and VMs.  Tag Contributor on Disks, a
 ```
 Install-Module -Name Az.ResourceGraph
 ```
+
+All modules below are required:
+
+Az.Accounts
+Az.DataProtection
+Az.ResourceGraph
