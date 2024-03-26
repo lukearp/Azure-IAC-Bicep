@@ -58,5 +58,5 @@ foreach ($disk in $disks) {
             $tags.DiskBackupNeeded = "false"
         }
     }
-    Set-AzResource -ResourceId $disk -Tag $tags -Force -Confirm:$false
+    New-AzTag -ResourceId $disk -Tag $tags -Force -Confirm:$false
 }
