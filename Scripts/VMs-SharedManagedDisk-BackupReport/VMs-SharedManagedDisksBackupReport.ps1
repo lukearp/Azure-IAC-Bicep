@@ -39,6 +39,9 @@ foreach ($disk in $disks) {
         if ($tags.Keys -notcontains "DiskBackupNeeded") {
             $tags.Add("DiskBackupNeeded", "true")
         }
+        else {
+            $tags.DiskBackupNeeded = "true"
+        }
     }
     else {
         if ($tags.Keys -notcontains "DiskBackupNeeded") {
