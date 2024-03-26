@@ -12,6 +12,12 @@ resources
 | where DataDisks contains "{0}"
 '@
 
+$backupVaultsGraphQuery = @'
+resources
+| where type =~ "Microsoft.DataProtection/BackupVaults"
+| project name, resourceGroup, subscriptionId
+'@
+
 $sharedDisks = Search-AzGraph -Query $sharedDisksQuery
 
 $sharedDiskVms = @()
@@ -21,11 +27,12 @@ foreach ($disk in $sharedDisks) {
 }
 $disks = $sharedDiskVms.OsDisk.manageddisk.id
 $disks += $sharedDiskVms.DataDisks.manageddisk.id
-$backupVaults = Get-AzDataProtectionBackupVault
+$backupVaults = Search-AzGraph -Query $backupVaultsGraphQuery
 $disks = $disks | Select -Unique
 $instances = @()
 foreach ($backupVault in $backupVaults) {
-    $instances += Get-AzDataProtectionBackupInstance -VaultName $backupVault.Name -ResourceGroupName $backupVault.Id.Split("/")[4]
+    Select-AzSubscription $backupVault.subscriptionId
+    $instances += Get-AzDataProtectionBackupInstance -VaultName $backupVault.name -ResourceGroupName $backupVault.resourceGroup
 }
 
 foreach ($disk in $disks) {
