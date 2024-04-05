@@ -8,15 +8,15 @@ $rootTemplate = @'
     "parameters": {
         "appGateway_name": {
             "type": "string",
-            "defaultVaule": ""
+            "defaultValue": ""
         },
         "appGateway_subnet": {
             "type": "string",
-            "defaultVaule": ""
+            "defaultValue": ""
         },
         "vnetResourceId": {
             "type": "string",
-            "defaultVaule": ""
+            "defaultValue": ""
         }
     },
     "resources": [
@@ -45,7 +45,7 @@ $frontendIpResourceString = @'
     "properties": {{
         "privateIPAllocationMethod": "Dynamic",
         "publicIPAddress": {{
-            "id": "[resourceId('Microsoft.Network/publicIPAddresses',format('{0}-pip', parameters('appGateway_name')))]"
+            "id": "[resourceId('Microsoft.Network/publicIPAddresses',concat(parameters('appGateway_name'),'-pip'))]"
         }}
     }}
 }},
@@ -76,6 +76,7 @@ SslProfile = null
 #>
 $listnerResourceFirewallPolicyString = @'
 {{
+    "properties": {{
     "FrontendIpConfiguration": {{
       "Id": "[concat(resourceId('Microsoft.Network/applicationGateways',parameters('appGateway_name')),'/frontendIPConfigurations/{1}')]"
     }},
@@ -87,18 +88,25 @@ $listnerResourceFirewallPolicyString = @'
     "HostNames": [],
     "SslCertificate": {5},
     "RequireServerNameIndication": {6},
-    "Type": "Microsoft.Network/applicationGateways/httpListeners",
     "CustomErrorConfigurations": [],
     "FirewallPolicy": {{
       "Id": "[resourceId('Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies', parameters('{0}'))]"
     }},
-    "SslProfile": {7},
+    "SslProfile": {7}
+}},
     "Name": "{8}"
+}}
+'@
+
+$firewallPolicyResourceString = @'
+{{
+    "Id": "[resourceId('Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies', parameters('{0}'))]"
 }}
 '@
 
 $listnerResourceString = @'
 {{
+    "properties": {{
     "FrontendIpConfiguration": {{
       "Id": "[concat(resourceId('Microsoft.Network/applicationGateways',parameters('appGateway_name')),'/frontendIPConfigurations/{0}')]"
     }},
@@ -110,15 +118,16 @@ $listnerResourceString = @'
     "HostNames": [],
     "SslCertificate": {4},
     "RequireServerNameIndication": {5},
-    "Type": "Microsoft.Network/applicationGateways/httpListeners",
     "CustomErrorConfigurations": [],    
-    "SslProfile": {6},
+    "SslProfile": {6}
+}},
     "Name": "{7}"
 }}
 '@
 
 $backendHttpSettingResourceString = @'
 {{
+    "properties":{{
     "Port": {1},
     "Protocol": "{2}",
     "CookieBasedAffinity": "{3}",
@@ -129,14 +138,15 @@ $backendHttpSettingResourceString = @'
     "HostName": {6},
     "PickHostNameFromBackendAddress": {7},
     "AffinityCookieName": "{8}",
-    "Path": {9},
-    "Type": "Microsoft.Network/applicationGateways/backendHttpSettingsCollection",
+    "Path": {9}
+}},
     "Name": "{0}"
 }}
 '@
 
 $backendHttpSettingCustomProbeResourceString = @'
 {{
+    "properties": {{
     "Port": {2},
     "Protocol": "{3}",
     "CookieBasedAffinity": "{4}",
@@ -150,8 +160,8 @@ $backendHttpSettingCustomProbeResourceString = @'
     "HostName": {7},
     "PickHostNameFromBackendAddress": {8},
     "AffinityCookieName": "{9}",
-    "Path": {10},
-    "Type": "Microsoft.Network/applicationGateways/backendHttpSettingsCollection",
+    "Path": {10}
+}},
     "Name": "{1}"
 }}
 '@
@@ -187,9 +197,179 @@ $sslCertificatesResourceString = @'
 
 $trustedRootResourceString = @'
 {{
-    "Data": "{1}",
-    "Type": "Microsoft.Network/applicationGateways/trustedRootCertificates",
+    "properties": {{
+    "Data": "{1}"
+}},
     "Name": "{0}",
+}}
+'@
+
+<#
+DefaultRewriteRuleSet = null
+DefaultRedirectConfiguration = null
+#>
+$urlPathMapResourceString = @'
+{{
+    "properties": {{
+    "DefaultBackendAddressPool": {{
+        "Id": "[concat(resourceId('Microsoft.Network/applicationGateways',parameters('appGateway_name')),'/backendAddressPools/{1}')]"
+    }},
+    "DefaultBackendHttpSettings": {{
+        "Id": "[concat(resourceId('Microsoft.Network/applicationGateways',parameters('appGateway_name')),'/backendHttpSettingsCollection/{2}')]"
+    }},
+    "DefaultRewriteRuleSet": {3},
+    "DefaultRedirectConfiguration": {4},
+    "PathRules": []
+}},
+    "Name": "{0}",
+}}
+'@
+
+$pathRulesResourceString = @'
+{{
+    "properties": {{
+    "Paths": [],
+    "BackendAddressPool": {{
+        "Id": "[concat(resourceId('Microsoft.Network/applicationGateways',parameters('appGateway_name')),'/backendAddressPools/{1}')]"
+    }},
+    "BackendHttpSettings": {{
+        "Id": "[concat(resourceId('Microsoft.Network/applicationGateways',parameters('appGateway_name')),'/backendHttpSettingsCollection/{2}')]"
+    }},
+    "RewriteRuleSet": {3},
+    "RedirectConfiguration": {4},
+    "FirewallPolicy": {5}
+}},
+    "Name": "{0}",
+}}
+'@
+
+$pathRewriteRuleResourceString = @'
+{{
+    "Id": "[concat(resourceId('Microsoft.Network/applicationGateways',parameters('appGateway_name')),'/rewriteRuleSets/{1}')]"
+}}
+'@
+
+$pathRedirectRuleResourceString = @'
+{{
+    "Id": "[concat(resourceId('Microsoft.Network/applicationGateways',parameters('appGateway_name')),'/redirectConfigurations/{1}')]"
+}}
+'@
+<#
+UrlPathMape = null
+RewriteRuleSet = null
+RedirectConfiguration = null
+#>
+
+$routingRuleBackendResourceString = @'
+{{
+    "Id": "[concat(resourceId('Microsoft.Network/applicationGateways',parameters('appGateway_name')),'/backendAddressPools/{0}')]"
+}}
+'@
+
+$routingRuleHttpSettingResourceString = @'
+{{
+    "Id": "[concat(resourceId('Microsoft.Network/applicationGateways',parameters('appGateway_name')),'/backendHttpSettingsCollection/{0}')]"
+}}
+'@
+
+$routingRewriteRuleIdResourceString = @'
+{{
+    "id": "[concat(resourceId('Microsoft.Network/applicationGateways',parameters('appGateway_name')),'/rewriteRuleSets/{0}')]"
+}}
+'@
+
+$routingUrlPathIdResourceString = @'
+{{
+    "id": "[concat(resourceId('Microsoft.Network/applicationGateways',parameters('appGateway_name')),'/urlPathMaps/{0}')]"
+}}
+'@
+$routingRuleResourceString = @'
+{{
+    "properties": {{
+    "RuleType": "{1}",
+    "Priority": {2},
+    "BackendAddressPool": {3},
+    "BackendHttpSettings": {4},
+    "HttpListener": {{
+        "Id": "[concat(resourceId('Microsoft.Network/applicationGateways',parameters('appGateway_name')),'/httpListeners/{5}')]"
+    }},
+    "UrlPathMap": {6},
+    "RewriteRuleSet": {7},
+    "RedirectConfiguration": {8}
+}},
+    "Name": "{0}"
+}}
+'@
+#Conditions,RequestHeaderConfigurations,ResponseHeaderConfigurations = Array UrlConfiguration = null
+$rewriteRuleResourceString = @'
+{{
+    "Name": "{0}",
+    "RuleSequence": {1},
+    "Conditions": {2},
+    "ActionSet": {3}
+}}
+'@
+
+$rewriteRuleSetResourceString = @'
+{{
+    "properties": {{
+    "RewriteRules": []
+    }},
+    "Name": "{0}",
+}}
+'@
+#Port = null
+$probeResourceString = @'
+{{
+    "properties": {{
+    "Protocol": "{1}",
+    "Host": "{2}",
+    "Path": "{3}",
+    "Interval": {4},
+    "Timeout": {5},
+    "UnhealthyThreshold": {6},
+    "PickHostNameFromBackendHttpSettings": {7},
+    "MinServers": {8},
+    "Port": {9},
+    "Match": {10}
+}},
+    "Name": "{0}",
+}}
+'@
+
+$trustedClientCertResourceString = @'
+{{
+    "properties":{{
+    "Data": "{1}",
+    "ClientCertIssuerDN": "{2}"
+}},
+    "Name": "{0}",
+}}
+'@
+
+$sslProfileTrustedCertificateResourceString = @'
+{{
+    "Id": "[concat(resourceId('Microsoft.Network/applicationGateways',parameters('appGateway_name')),'/trustedClientCertificates/{0}')]"
+}}
+'@
+#SslPolicy = nul
+$sslProfileResourceString = @'
+{{
+    "properties": {{
+    "SslPolicy": {1},
+    "ClientAuthConfiguration": {2},
+    "TrustedClientCertificates": []
+}},
+    "Name": "{0}",
+}}
+'@
+
+$appGatewayIdentityResourceString = @'
+{{
+    "Type": "UserAssigned",
+    "UserAssignedIdentities": {{
+      "{0}": {{}}
+    }}
 }}
 '@
 
@@ -262,6 +442,9 @@ $locationParameter = New-Object -TypeName psobject -Property @{
 #$wafResources = @()
 $template = ConvertFrom-Json -InputObject $rootTemplate -Depth 10
 $template.parameters | Add-Member -Name "location" -MemberType NoteProperty -Value $locationParameter
+$userIdentity = ""
+foreach ($key in $appGateway.Identity.UserAssignedIdentities.Keys) { $userIdentity = $key }
+$newAppGw = ConvertFrom-Json -InputObject $($appGwResourceString -f $($appGatewayIdentityResourceString -f $userIdentity),$(ConvertTo-Json -InputObject $appGateway.Sku -Depth 10),$($wafPolicies[0].split("/")[8]))
 foreach($policy in $wafPolicies)
 {
     $wafPolicy = $null
@@ -271,15 +454,16 @@ foreach($policy in $wafPolicies)
         PolicySettings = $wafPolicy.PolicySettings
         ManagedRules = $wafPolicy.ManagedRules        
     }
-    $template.resources += ConvertFrom-Json -InputObject $($wafResourceString -f $($wafPolicy.Name + "-" + $count),$(ConvertTo-Json -InputObject $wafPolicy.Tag -Depth 10),$(ConvertTo-Json -InputObject $policyProperties -Depth 10)) -Depth 10
+    $template.resources += ConvertFrom-Json -InputObject $($wafResourceString -f $($wafPolicy.Name),$(ConvertTo-Json -InputObject $wafPolicy.Tag -Depth 10),$(ConvertTo-Json -InputObject $policyProperties -Depth 10)) -Depth 10
     $paramVaule = New-Object -TypeName psobject -Property @{
         type = "string"
         defaultValue = $wafPolicy.Name
     }
     $template.parameters | Add-Member -Name $wafPolicy.Name <#$($wafPolicy.Name + "-" + $count).ToString()#> -Value $paramVaule -MemberType NoteProperty
+    $newAppGw.dependsOn += "[resourceId('Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies',parameters('$($wafPolicy.Name)'))]"
     #$count++
 }
-$newAppGw = ConvertFrom-Json -InputObject $($appGwResourceString -f $(ConvertTo-Json -InputObject $appGateway.Identity -Depth 10),$(ConvertTo-Json -InputObject $appGateway.Sku -Depth 10),$($wafPolicies[0].split("/")[8] + "-0"))
+$newAppGw.properties.autoscaleConfiguration = $appGateway.AutoscaleConfiguration
 foreach($gatewayIpConfig in $appGateway.GatewayIPConfigurations)
 {
     $newAppGw.properties.gatewayIPConfigurations += ConvertFrom-Json -InputObject $($gatewayIpResourceString -f $gatewayIpConfig.Name) -Depth 10
@@ -319,7 +503,7 @@ foreach($httpSetting in $appGateway.BackendHttpSettingsCollection)
         $backendSetting = ConvertFrom-Json -InputObject $($backendHttpSettingCustomProbeResourceString -f "[concat(resourceId('Microsoft.Netowrk/applicationGateways',parameters('appGateway_name')),'/probes/$($httpSetting.Probe.Id.Split("/")[10])')]",$httpSetting.Name,$httpSetting.Port.ToString(),$httpSetting.Protocol,$httpSetting.CookieBasedAffinity,$httpSetting.RequestTimeout.ToString(),$($httpSetting.ConnectionDraining -eq $null ? "null" : "`"$($httpSetting.ConnectionDraining)`""),$($httpSetting.HostName -eq $null ? "null" : "`"$($httpSetting.HostName)`""),$httpSetting.PickHostNameFromBackendAddress.ToString().ToLower(),$httpSetting.AffinityCookieName,$($httpSetting.Path -eq $null ? "null" : "`"$($httpSetting.Path)`"")) -Depth 10
         foreach($rootCert in $httpSetting.TrustedRootCertificates)
         {
-            $backendSetting.TrustedRootCertificates += New-Object -TypeName psobject -Property @{
+            $backendSetting.properties.TrustedRootCertificates += New-Object -TypeName psobject -Property @{
                 Id = "[concat(resourceId('Microsoft.Netowrk/applicationGateways',parameters('appGateway_name')),'/trustedRootCertificates/$($rootCert.Id.Split("/")[10])')]"
             }
         }        
@@ -329,7 +513,7 @@ foreach($httpSetting in $appGateway.BackendHttpSettingsCollection)
         $backendSetting = ConvertFrom-Json -InputObject $($backendHttpSettingResourceString -f $httpSetting.Name,$httpSetting.Port.ToString(),$httpSetting.Protocol,$httpSetting.CookieBasedAffinity,$httpSetting.RequestTimeout.ToString(),$($httpSetting.ConnectionDraining -eq $null ? "null" : "`"$($httpSetting.ConnectionDraining)`""),$($httpSetting.HostName -eq $null ? "null" : "`"$($httpSetting.HostName)`""),$httpSetting.PickHostNameFromBackendAddress.ToString().ToLower(),$httpSetting.AffinityCookieName,$($httpSetting.Path -eq $null ? "null" : "`"$($httpSetting.Path)`"")) -Depth 10
         foreach($rootCert in $httpSetting.TrustedRootCertificates)
         {
-            $backendSetting.TrustedRootCertificates += New-Object -TypeName psobject -Property @{
+            $backendSetting.properties.TrustedRootCertificates += New-Object -TypeName psobject -Property @{
                 Id = "[concat(resourceId('Microsoft.Netowrk/applicationGateways',parameters('appGateway_name')),'/trustedRootCertificates/$($rootCert.Id.Split("/")[10])')]"
             }
         }
@@ -341,15 +525,60 @@ foreach($listener in $appGateway.HttpListeners)
     if($null -ne $listener.FirewallPolicy)
     {
         $wafName = ($template.parameters | Get-Member | ?{$_.Name -eq "$($listener.FirewallPolicy.Id.Split(`"/`")[8])"}).Name 
-        $listenerSetting = ConvertFrom-Json -InputObject $($listnerResourceFirewallPolicyString -f $wafName,$listener.FrontendIpConfiguration.Id.Split("/")[10],$listener.FrontendPort.Id.Split("/")[10],$listener.Protocol,$($listener.HostName -eq $null ? "null" : "`"$($listener.HostName)`""),$($listener.SslCertificate -eq $null ? "null" : "`"[concat(resourceId('Microsoft.Network/applicationGateways',parameters('appGateway_name)),'/sslCertificates/$($listener.SslCertificate.Id.Split("/")[10])')]`""),$listener.RequireServerNameIndication.ToString().ToLower(),$($listener.SslProfile -eq $null ? "null" : "`"[concat(resourceId('Microsoft.Network/applicationGateways',parameters('appGateway_name)),'/sslCertificates/$($listener.SslProfile.Id.Split("/")[10])')]`""),$listener.Name )
-        $listenerSetting.HostNames += $listener.HostNames
+        $listenerSetting = ConvertFrom-Json -InputObject $($listnerResourceFirewallPolicyString -f $wafName,$listener.FrontendIpConfiguration.Id.Split("/")[10],$listener.FrontendPort.Id.Split("/")[10],$listener.Protocol,$($listener.HostName -eq $null ? "null" : "`"$($listener.HostName)`""),$($listener.SslCertificate -eq $null ? "null" : "{ `"id`":`"[concat(resourceId('Microsoft.Network/applicationGateways',parameters('appGateway_name')),'/sslCertificates/$($listener.SslCertificate.Id.Split("/")[10])')]`"}"),$listener.RequireServerNameIndication.ToString().ToLower(),$($listener.SslProfile -eq $null ? "null" : "{ `"id`":`"[concat(resourceId('Microsoft.Network/applicationGateways',parameters('appGateway_name')),'/sslProfiles/$($listener.SslProfile.Id.Split("/")[10])')]`"}"),$listener.Name )
+        $listenerSetting.properties.HostNames += $listener.HostNames
         $newAppGw.properties.httpListeners += $listenerSetting
     }
     else 
     {
-        $listenerSetting = ConvertFrom-Json -InputObject $($listnerResourceString -f $listener.FrontendIpConfiguration.Id.Split("/")[10],$listener.FrontendPort.Id.Split("/")[10],$listener.Protocol,$($listener.HostName -eq $null ? "null" : "`"$($listener.HostName)`""),$($listener.SslCertificate -eq $null ? "null" : "`"[concat(resourceId('Microsoft.Network/applicationGateways',parameters('appGateway_name)),'/sslCertificates/$($listener.SslCertificate.Id.Split("/")[10])')]`""),$listener.RequireServerNameIndication.ToString().ToLower(),$($listener.SslProfile -eq $null ? "null" : "`"[concat(resourceId('Microsoft.Network/applicationGateways',parameters('appGateway_name)),'/sslCertificates/$($listener.SslProfile.Id.Split("/")[10])')]`""),$listener.Name )
-        $listenerSetting.HostNames += $listener.HostNames
+        $listenerSetting = ConvertFrom-Json -InputObject $($listnerResourceString -f $listener.FrontendIpConfiguration.Id.Split("/")[10],$listener.FrontendPort.Id.Split("/")[10],$listener.Protocol,$($listener.HostName -eq $null ? "null" : "`"$($listener.HostName)`""),$($listener.SslCertificate -eq $null ? "null" : "{ `"id`":`"[concat(resourceId('Microsoft.Network/applicationGateways',parameters('appGateway_name')),'/sslCertificates/$($listener.SslCertificate.Id.Split("/")[10])')]`"}"),$listener.RequireServerNameIndication.ToString().ToLower(),$($listener.SslProfile -eq $null ? "null" : "{ `"id`":`"[concat(resourceId('Microsoft.Network/applicationGateways',parameters('appGateway_name')),'/sslProfiles/$($listener.SslProfile.Id.Split("/")[10])')]`"}"),$listener.Name )
+        $listenerSetting.properties.HostNames += $listener.HostNames
         $newAppGw.properties.httpListeners += $listenerSetting
     }
 }
-$template.resources += $appGwResourceString
+foreach($urlPathMap in $appGateway.UrlPathMaps)
+{
+    $map = ConvertFrom-Json -InputObject $($urlPathMapResourceString -f $urlPathMap.Name,$urlPathMap.DefaultBackendAddressPool.Id.Split("/")[10],$urlPathMap.DefaultBackendHttpSettings.Id.Split("/")[10],$($urlPathMap.DefaultRewriteRuleSet -eq $null ? "null" : $(pathRewriteRuleResourceString -f $urlPathMap.DefaultRewriteRuleSet.Id.Split("/")[10])),$($urlPathMap.DefaultRedirectConfiguration -eq $null ? "null" : $($pathRedirectRuleResourceString -f $urlPathMap.DefaultRedirectConfiguration.Id.Split("/")[10]))) -Depth 10
+    foreach($rule in $urlPathMap.PathRules)
+    {
+        $pathRule = ConvertFrom-Json -InputObject $($pathRulesResourceString -f $rule.Name,$rule.BackendAddressPool.Id.Split("/")[10],$rule.BackendHttpSettings.Id.Split("/")[10],$($rule.RewriteRuleSet -eq $null ? "null" : $(pathRewriteRuleResourceString -f $rule.RewriteRuleSet.Id.Split("/")[10])),$($rule.RedirectConfiguration -eq $null ? "null" : $($pathRedirectRuleResourceString -f $rule.RedirectConfiguration.Id.Split("/")[10])),$($rule.FirewallPolicy -eq $null ? "null" : $($firewallPolicyResourceString -f $rule.FirewallPolicy.Id.Split("/")[8])))
+        $pathRule.properties.Paths += $rule.Paths
+        $map.properties.PathRules += $pathRule
+    }
+    $newAppGw.properties.urlPathMaps += $map
+}
+foreach($routingRule in $appGateway.RequestRoutingRules)
+{
+    $newAppGw.properties.requestRoutingRules += ConvertFrom-Json -InputObject $($routingRuleResourceString -f $routingRule.Name,$routingRule.RuleType,$routingRule.Priority,$($routingRule.BackendAddressPool -eq $null ? "null" : $($routingRuleBackendResourceString -f $routingRule.BackendAddressPool.Id.Split("/")[10])),$($routingRule.BackendHttpSettings -eq $null ? "null" : $($routingRuleHttpSettingResourceString -f $routingRule.BackendHttpSettings.Id.Split("/")[10])),$routingRule.HttpListener.Id.Split("/")[10],$($routingRule.UrlPathMap -eq $null ? "null" : $($routingUrlPathIdResourceString -f $routingRule.UrlPathMap.Id.Split("/")[10])),$($routingRule.RewriteRuleSet -eq $null ? "null" : $($routingRewriteRuleIdResourceString -f $routingRule.RewriteRuleSet.Id.Split("/")[10])),$($routingRule.RedirectConfiguration -eq $null ? "null" : $(ConvertTo-Json -InputObject $routingRule.RedirectConfiguration -Depth 10))) -Depth 10
+}
+foreach($probe in $appGateway.Probes)
+{
+    $newAppGw.properties.probes += ConvertFrom-Json -InputObject $($probeResourceString -f $probe.Name,$probe.Protocol,$($probe.Host -eq $null ? "null" : $probe.Host),$probe.Path,$probe.Interval,$probe.Timeout,$probe.UnhealthyThreshold,$probe.PickHostNameFromBackendHttpSettings.ToString().ToLower(),$probe.MinServers,$($probe.Port -eq $null ? "null" : $probe.Port),$(ConvertTo-Json -InputObject $probe.Match -Depth 10)) -Depth 10
+}
+foreach($rewrite in $appGateway.RewriteRuleSets)
+{
+    $ruleSet = ConvertFrom-Json -InputObject $($rewriteRuleSetResourceString -f $rewrite.Name) -Depth 10
+    foreach($rewriteRule in $rewrite.RewriteRules)
+    {
+        $ruleSet.properties.RewriteRules += ConvertFrom-Json -InputObject $($rewriteRuleResourceString -f $rewriteRule.Name,$rewriteRule.RuleSequence,$(ConvertTo-Json -InputObject $rewriteRule.Conditions -Depth 10),$(ConvertTo-Json -InputObject $rewriteRule.ActionSet -Depth 10)) -Depth 10
+    }
+    $newAppGw.properties.rewriteRuleSets += $ruleSet
+}
+foreach($redirect in $appGateway.RedirectConfigurations)
+{
+
+}
+foreach($sslProfile in $appGateway.SslProfiles)
+{
+    $profile = ConvertFrom-Json -InputObject $($sslProfileResourceString -f $sslProfile.Name,$($sslProfile.SslPolicy -eq $null ? "null" : $(ConvertTo-Json -InputObject $sslProfile.SslPolicy -Depth 10)),$(ConvertTo-Json -InputObject $sslProfile.ClientAuthConfiguration -Depth 10)) -Depth 10
+    foreach($trustedCert in $sslProfile.TrustedClientCertificates)
+    {
+        $profile.properties.TrustedClientCertificates += ConvertFrom-Json -InputObject $($sslProfileTrustedCertificateResourceString -f $trustedCert.Id.Split("/")[10]) -Depth 10
+    }
+    $newAppGw.properties.sslProfiles += $profile
+}
+foreach($trustedClientCert in $appGateway.TrustedClientCertificates)
+{
+    $newAppGw.properties.trustedClientCertificates += ConvertFrom-Json -InputObject $($trustedClientCertResourceString -f $trustedClientCert.Name,$trustedClientCert.Data,$trustedClientCert.ClientCertIssuerDN) -Depth 10
+}
+$template.resources += $newAppGw
