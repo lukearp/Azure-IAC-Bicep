@@ -1,5 +1,5 @@
-$appGatewayName = "ingress-aks"
-$appGatewayResourceGroup = "temp-appgw"
+$appGatewayName = "test"
+$appGatewayResourceGroup = "test-appgwbackup"
 
 $rootTemplate = @'
 {
@@ -225,16 +225,18 @@ $urlPathMapResourceString = @'
 }}
 '@
 
+$routingRuleBackendHttpSettingsResourceString = @'
+{{
+    "Id": "[concat(resourceId('Microsoft.Network/applicationGateways',parameters('appGateway_name')),'/backendHttpSettingsCollection/{0}')]"
+}}
+'@
+
 $pathRulesResourceString = @'
 {{
     "properties": {{
     "Paths": [],
-    "BackendAddressPool": {{
-        "Id": "[concat(resourceId('Microsoft.Network/applicationGateways',parameters('appGateway_name')),'/backendAddressPools/{1}')]"
-    }},
-    "BackendHttpSettings": {{
-        "Id": "[concat(resourceId('Microsoft.Network/applicationGateways',parameters('appGateway_name')),'/backendHttpSettingsCollection/{2}')]"
-    }},
+    "BackendAddressPool": {1},
+    "BackendHttpSettings": {2},
     "RewriteRuleSet": {3},
     "RedirectConfiguration": {4},
     "FirewallPolicy": {5}
@@ -243,22 +245,11 @@ $pathRulesResourceString = @'
 }}
 '@
 
-$pathRewriteRuleResourceString = @'
-{{
-    "Id": "[concat(resourceId('Microsoft.Network/applicationGateways',parameters('appGateway_name')),'/rewriteRuleSets/{1}')]"
-}}
-'@
-
 $pathRedirectRuleResourceString = @'
 {{
-    "Id": "[concat(resourceId('Microsoft.Network/applicationGateways',parameters('appGateway_name')),'/redirectConfigurations/{1}')]"
+    "Id": "[concat(resourceId('Microsoft.Network/applicationGateways',parameters('appGateway_name')),'/redirectConfigurations/{0}')]"
 }}
 '@
-<#
-UrlPathMape = null
-RewriteRuleSet = null
-RedirectConfiguration = null
-#>
 
 $routingRuleBackendResourceString = @'
 {{
@@ -283,6 +274,19 @@ $routingUrlPathIdResourceString = @'
     "id": "[concat(resourceId('Microsoft.Network/applicationGateways',parameters('appGateway_name')),'/urlPathMaps/{0}')]"
 }}
 '@
+
+$routingUrlPathRulesIdResourceString = @'
+{{
+    "id": "[concat(resourceId('Microsoft.Network/applicationGateways',parameters('appGateway_name')),'/urlPathMaps/{0}/pathRules/{1}')]"
+}}
+'@
+
+$routingRuleIdResoruceString = @'
+{{
+    "id": "[concat(resourceId('Microsoft.Network/applicationGateways',parameters('appGateway_name')),'/requestRoutingRules/{0}')]"
+}}
+'@
+
 $routingRuleResourceString = @'
 {{
     "properties": {{
@@ -364,6 +368,28 @@ $sslProfileResourceString = @'
 }}
 '@
 
+$redirectTargetListenerResourceString = @'
+{{
+    "Id": "[concat(resourceId('Microsoft.Network/applicationGateways',parameters('appGateway_name')),'/httpListeners/{0}')]"
+}}
+'@
+
+$redirectRuleResourceString = @'
+{{
+    "properties": {{
+    "RedirectType": "{1}",
+    "TargetListener": {2},
+    "TargetUrl": {3},
+    "IncludePath": {4},
+    "IncludeQueryString": {5},
+    "RequestRoutingRules": [],
+    "UrlPathMaps": [],
+    "PathRules": []
+    }},
+    "Name": "{0}"
+}}
+'@
+
 $appGatewayIdentityResourceString = @'
 {{
     "Type": "UserAssigned",
@@ -435,7 +461,7 @@ $wafPolicies += $appGateway.httpListeners.FirewallPolicy.id
 $wafPolicies += $appGateway.UrlPathMaps.PathRules.FirewallPolicy.id
 $wafPolicies += $appGateway.FirewallPolicy.id
 $wafPolicies = $wafPolicies | Select -Unique
-$count = 0
+
 $locationParameter = New-Object -TypeName psobject -Property @{
     type = "string"
 }
@@ -541,7 +567,7 @@ foreach($urlPathMap in $appGateway.UrlPathMaps)
     $map = ConvertFrom-Json -InputObject $($urlPathMapResourceString -f $urlPathMap.Name,$urlPathMap.DefaultBackendAddressPool.Id.Split("/")[10],$urlPathMap.DefaultBackendHttpSettings.Id.Split("/")[10],$($urlPathMap.DefaultRewriteRuleSet -eq $null ? "null" : $(pathRewriteRuleResourceString -f $urlPathMap.DefaultRewriteRuleSet.Id.Split("/")[10])),$($urlPathMap.DefaultRedirectConfiguration -eq $null ? "null" : $($pathRedirectRuleResourceString -f $urlPathMap.DefaultRedirectConfiguration.Id.Split("/")[10]))) -Depth 10
     foreach($rule in $urlPathMap.PathRules)
     {
-        $pathRule = ConvertFrom-Json -InputObject $($pathRulesResourceString -f $rule.Name,$rule.BackendAddressPool.Id.Split("/")[10],$rule.BackendHttpSettings.Id.Split("/")[10],$($rule.RewriteRuleSet -eq $null ? "null" : $(pathRewriteRuleResourceString -f $rule.RewriteRuleSet.Id.Split("/")[10])),$($rule.RedirectConfiguration -eq $null ? "null" : $($pathRedirectRuleResourceString -f $rule.RedirectConfiguration.Id.Split("/")[10])),$($rule.FirewallPolicy -eq $null ? "null" : $($firewallPolicyResourceString -f $rule.FirewallPolicy.Id.Split("/")[8])))
+        $pathRule = ConvertFrom-Json -InputObject $($pathRulesResourceString -f $rule.Name,$($rule.BackendAddressPool -eq $null ? "null" : $routingRuleBackendResourceString -f $rule.BackendAddressPool.Id.Split("/")[10]),$($rule.BackendHttpSettings -eq $null ? "null" : $routingRuleBackendHttpSettingsResourceString -f $rule.BackendHttpSettings.Id.Split("/")[10]),$($rule.RewriteRuleSet -eq $null ? "null" : $($pathRewriteRuleResourceString -f $rule.RewriteRuleSet.Id.Split("/")[10])),$($rule.RedirectConfiguration -eq $null ? "null" : $pathRedirectRuleResourceString -f $rule.RedirectConfiguration.Id.Split("/")[10]),$($rule.FirewallPolicy -eq $null ? "null" : $($firewallPolicyResourceString -f $rule.FirewallPolicy.Id.Split("/")[8])))
         $pathRule.properties.Paths += $rule.Paths
         $map.properties.PathRules += $pathRule
     }
@@ -566,16 +592,29 @@ foreach($rewrite in $appGateway.RewriteRuleSets)
 }
 foreach($redirect in $appGateway.RedirectConfigurations)
 {
-
+    $redirectRule = ConvertFrom-Json -InputObject $($redirectRuleResourceString -f $redirect.Name,$redirect.RedirectType,$($redirect.TargetListener -eq $null ? "null" : $redirectTargetListenerResourceString -f $redirect.TargetListener.Id.Split("/")[10]),$($redirect.TargetUrl -eq $null ? "null" : "`"$($redirect.TargetUrl)`""),$redirect.IncludePath.ToString().ToLower(),$redirect.IncludeQueryString.ToString().ToLower())
+    foreach($requestRouting in $redirect.RequestRoutingRules)
+    {
+        $redirectRule.properties.RequestRoutingRules += ConvertFrom-Json -InputObject $($routingRuleIdResoruceString -f $requestRouting.Id.Split("/")[10]) -Depth 10
+    }
+    foreach($pathRules in $redirect.PathRules)
+    {
+        $redirectRule.properties.PathRules += ConvertFrom-Json -InputObject $($routingUrlPathRulesIdResourceString -f $pathRules.Id.Split("/")[10],$pathRules.Id.Split("/")[12]) -Depth 10
+    }
+    foreach($urlPath in $redirect.UrlPathMaps)
+    {
+        $redirectRule.properties.UrlPathMaps += ConvertFrom-Json -InputObject $($routingUrlPathIdResourceString -f $urlPath.Id.Split("/")[10]) -Depth 10
+    }
+    $newAppGw.properties.redirectConfigurations += $redirectRule
 }
 foreach($sslProfile in $appGateway.SslProfiles)
 {
-    $profile = ConvertFrom-Json -InputObject $($sslProfileResourceString -f $sslProfile.Name,$($sslProfile.SslPolicy -eq $null ? "null" : $(ConvertTo-Json -InputObject $sslProfile.SslPolicy -Depth 10)),$(ConvertTo-Json -InputObject $sslProfile.ClientAuthConfiguration -Depth 10)) -Depth 10
+    $profileSsl = ConvertFrom-Json -InputObject $($sslProfileResourceString -f $sslProfile.Name,$($sslProfile.SslPolicy -eq $null ? "null" : $(ConvertTo-Json -InputObject $sslProfile.SslPolicy -Depth 10)),$(ConvertTo-Json -InputObject $sslProfile.ClientAuthConfiguration -Depth 10)) -Depth 10
     foreach($trustedCert in $sslProfile.TrustedClientCertificates)
     {
-        $profile.properties.TrustedClientCertificates += ConvertFrom-Json -InputObject $($sslProfileTrustedCertificateResourceString -f $trustedCert.Id.Split("/")[10]) -Depth 10
+        $profileSsl.properties.TrustedClientCertificates += ConvertFrom-Json -InputObject $($sslProfileTrustedCertificateResourceString -f $trustedCert.Id.Split("/")[10]) -Depth 10
     }
-    $newAppGw.properties.sslProfiles += $profile
+    $newAppGw.properties.sslProfiles += $profileSsl
 }
 foreach($trustedClientCert in $appGateway.TrustedClientCertificates)
 {
