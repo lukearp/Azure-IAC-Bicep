@@ -474,30 +474,54 @@ $appGateway = Get-AzApplicationGateway -Name $appGatewayName -ResourceGroupName 
 #URLPathMaps $appGateway.UrlPathMaps.PathRules.FirewallPolicy.id
 #FirewallPolicy $appGateway.FirewallPolicy.id
 $wafPolicies = @()
-$wafPolicies += $appGateway.httpListeners.FirewallPolicy.id
-$wafPolicies += $appGateway.UrlPathMaps.PathRules.FirewallPolicy.id
-$wafPolicies += $appGateway.FirewallPolicy.id
-$wafPolicies = $wafPolicies | Select -Unique
+$walPoliciesAll = @()
+$walPoliciesAll += $appGateway.FirewallPolicy.id
+$walPoliciesAll += $appGateway.httpListeners.FirewallPolicy.id
+$walPoliciesAll += $appGateway.UrlPathMaps.PathRules.FirewallPolicy.id
+$wafPolicies += $walPoliciesAll | Select -Unique
 
 $locationParameter = New-Object -TypeName psobject -Property @{
     type = "string"
 }
 #$wafResources = @()
-$template = ConvertFrom-Json -InputObject $rootTemplate -Depth 10
+$template = ConvertFrom-Json -InputObject $rootTemplate -Depth 20
 $template.parameters | Add-Member -Name "location" -MemberType NoteProperty -Value $locationParameter
 $userIdentity = ""
 foreach ($key in $appGateway.Identity.UserAssignedIdentities.Keys) { $userIdentity = $key }
-$newAppGw = ConvertFrom-Json -InputObject $($appGwResourceString -f $($appGatewayIdentityResourceString -f $userIdentity),$(ConvertTo-Json -InputObject $appGateway.Sku -Depth 10),$($wafPolicies[0].split("/")[8]))
+$newAppGw = ConvertFrom-Json -InputObject $($appGwResourceString -f $($appGatewayIdentityResourceString -f $userIdentity),$(ConvertTo-Json -InputObject $appGateway.Sku -Depth 20),$($wafPolicies[0].split("/")[8]))
 foreach($policy in $wafPolicies)
 {
     $wafPolicy = $null
     $wafPolicy = Get-AzApplicationGatewayFirewallPolicy -Name $policy.split("/")[8] -ResourceGroupName $policy.split("/")[4]
+    $customRules = @()
+    foreach($customRule in $wafPolicy.CustomRules)
+    {
+        $matchConditions = @()
+        foreach($matchCondition in $customRule.MatchConditions)
+        {
+            $condition = $matchCondition | Select MatchVariables,NegationConditon,MatchValues,Transforms
+            $condition | Add-Member -MemberType NoteProperty -Name Operator -Value $matchCondition.OperatorProperty
+            $matchConditions += $condition
+        }
+
+        $customRules += New-Object -TypeName psobject -Property @{
+            Name = $customRule.Name
+            Priority = $customRule.Priority
+            RateLimitDuration = $customRule.RateLimitDuration
+            RuleType = $customRule.RuleType
+            MatchConditions = $matchConditions
+            GroupByUserSession = $customRule.GroupByUserSession
+            Action = $customRule.Action
+            State = $customRule.State
+        }
+    }
+
     $policyProperties = New-Object -typename psobject -Property @{
-        CustomRules = $wafPolicy.CustomRules
+        CustomRules = $customRules
         PolicySettings = $wafPolicy.PolicySettings
         ManagedRules = $wafPolicy.ManagedRules        
     }
-    $template.resources += ConvertFrom-Json -InputObject $($wafResourceString -f $($wafPolicy.Name),$(ConvertTo-Json -InputObject $wafPolicy.Tag -Depth 10),$(ConvertTo-Json -InputObject $policyProperties -Depth 10)) -Depth 10
+    $template.resources += ConvertFrom-Json -InputObject $($wafResourceString -f $($wafPolicy.Name),$(ConvertTo-Json -InputObject $wafPolicy.Tag -Depth 20),$(ConvertTo-Json -InputObject $policyProperties -Depth 20)) -Depth 20
     $paramVaule = New-Object -TypeName psobject -Property @{
         type = "string"
         defaultValue = $wafPolicy.Name
@@ -509,11 +533,11 @@ foreach($policy in $wafPolicies)
 $newAppGw.properties.autoscaleConfiguration = $appGateway.AutoscaleConfiguration
 foreach($gatewayIpConfig in $appGateway.GatewayIPConfigurations)
 {
-    $newAppGw.properties.gatewayIPConfigurations += ConvertFrom-Json -InputObject $($gatewayIpResourceString -f $gatewayIpConfig.Name) -Depth 10
+    $newAppGw.properties.gatewayIPConfigurations += ConvertFrom-Json -InputObject $($gatewayIpResourceString -f $gatewayIpConfig.Name) -Depth 20
 }
 foreach($sslCertificate in $appGateway.SslCertificates)
 {
-    $newAppGw.properties.sslCertificates += ConvertFrom-Json -InputObject $($sslCertificatesResourceString -f $sslCertificate.Name, $sslCertificate.KeyVaultSecretId) -Depth 10
+    $newAppGw.properties.sslCertificates += ConvertFrom-Json -InputObject $($sslCertificatesResourceString -f $sslCertificate.Name, $sslCertificate.KeyVaultSecretId) -Depth 20
 }
 foreach($rootCert in $appGateway.TrustedRootCertificates)
 {
@@ -531,11 +555,11 @@ $firstIpOfSubnet = "[format('{0}.{1}.{2}.{3}', split(split(reference(extensionRe
 $newAppGw.properties.frontendIPConfigurations += ConvertFrom-Json -InputObject $($frontendIpResourceString -f $appGateway.FrontendIPConfigurations[0].Name,$secondary,$firstIpOfSubnet)
 foreach($frontEndPort in $appGateway.FrontendPorts)
 {
-    $newAppGw.properties.frontendPorts += ConvertFrom-Json -InputObject $($fronendPortResourceString -f $frontEndPort.Name,$frontEndPort.Port) -Depth 10
+    $newAppGw.properties.frontendPorts += ConvertFrom-Json -InputObject $($fronendPortResourceString -f $frontEndPort.Name,$frontEndPort.Port) -Depth 20
 }
 foreach($backendPool in $appGateway.BackendAddressPools)
 {
-    $backend = ConvertFrom-Json -InputObject $($backendAddressPoolResourceString -f $backendPool.Name) -Depth 10
+    $backend = ConvertFrom-Json -InputObject $($backendAddressPoolResourceString -f $backendPool.Name) -Depth 20
     $backend.properties.backendAddresses += $backendPool.BackendAddresses
     $newAppGw.properties.backendAddressPools += $backend
 }
@@ -543,7 +567,7 @@ foreach($httpSetting in $appGateway.BackendHttpSettingsCollection)
 {
     if($null -ne $httpSetting.Probe)
     {
-        $backendSetting = ConvertFrom-Json -InputObject $($backendHttpSettingCustomProbeResourceString -f "[concat(resourceId('Microsoft.Netowrk/applicationGateways',parameters('appGateway_name')),'/probes/$($httpSetting.Probe.Id.Split("/")[10])')]",$httpSetting.Name,$httpSetting.Port.ToString(),$httpSetting.Protocol,$httpSetting.CookieBasedAffinity,$httpSetting.RequestTimeout.ToString(),$($httpSetting.ConnectionDraining -eq $null ? "null" : "`"$($httpSetting.ConnectionDraining)`""),$($httpSetting.HostName -eq $null ? "null" : "`"$($httpSetting.HostName)`""),$httpSetting.PickHostNameFromBackendAddress.ToString().ToLower(),$httpSetting.AffinityCookieName,$($httpSetting.Path -eq $null ? "null" : "`"$($httpSetting.Path)`"")) -Depth 10
+        $backendSetting = ConvertFrom-Json -InputObject $($backendHttpSettingCustomProbeResourceString -f "[concat(resourceId('Microsoft.Netowrk/applicationGateways',parameters('appGateway_name')),'/probes/$($httpSetting.Probe.Id.Split("/")[10])')]",$httpSetting.Name,$httpSetting.Port.ToString(),$httpSetting.Protocol,$httpSetting.CookieBasedAffinity,$httpSetting.RequestTimeout.ToString(),$($httpSetting.ConnectionDraining -eq $null ? "null" : "`"$($httpSetting.ConnectionDraining)`""),$($httpSetting.HostName -eq $null ? "null" : "`"$($httpSetting.HostName)`""),$httpSetting.PickHostNameFromBackendAddress.ToString().ToLower(),$httpSetting.AffinityCookieName,$($httpSetting.Path -eq $null ? "null" : "`"$($httpSetting.Path)`"")) -Depth 20
         foreach($rootCert in $httpSetting.TrustedRootCertificates)
         {
             $backendSetting.properties.TrustedRootCertificates += New-Object -TypeName psobject -Property @{
@@ -553,7 +577,7 @@ foreach($httpSetting in $appGateway.BackendHttpSettingsCollection)
         $newAppGw.properties.backendHttpSettingsCollection += $backendSetting
     }
     else {
-        $backendSetting = ConvertFrom-Json -InputObject $($backendHttpSettingResourceString -f $httpSetting.Name,$httpSetting.Port.ToString(),$httpSetting.Protocol,$httpSetting.CookieBasedAffinity,$httpSetting.RequestTimeout.ToString(),$($httpSetting.ConnectionDraining -eq $null ? "null" : "`"$($httpSetting.ConnectionDraining)`""),$($httpSetting.HostName -eq $null ? "null" : "`"$($httpSetting.HostName)`""),$httpSetting.PickHostNameFromBackendAddress.ToString().ToLower(),$httpSetting.AffinityCookieName,$($httpSetting.Path -eq $null ? "null" : "`"$($httpSetting.Path)`"")) -Depth 10
+        $backendSetting = ConvertFrom-Json -InputObject $($backendHttpSettingResourceString -f $httpSetting.Name,$httpSetting.Port.ToString(),$httpSetting.Protocol,$httpSetting.CookieBasedAffinity,$httpSetting.RequestTimeout.ToString(),$($httpSetting.ConnectionDraining -eq $null ? "null" : "`"$($httpSetting.ConnectionDraining)`""),$($httpSetting.HostName -eq $null ? "null" : "`"$($httpSetting.HostName)`""),$httpSetting.PickHostNameFromBackendAddress.ToString().ToLower(),$httpSetting.AffinityCookieName,$($httpSetting.Path -eq $null ? "null" : "`"$($httpSetting.Path)`"")) -Depth 20
         foreach($rootCert in $httpSetting.TrustedRootCertificates)
         {
             $backendSetting.properties.TrustedRootCertificates += New-Object -TypeName psobject -Property @{
@@ -581,7 +605,7 @@ foreach($listener in $appGateway.HttpListeners)
 }
 foreach($urlPathMap in $appGateway.UrlPathMaps)
 {
-    $map = ConvertFrom-Json -InputObject $($urlPathMapResourceString -f $urlPathMap.Name,$urlPathMap.DefaultBackendAddressPool.Id.Split("/")[10],$urlPathMap.DefaultBackendHttpSettings.Id.Split("/")[10],$($urlPathMap.DefaultRewriteRuleSet -eq $null ? "null" : $(pathRewriteRuleResourceString -f $urlPathMap.DefaultRewriteRuleSet.Id.Split("/")[10])),$($urlPathMap.DefaultRedirectConfiguration -eq $null ? "null" : $($pathRedirectRuleResourceString -f $urlPathMap.DefaultRedirectConfiguration.Id.Split("/")[10]))) -Depth 10
+    $map = ConvertFrom-Json -InputObject $($urlPathMapResourceString -f $urlPathMap.Name,$urlPathMap.DefaultBackendAddressPool.Id.Split("/")[10],$urlPathMap.DefaultBackendHttpSettings.Id.Split("/")[10],$($urlPathMap.DefaultRewriteRuleSet -eq $null ? "null" : $(pathRewriteRuleResourceString -f $urlPathMap.DefaultRewriteRuleSet.Id.Split("/")[10])),$($urlPathMap.DefaultRedirectConfiguration -eq $null ? "null" : $($pathRedirectRuleResourceString -f $urlPathMap.DefaultRedirectConfiguration.Id.Split("/")[10]))) -Depth 20
     foreach($rule in $urlPathMap.PathRules)
     {
         $pathRule = ConvertFrom-Json -InputObject $($pathRulesResourceString -f $rule.Name,$($rule.BackendAddressPool -eq $null ? "null" : $routingRuleBackendResourceString -f $rule.BackendAddressPool.Id.Split("/")[10]),$($rule.BackendHttpSettings -eq $null ? "null" : $routingRuleBackendHttpSettingsResourceString -f $rule.BackendHttpSettings.Id.Split("/")[10]),$($rule.RewriteRuleSet -eq $null ? "null" : $($pathRewriteRuleResourceString -f $rule.RewriteRuleSet.Id.Split("/")[10])),$($rule.RedirectConfiguration -eq $null ? "null" : $pathRedirectRuleResourceString -f $rule.RedirectConfiguration.Id.Split("/")[10]),$($rule.FirewallPolicy -eq $null ? "null" : $($firewallPolicyResourceString -f $rule.FirewallPolicy.Id.Split("/")[8])))
@@ -592,18 +616,18 @@ foreach($urlPathMap in $appGateway.UrlPathMaps)
 }
 foreach($routingRule in $appGateway.RequestRoutingRules)
 {
-    $newAppGw.properties.requestRoutingRules += ConvertFrom-Json -InputObject $($routingRuleResourceString -f $routingRule.Name,$routingRule.RuleType,$routingRule.Priority,$($routingRule.BackendAddressPool -eq $null ? "null" : $($routingRuleBackendResourceString -f $routingRule.BackendAddressPool.Id.Split("/")[10])),$($routingRule.BackendHttpSettings -eq $null ? "null" : $($routingRuleHttpSettingResourceString -f $routingRule.BackendHttpSettings.Id.Split("/")[10])),$routingRule.HttpListener.Id.Split("/")[10],$($routingRule.UrlPathMap -eq $null ? "null" : $($routingUrlPathIdResourceString -f $routingRule.UrlPathMap.Id.Split("/")[10])),$($routingRule.RewriteRuleSet -eq $null ? "null" : $($routingRewriteRuleIdResourceString -f $routingRule.RewriteRuleSet.Id.Split("/")[10])),$($routingRule.RedirectConfiguration -eq $null ? "null" : $(ConvertTo-Json -InputObject $routingRule.RedirectConfiguration -Depth 10))) -Depth 10
+    $newAppGw.properties.requestRoutingRules += ConvertFrom-Json -InputObject $($routingRuleResourceString -f $routingRule.Name,$routingRule.RuleType,$routingRule.Priority,$($routingRule.BackendAddressPool -eq $null ? "null" : $($routingRuleBackendResourceString -f $routingRule.BackendAddressPool.Id.Split("/")[10])),$($routingRule.BackendHttpSettings -eq $null ? "null" : $($routingRuleHttpSettingResourceString -f $routingRule.BackendHttpSettings.Id.Split("/")[10])),$routingRule.HttpListener.Id.Split("/")[10],$($routingRule.UrlPathMap -eq $null ? "null" : $($routingUrlPathIdResourceString -f $routingRule.UrlPathMap.Id.Split("/")[10])),$($routingRule.RewriteRuleSet -eq $null ? "null" : $($routingRewriteRuleIdResourceString -f $routingRule.RewriteRuleSet.Id.Split("/")[10])),$($routingRule.RedirectConfiguration -eq $null ? "null" : $(ConvertTo-Json -InputObject $routingRule.RedirectConfiguration -Depth 20))) -Depth 20
 }
 foreach($probe in $appGateway.Probes)
 {
-    $newAppGw.properties.probes += ConvertFrom-Json -InputObject $($probeResourceString -f $probe.Name,$probe.Protocol,$($probe.Host -eq $null ? "null" : $probe.Host),$probe.Path,$probe.Interval,$probe.Timeout,$probe.UnhealthyThreshold,$probe.PickHostNameFromBackendHttpSettings.ToString().ToLower(),$probe.MinServers,$($probe.Port -eq $null ? "null" : $probe.Port),$(ConvertTo-Json -InputObject $probe.Match -Depth 10)) -Depth 10
+    $newAppGw.properties.probes += ConvertFrom-Json -InputObject $($probeResourceString -f $probe.Name,$probe.Protocol,$($probe.Host -eq $null ? "null" : $probe.Host),$probe.Path,$probe.Interval,$probe.Timeout,$probe.UnhealthyThreshold,$probe.PickHostNameFromBackendHttpSettings.ToString().ToLower(),$probe.MinServers,$($probe.Port -eq $null ? "null" : $probe.Port),$(ConvertTo-Json -InputObject $probe.Match -Depth 20)) -Depth 20
 }
 foreach($rewrite in $appGateway.RewriteRuleSets)
 {
-    $ruleSet = ConvertFrom-Json -InputObject $($rewriteRuleSetResourceString -f $rewrite.Name) -Depth 10
+    $ruleSet = ConvertFrom-Json -InputObject $($rewriteRuleSetResourceString -f $rewrite.Name) -Depth 20
     foreach($rewriteRule in $rewrite.RewriteRules)
     {
-        $ruleSet.properties.RewriteRules += ConvertFrom-Json -InputObject $($rewriteRuleResourceString -f $rewriteRule.Name,$rewriteRule.RuleSequence,$(ConvertTo-Json -InputObject $rewriteRule.Conditions -Depth 10),$(ConvertTo-Json -InputObject $rewriteRule.ActionSet -Depth 10)) -Depth 10
+        $ruleSet.properties.RewriteRules += ConvertFrom-Json -InputObject $($rewriteRuleResourceString -f $rewriteRule.Name,$rewriteRule.RuleSequence,$(ConvertTo-Json -InputObject $rewriteRule.Conditions -Depth 20),$(ConvertTo-Json -InputObject $rewriteRule.ActionSet -Depth 20)) -Depth 20
     }
     $newAppGw.properties.rewriteRuleSets += $ruleSet
 }
@@ -612,30 +636,30 @@ foreach($redirect in $appGateway.RedirectConfigurations)
     $redirectRule = ConvertFrom-Json -InputObject $($redirectRuleResourceString -f $redirect.Name,$redirect.RedirectType,$($redirect.TargetListener -eq $null ? "null" : $redirectTargetListenerResourceString -f $redirect.TargetListener.Id.Split("/")[10]),$($redirect.TargetUrl -eq $null ? "null" : "`"$($redirect.TargetUrl)`""),$redirect.IncludePath.ToString().ToLower(),$redirect.IncludeQueryString.ToString().ToLower())
     foreach($requestRouting in $redirect.RequestRoutingRules)
     {
-        $redirectRule.properties.RequestRoutingRules += ConvertFrom-Json -InputObject $($routingRuleIdResoruceString -f $requestRouting.Id.Split("/")[10]) -Depth 10
+        $redirectRule.properties.RequestRoutingRules += ConvertFrom-Json -InputObject $($routingRuleIdResoruceString -f $requestRouting.Id.Split("/")[10]) -Depth 20
     }
     foreach($pathRules in $redirect.PathRules)
     {
-        $redirectRule.properties.PathRules += ConvertFrom-Json -InputObject $($routingUrlPathRulesIdResourceString -f $pathRules.Id.Split("/")[10],$pathRules.Id.Split("/")[12]) -Depth 10
+        $redirectRule.properties.PathRules += ConvertFrom-Json -InputObject $($routingUrlPathRulesIdResourceString -f $pathRules.Id.Split("/")[10],$pathRules.Id.Split("/")[12]) -Depth 20
     }
     foreach($urlPath in $redirect.UrlPathMaps)
     {
-        $redirectRule.properties.UrlPathMaps += ConvertFrom-Json -InputObject $($routingUrlPathIdResourceString -f $urlPath.Id.Split("/")[10]) -Depth 10
+        $redirectRule.properties.UrlPathMaps += ConvertFrom-Json -InputObject $($routingUrlPathIdResourceString -f $urlPath.Id.Split("/")[10]) -Depth 20
     }
     $newAppGw.properties.redirectConfigurations += $redirectRule
 }
 foreach($sslProfile in $appGateway.SslProfiles)
 {
-    $profileSsl = ConvertFrom-Json -InputObject $($sslProfileResourceString -f $sslProfile.Name,$($sslProfile.SslPolicy -eq $null ? "null" : $(ConvertTo-Json -InputObject $sslProfile.SslPolicy -Depth 10)),$(ConvertTo-Json -InputObject $sslProfile.ClientAuthConfiguration -Depth 10)) -Depth 10
+    $profileSsl = ConvertFrom-Json -InputObject $($sslProfileResourceString -f $sslProfile.Name,$($sslProfile.SslPolicy -eq $null ? "null" : $(ConvertTo-Json -InputObject $($sslProfile.SslPolicy | Select PolicyType,PolicyName,CipherSuites,MinProtocolVersion) -Depth 20)),$(ConvertTo-Json -InputObject $sslProfile.ClientAuthConfiguration -Depth 20)) -Depth 20
     foreach($trustedCert in $sslProfile.TrustedClientCertificates)
     {
-        $profileSsl.properties.TrustedClientCertificates += ConvertFrom-Json -InputObject $($sslProfileTrustedCertificateResourceString -f $trustedCert.Id.Split("/")[10]) -Depth 10
+        $profileSsl.properties.TrustedClientCertificates += ConvertFrom-Json -InputObject $($sslProfileTrustedCertificateResourceString -f $trustedCert.Id.Split("/")[10]) -Depth 20
     }
     $newAppGw.properties.sslProfiles += $profileSsl
 }
 foreach($trustedClientCert in $appGateway.TrustedClientCertificates)
 {
-    $newAppGw.properties.trustedClientCertificates += ConvertFrom-Json -InputObject $($trustedClientCertResourceString -f $trustedClientCert.Name,$trustedClientCert.Data,$trustedClientCert.ClientCertIssuerDN) -Depth 10
+    $newAppGw.properties.trustedClientCertificates += ConvertFrom-Json -InputObject $($trustedClientCertResourceString -f $trustedClientCert.Name,$trustedClientCert.Data,$trustedClientCert.ClientCertIssuerDN) -Depth 20
 }
 $template.resources += $newAppGw
 $template.variables | Add-Member -MemberType NoteProperty -name "User" -Value $user
@@ -644,9 +668,9 @@ Select-AzSubscription -Subscription $templateResourceSubscription
 $currentTemplateSpec = Get-AzTemplateSpec -ResourceGroupName $templateResourceGroup -Name $($appGateway.Name + "-DR-Template")
 if($null -eq $currentTemplateSpec)
 {
-    New-AzTemplateSpec -ResourceGroupName $templateResourceGroup -Name $($appGateway.Name + "-DR-Template") -Location $drRegion -TemplateJson $template -Version "1"
+    New-AzTemplateSpec -ResourceGroupName $templateResourceGroup -Name $($appGateway.Name + "-DR-Template") -Location $drRegion -TemplateJson $(ConvertTo-Json -InputObject $template -Depth 20) -Version "1"
 }
 else {
     $version = $currentTemplateSpec.Versions.Count + 1
-    New-AzTemplateSpec -ResourceGroupName $templateResourceGroup -Name $($appGateway.Name + "-DR-Template") -Location $drRegion -TemplateJson $template -Version $version 
+    New-AzTemplateSpec -ResourceGroupName $templateResourceGroup -Name $($appGateway.Name + "-DR-Template") -Location $drRegion -TemplateJson $(ConvertTo-Json -InputObject $template -Depth 20) -Version $version 
 }
