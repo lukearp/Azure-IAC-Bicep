@@ -1,3 +1,5 @@
+param($eventGridEvent,$TriggerMetadata)
+
 $testing = $env:Testing #$true for True $false for False
 $testAppGatewayId = $env:TestAppGatewayId # Resource ID of test firewall policy
 $templateResourceGroup = $env:TemplateResourceGroup
