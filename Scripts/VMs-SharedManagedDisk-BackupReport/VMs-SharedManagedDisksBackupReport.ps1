@@ -120,10 +120,14 @@ foreach ($disk in $disks) {
         $diskPolicy = Get-AzDataProtectionBackupPolicy -Name "defaultPolicy" -ResourceGroupName "rg_backup" -VaultName $vault.Name
         $instance = Initialize-AzDataProtectionBackupInstance -DatasourceType AzureDisk -DatasourceLocation $diskInfo.Location -PolicyId $diskPolicy.Id -DatasourceId $disk
         $instance.Property.PolicyInfo.PolicyParameter.DataStoreParametersList[0].ResourceGroupId = "/subscriptions/$($subscription.Id)/resourceGroups/rg_backup"
-        New-AzDataProtectionBackupInstance -ResourceGroupName "rg_backup" -VaultName $vault.Name -BackupInstance $instance
-        Backup-AzDataProtectionBackupInstanceAdhoc -BackupInstanceName $instance.BackupInstanceName -ResourceGroupName "rg_backup" -VaultName $vault.Name -BackupRuleOptionRuleName "Default"
-        #ad-bv-{SubscriptionName}
-        #defaultPolicy = Everyday at 22:00 EST and keep for 30 days
+        try {
+          New-AzDataProtectionBackupInstance -ResourceGroupName "rg_backup" -VaultName $vault.Name -BackupInstance $instance
+          $diskInfo.tags.DiskBackupNeeded = "false"
+        }
+        catch {
+
+        }
+        #Backup-AzDataProtectionBackupInstanceAdhoc -BackupInstanceName $instance.BackupInstanceName -ResourceGroupName "rg_backup" -VaultName $vault.Name -BackupRuleOptionRuleName "Default"
     }
     else {
         if ($diskInfo.tags.Keys -notcontains "DiskBackupNeeded") {
