@@ -459,6 +459,46 @@ $appGwResourceString = @'
 }}
 '@
 
+$appGwResourceNoPolicyString = @'
+{{
+    "type": "Microsoft.Network/applicationGateways",
+    "apiVersion": "2023-06-01",
+    "name": "[parameters('appGateway_name')]",
+    "dependsOn": [
+        "[resourceId('Microsoft.Network/publicIPAddresses', format('{{0}}-pip', parameters('appGateway_name')))]"
+    ],
+    "location": "[parameters('location')]",
+    "identity": {0},
+    "properties": {{
+        "sku": {1},
+        "gatewayIPConfigurations": [],
+        "sslCertificates": [],
+        "trustedRootCertificates": [],
+        "trustedClientCertificates": [],
+        "sslProfiles": [],
+        "frontendIPConfigurations": [],
+        "frontendPorts": [],
+        "backendAddressPools": [],
+        "loadDistributionPolicies": [],
+        "backendHttpSettingsCollection": [],
+        "backendSettingsCollection": [],
+        "httpListeners": [],
+        "listeners": [],
+        "urlPathMaps": [],
+        "requestRoutingRules": [],
+        "routingRules": [],
+        "probes": [],
+        "rewriteRuleSets": [],
+        "redirectConfigurations": [],
+        "privateLinkConfigurations": [],
+        "sslPolicy": {{}},
+        "enableHttp2": true,
+        "autoscaleConfiguration": {{}},
+        "webApplicationFirewallConfiguration": {{}}
+    }}
+}}
+'@
+
 $wafResourceString = @'
 {{
     "type": "Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies",
@@ -490,7 +530,12 @@ $template = ConvertFrom-Json -InputObject $rootTemplate -Depth 20
 $template.parameters | Add-Member -Name "location" -MemberType NoteProperty -Value $locationParameter
 $userIdentity = ""
 foreach ($key in $appGateway.Identity.UserAssignedIdentities.Keys) { $userIdentity = $key }
-$newAppGw = ConvertFrom-Json -InputObject $($appGwResourceString -f $($appGatewayIdentityResourceString -f $userIdentity),$(ConvertTo-Json -InputObject $appGateway.Sku -Depth 20),$($wafPolicies[0].split("/")[8]))
+if($null -eq $appGateway.FirewallPolicy.id) {
+    $newAppGw = ConvertFrom-Json -InputObject $($appGwResourceString -f $($appGatewayIdentityResourceString -f $userIdentity),$(ConvertTo-Json -InputObject $appGateway.Sku -Depth 20))
+}
+else {
+    $newAppGw = ConvertFrom-Json -InputObject $($appGwResourceString -f $($appGatewayIdentityResourceString -f $userIdentity),$(ConvertTo-Json -InputObject $appGateway.Sku -Depth 20),$($wafPolicies[0].split("/")[8]))
+}
 foreach($policy in $wafPolicies)
 {
     $wafPolicy = $null
