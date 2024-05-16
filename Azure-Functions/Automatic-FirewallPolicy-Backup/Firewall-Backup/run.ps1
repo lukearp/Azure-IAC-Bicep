@@ -25,14 +25,17 @@ $tempFile = New-TemporaryFile
 Select-AzSubscription -Subscription $subscription
 Export-AzResourceGroup -ResourceGroupName $resourceGroup -Resource $firewallPolicyId -Path $tempFile.FullName #$eventGridEvent.data.resourceUri
 $content = (Get-Content -Path "$($tempFile.FullName).json") -join ""
-Write-Output $content
 $firewallPolicyTemplate = ConvertFrom-Json -InputObject $content
-$firewallPolicyTemplate.parameters."firewallPolicies_$($policyName.Replace("-","_"))_name" | Add-Member -MemberType Noteproperty -Name "defaultValue" -Value "$($policyName)-Backup"
-$firewallPolicyTemplate.variables | Add-Member -MemberType NoteProperty -name "User" -Value $user
+
+Write-Output $content
 $ipGroups = @()
+$ipGroups += ($firewallPolicyTemplate.parameters | Get-Member | ?{$_.MemberType -eq "NoteProperty" -and $_.Name -like "ipGroups_*_externalid"})
+$firewallPolicyTemplate.parameters = New-Object -TypeName psobject
+$firewallPolicyTemplate.parameters | Add-Member -MemberType NoteProperty -Name "firewallPolicies_$($policyName.Replace("-","_"))_name" -Value $(New-Object -TypeName psobject -Property @{ defaultValue =  "$($policyName)-Backup"})
+$firewallPolicyTemplate.variables | Add-Member -MemberType NoteProperty -name "User" -Value $user
+$content = $firewallPolicyTemplate | ConvertTo-Json -Depth 100
 $graphQuery = "resources | where type == `"microsoft.network/ipgroups`" | project id,name"
 $ipGroupResourceIds = Search-AzGraph -Query $graphQuery -First 1000
-$ipGroups += ($firewallPolicyTemplate.parameters | Get-Member | ?{$_.MemberType -eq "NoteProperty" -and $_.Name -like "ipGroups_*_externalid"})
 foreach($ipGroup in $ipGroups)
 {
     $resourceId = $null
@@ -42,9 +45,10 @@ foreach($ipGroup in $ipGroups)
     {
         $resourceId = $resourceId | ?{$_ -like "/subscriptions/$($subscription)/*"}
     }
-    $firewallPolicyTemplate.parameters."ipGroups_$($ipGroupName)_externalid" | Add-Member -MemberType NoteProperty -Name "defaultValue" -Value $resourceId
-    Write-Output $firewallPolicyTemplate.parameters."ipGroups_$($ipGroupName)_externalid".defaultValue
+    $content = $content.Replace("[parameters('$($ipGroup.Name)')]",$resourceId).Replace("parameters('$($ipGroup.Name)')",$resourceId)
 }
+$firewallPolicyTemplate = ConvertFrom-Json -InputObject $content
+
 $count = 0
 $dependsOn = @()
 $stringDepends = "[resourceId('Microsoft.Network/firewallPolicies/ruleCollectionGroups',parameters('firewallPolicies_$($policyName.Replace("-","_"))_name'),'{0}')]"
