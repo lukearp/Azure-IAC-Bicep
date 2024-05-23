@@ -31,7 +31,7 @@ Write-Output $content
 $ipGroups = @()
 $ipGroups += ($firewallPolicyTemplate.parameters | Get-Member | ?{$_.MemberType -eq "NoteProperty" -and $_.Name -like "ipGroups_*_externalid"})
 $firewallPolicyTemplate.parameters = New-Object -TypeName psobject
-$firewallPolicyTemplate.parameters | Add-Member -MemberType NoteProperty -Name "firewallPolicies_$($policyName.Replace("-","_"))_name" -Value $(New-Object -TypeName psobject -Property @{ defaultValue =  "$($policyName)-Backup"})
+$firewallPolicyTemplate.parameters | Add-Member -MemberType NoteProperty -Name "firewallPolicies_$($policyName.Replace("-","_"))_name" -Value $(New-Object -TypeName psobject -Property @{ defaultValue =  "$($policyName)-Backup"; type = "string"})
 $firewallPolicyTemplate.variables | Add-Member -MemberType NoteProperty -name "User" -Value $user
 $content = $firewallPolicyTemplate | ConvertTo-Json -Depth 100
 $graphQuery = "resources | where type == `"microsoft.network/ipgroups`" | project id,name"
