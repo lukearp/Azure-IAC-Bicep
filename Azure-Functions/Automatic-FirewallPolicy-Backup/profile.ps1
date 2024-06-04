@@ -13,6 +13,7 @@
 # Remove this if you are not planning on using MSI or Azure PowerShell.
 if ($env:MSI_SECRET) {
     Disable-AzContextAutosave -Scope Process | Out-Null
+    Update-AzConfig -DefaultSubscriptionForLogin '32eb88b4-4029-4094-85e3-ec8b7ce1fc00'
     Connect-AzAccount -Identity
 }
 

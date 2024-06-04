@@ -24,3 +24,8 @@ In the App Settings configuration of the Function app, add the following values:
 |StorageAccountSubscription | Subscription ID of Storage Account |
 |Testing | true or false | 
 |TestFirewallPolicy | Resource ID of policy you are |wanting to test with.  Only used with Testing is set to true |
+|TestFirewallPolicyName | Name of a Firewall Policy, used for testing BuildDiff Functions |
+
+# Feature Adds
+
+Two Functions added.  BuildDiffs-v1 and BuildDiffs.  Both are leveraging [DiffPlex]("https://github.com/mmanela/diffplex/tree/master").  v1 exports 2 files OldText and NewText.  You can then see what changes are made between the two version.  BuildDiffs is still a Work in Progress.  BuildDiffs will give you a condensed report on what specific data objects have been updated.   
