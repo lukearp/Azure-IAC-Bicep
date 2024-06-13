@@ -497,7 +497,7 @@ $appGwResourceNoPolicyString = @'
     }}
 }}
 '@
-#,"webApplicationFirewallConfiguration": {{}}
+#,"webApplicationFirewallConfiguration": {{}},        "autoscaleConfiguration": {{}}
 
 $wafResourceString = @'
 {{
@@ -531,9 +531,11 @@ $template.parameters | Add-Member -Name "location" -MemberType NoteProperty -Val
 $userIdentity = ""
 foreach ($key in $appGateway.Identity.UserAssignedIdentities.Keys) { $userIdentity = $key }
 if($null -eq $appGateway.FirewallPolicy.id) {
+    Write-Output "No Firewall Policy"
     $newAppGw = ConvertFrom-Json -InputObject $($appGwResourceNoPolicyString -f $($appGatewayIdentityResourceString -f $userIdentity),$(ConvertTo-Json -InputObject $appGateway.Sku -Depth 20))
 }
 else {
+    Write-Output "Firewall Policy"
     $newAppGw = ConvertFrom-Json -InputObject $($appGwResourceString -f $($appGatewayIdentityResourceString -f $userIdentity),$(ConvertTo-Json -InputObject $appGateway.Sku -Depth 20),$($wafPolicies[0].split("/")[8]))
 }
 foreach($policy in $wafPolicies)
@@ -577,7 +579,10 @@ foreach($policy in $wafPolicies)
     $newAppGw.dependsOn += "[resourceId('Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies',parameters('$($wafPolicy.Name)'))]"
     #$count++
 }
-$newAppGw.properties.autoscaleConfiguration = $appGateway.AutoscaleConfiguration
+if($null -ne $appGateway.AutoscaleConfiguration)
+{
+    $newAppGw.properties.autoscaleConfiguration = $appGateway.AutoscaleConfiguration
+}
 foreach($gatewayIpConfig in $appGateway.GatewayIPConfigurations)
 {
     $newAppGw.properties.gatewayIPConfigurations += ConvertFrom-Json -InputObject $($gatewayIpResourceString -f $gatewayIpConfig.Name) -Depth 20
