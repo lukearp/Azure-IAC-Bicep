@@ -189,6 +189,7 @@ $backendAddressPoolResourceString = @'
     "name": "{0}",
     "properties": {{
         "backendAddresses": []
+        "backendIpConfigurations": []
     }}
 }}
 '@
@@ -702,6 +703,7 @@ foreach($backendPool in $appGateway.BackendAddressPools)
 {
     $backend = ConvertFrom-Json -InputObject $($backendAddressPoolResourceString -f $backendPool.Name) -Depth 20
     $backend.properties.backendAddresses += $backendPool.BackendAddresses
+    $backend.properties.backendIpConfigurations += $backendPool.BackendIpConfigurations
     $newAppGw.properties.backendAddressPools += $backend
 }
 foreach($httpSetting in $appGateway.BackendHttpSettingsCollection)
