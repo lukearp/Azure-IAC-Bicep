@@ -188,7 +188,7 @@ $backendAddressPoolResourceString = @'
 {{
     "name": "{0}",
     "properties": {{
-        "backendAddresses": []
+        "backendAddresses": [],
         "backendIpConfigurations": []
     }}
 }}
