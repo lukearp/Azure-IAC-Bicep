@@ -493,11 +493,11 @@ $appGwResourceNoPolicyString = @'
         "privateLinkConfigurations": [],
         "sslPolicy": {{}},
         "enableHttp2": true,
-        "autoscaleConfiguration": {{}},
-        "webApplicationFirewallConfiguration": {{}}
+        "autoscaleConfiguration": {{}}
     }}
 }}
 '@
+#,"webApplicationFirewallConfiguration": {{}}
 
 $wafResourceString = @'
 {{
@@ -531,7 +531,7 @@ $template.parameters | Add-Member -Name "location" -MemberType NoteProperty -Val
 $userIdentity = ""
 foreach ($key in $appGateway.Identity.UserAssignedIdentities.Keys) { $userIdentity = $key }
 if($null -eq $appGateway.FirewallPolicy.id) {
-    $newAppGw = ConvertFrom-Json -InputObject $($appGwResourceString -f $($appGatewayIdentityResourceString -f $userIdentity),$(ConvertTo-Json -InputObject $appGateway.Sku -Depth 20))
+    $newAppGw = ConvertFrom-Json -InputObject $($appGwResourceNoPolicyString -f $($appGatewayIdentityResourceString -f $userIdentity),$(ConvertTo-Json -InputObject $appGateway.Sku -Depth 20))
 }
 else {
     $newAppGw = ConvertFrom-Json -InputObject $($appGwResourceString -f $($appGatewayIdentityResourceString -f $userIdentity),$(ConvertTo-Json -InputObject $appGateway.Sku -Depth 20),$($wafPolicies[0].split("/")[8]))

@@ -18,6 +18,7 @@ In the App Settings configuration of the Function app, add the following values:
 
 | App Setting | Description |
 | --| -- |
+|DefaultLoginSubscription | Subscription ID for Connect-AzAccount |
 | ContainerName | Name of Azure Storage Container |
 |StorageAccountName | Name of Azure Storage Account |
 |StorageAccountResourceGroupName | Resource Group Name of Storage Account |
