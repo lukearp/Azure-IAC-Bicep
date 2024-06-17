@@ -616,7 +616,7 @@ if($null -eq $appGateway.FirewallPolicy.id -and $null -ne $appGatewayId.Identity
     Write-Output "No Firewall Policy"
     $newAppGw = ConvertFrom-Json -InputObject $($appGwResourceNoPolicyString -f $($appGatewayIdentityResourceString -f $userIdentity),$(ConvertTo-Json -InputObject $appGateway.Sku -Depth 20))
 }
-elseif($null -ne $appGatewayId.Identity) {
+elseif($null -ne $appGateway.Identity) {
     Write-Output "Firewall Policy"
     $newAppGw = ConvertFrom-Json -InputObject $($appGwResourceString -f $($appGatewayIdentityResourceString -f $userIdentity),$(ConvertTo-Json -InputObject $appGateway.Sku -Depth 20),$($wafPolicies[0].split("/")[8]))
 }
