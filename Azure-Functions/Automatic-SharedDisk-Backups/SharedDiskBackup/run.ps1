@@ -39,7 +39,7 @@ $instances = @()
 #Get all backup instances from available Backupe Vaults
 foreach ($backupVault in $backupVaults) {
     Select-AzSubscription $backupVault.subscriptionId
-    $instances += Get-AzDataProtectionBackupInstance -VaultName $backupVault.name -ResourceGroupName $backupVault.resourceGroup
+    $instances += Get-AzDataProtectionBackupInstance -VaultName $backupVault.name -ResourceGroupName $backupVault.resourceGroup | ?{$_.Property.CurrentProtectionState -eq "ProtectionConfigured"}# Validate Status
 }
 
 #Loop through disks to verfiy they are being backed up
@@ -58,12 +58,11 @@ foreach ($disk in $disks) {
             $diskInfo.tags.DiskBackupNeeded = "true"
         }
         $subscription = Get-AzSubscription -SubscriptionId $($disk.split("/")[2])
-        $vault = $backupVaults | ?{$_.subscriptionId -eq "*$($disk.split("/")[2])*" -and $_.name -eq "ad-bv-$($subscription.Name.Replace("_","-"))"}
-        
+        $vault = $backupVaults | ?{$_.subscriptionId -eq "$($disk.split("/")[2])" -and $_.name -eq "ad-bv-$($subscription.Name.Replace("_","-"))"}
+        Select-AzSubscription -Subscription $subscription.Id
         #Check to see if Vault exists in Azure Subscription with disk
         if($null -eq $vault)
         {
-            Select-AzSubscription -Subscription $subscription.Id
             $storageSetting = New-AzDataProtectionBackupVaultStorageSettingObject -Type GeoRedundant -DataStoreType VaultStore
             $newVault = New-AzDataProtectionBackupVault -ResourceGroupName "rg_backup" -VaultName "ad-bv-$((Get-AzSubscription -SubscriptionId $disk.split("/")[2]).Name.Replace("_","-"))" -Location $diskInfo.Location -StorageSetting $storageSetting
             
@@ -88,13 +87,13 @@ foreach ($disk in $disks) {
         $diskPolicy = Get-AzDataProtectionBackupPolicy -Name "defaultPolicy" -ResourceGroupName "rg_backup" -VaultName $vault.Name
         $instance = Initialize-AzDataProtectionBackupInstance -DatasourceType AzureDisk -DatasourceLocation $diskInfo.Location -PolicyId $diskPolicy.Id -DatasourceId $disk
         $instance.Property.PolicyInfo.PolicyParameter.DataStoreParametersList[0].ResourceGroupId = "/subscriptions/$($subscription.Id)/resourceGroups/rg_backup"
-        try {
+        <#try {
           New-AzDataProtectionBackupInstance -ResourceGroupName "rg_backup" -VaultName $vault.Name -BackupInstance $instance -AsJob
           $diskInfo.tags.DiskBackupNeeded = "false"
         }
         catch {
 
-        }
+        }#>
         #Backup-AzDataProtectionBackupInstanceAdhoc -BackupInstanceName $instance.BackupInstanceName -ResourceGroupName "rg_backup" -VaultName $vault.Name -BackupRuleOptionRuleName "Default"
     }
     else {
@@ -105,7 +104,7 @@ foreach ($disk in $disks) {
             $diskInfo.tags.DiskBackupNeeded = "false"
         }
     }
-    New-AzTag -ResourceId $disk -Tag $diskInfo.tags -Force -Confirm:$false
+    #New-AzTag -ResourceId $disk -Tag $diskInfo.tags
 }
 Get-Job | Wait-Job
 Get-Job | Receive-Job
