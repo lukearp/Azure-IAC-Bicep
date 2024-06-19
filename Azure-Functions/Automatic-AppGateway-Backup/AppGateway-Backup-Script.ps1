@@ -5,8 +5,13 @@ $testAppGatewayId = $env:TestAppGatewayId # Resource ID of test firewall policy
 $templateResourceGroup = $env:TemplateResourceGroup
 $templateResourceSubscription = $env:TemplateResourceSubscription
 $drRegion = $env:DrRegion
+$testRun = $false
+if($testing -eq "TRUE")
+{
+    $testRun = $true
+}
 
-if($testing -eq $false) {
+if($testRun -eq $false) {
     $user = $eventGridEvent.data.claims['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn']
     $appGatewayId = $eventGridEvent.data.resourceUri.split("/")[0..8] -join "/"
 } else {
