@@ -501,7 +501,7 @@ $appGwResourceNoIdentityString = @'
         "enableHttp2": true,
         "autoscaleConfiguration": {{}},
         "firewallPolicy": {{
-            "id": "[resourceId('Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies',parameters('{2}'))]"
+            "id": "[resourceId('Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies',parameters('{1}'))]"
         }}
     }}
 }}
@@ -618,19 +618,21 @@ $template.parameters | Add-Member -Name "location" -MemberType NoteProperty -Val
 $userIdentity = ""
 foreach ($key in $appGateway.Identity.UserAssignedIdentities.Keys) { $userIdentity = $key }
 if($null -eq $appGateway.FirewallPolicy.id -and $null -ne $appGatewayId.Identity) {
-    Write-Output "No Firewall Policy"
+    Write-Output "No Firewall Policy No Identity"
     $newAppGw = ConvertFrom-Json -InputObject $($appGwResourceNoPolicyString -f $($appGatewayIdentityResourceString -f $userIdentity),$(ConvertTo-Json -InputObject $appGateway.Sku -Depth 20))
 }
 elseif($null -ne $appGateway.Identity) {
-    Write-Output "Firewall Policy"
+    Write-Output "Firewall Policy No Identity"
     $newAppGw = ConvertFrom-Json -InputObject $($appGwResourceString -f $($appGatewayIdentityResourceString -f $userIdentity),$(ConvertTo-Json -InputObject $appGateway.Sku -Depth 20),$($wafPolicies[0].split("/")[8]))
 }
 elseif($null -eq $appGateway.FirewallPolicy.id)
 {
+    Write-Output "No Firewall Policy and No Identity"
     $newAppGw = ConvertFrom-Json -InputObject $($appGwResourceNoPolicyNoIdenityString -f $(ConvertTo-Json -InputObject $appGateway.Sku -Depth 20)) 
 }
 else 
 {
+    Write-Output "Firewall Policy and No Identity"
     $newAppGw = ConvertFrom-Json -InputObject $($appGwResourceNoIdentityString -f $(ConvertTo-Json -InputObject $appGateway.Sku -Depth 20),$($wafPolicies[0].split("/")[8]))
 }
 foreach($policy in $wafPolicies)
