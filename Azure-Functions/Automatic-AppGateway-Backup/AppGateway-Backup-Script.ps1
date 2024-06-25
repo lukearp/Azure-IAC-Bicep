@@ -58,7 +58,13 @@ $rootTemplate = @'
                 "publicIPAllocationMethod": "Static"
             }
         }
-    ]
+    ],
+    "outputs": {
+        "publicIp": {
+            "type": "string",
+            "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', format('{0}-pip', parameters('appGateway_name')))).ipAddress]"
+        }
+    }
 }
 '@
 
@@ -457,10 +463,7 @@ $appGwResourceString = @'
         "privateLinkConfigurations": [],
         "sslPolicy": {{}},
         "enableHttp2": true,
-        "autoscaleConfiguration": {{}},
-        "firewallPolicy": {{
-            "id": "[resourceId('Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies',parameters('{2}'))]"
-        }}
+        "autoscaleConfiguration": {{}}
     }}
 }}
 '@
@@ -621,8 +624,8 @@ if($null -eq $appGateway.FirewallPolicy.id -and $null -ne $appGatewayId.Identity
     Write-Output "No Firewall Policy No Identity"
     $newAppGw = ConvertFrom-Json -InputObject $($appGwResourceNoPolicyString -f $($appGatewayIdentityResourceString -f $userIdentity),$(ConvertTo-Json -InputObject $appGateway.Sku -Depth 20))
 }
-elseif($null -ne $appGateway.Identity) {
-    Write-Output "Firewall Policy No Identity"
+elseif($null -eq $appGateway.FirewallPolicy.id -and $null -ne $appGateway.Identity) {
+    Write-Output "No Firewall Policy with Identity"
     $newAppGw = ConvertFrom-Json -InputObject $($appGwResourceString -f $($appGatewayIdentityResourceString -f $userIdentity),$(ConvertTo-Json -InputObject $appGateway.Sku -Depth 20),$($wafPolicies[0].split("/")[8]))
 }
 elseif($null -eq $appGateway.FirewallPolicy.id)
