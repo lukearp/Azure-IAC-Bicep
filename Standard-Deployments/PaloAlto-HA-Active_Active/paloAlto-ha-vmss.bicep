@@ -45,7 +45,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2020-11-01' existing = {
 }
 
 resource bootstrapStorage 'Microsoft.Storage/storageAccounts@2021-02-01' = {
-  name: substring(concat('palo',replace(guid(paloNamePrefix,subscription().subscriptionId),'-','')),0,23)
+  name: substring(concat('palo',replace(guid(paloNamePrefix,subscription().subscriptionId,resourceGroup().name),'-','')),0,23)
   kind: 'StorageV2'
   location: location
   sku: {
