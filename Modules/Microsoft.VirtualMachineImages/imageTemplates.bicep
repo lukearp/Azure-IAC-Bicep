@@ -48,6 +48,6 @@ resource image 'Microsoft.VirtualMachineImages/imageTemplates@2022-02-14' = {
         runOutputName: guid(name)  
       }
     ]
-    customize: customize 
+    //customize: customize 
   }     
 }

@@ -29,6 +29,13 @@ var properties = nsgName == '' && routeTableName == '' ? {
   }
   serviceEndpoints: serviceEndpoints
   delegations: subnetDelegation
+} : nsgName != '' && routeTableName == '' ? {
+  addressPrefix: addressPrefix
+  networkSecurityGroup: {
+    id: resourceId('Microsoft.Network/networkSecurityGroups', nsgName)
+  }
+  serviceEndpoints: serviceEndpoints
+  delegations: subnetDelegation
 } : {
   addressPrefix: addressPrefix
   routeTable: {

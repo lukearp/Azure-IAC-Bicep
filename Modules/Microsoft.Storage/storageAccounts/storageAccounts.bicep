@@ -42,6 +42,12 @@ param keyVaultRg string = ''
 param keyVaultSubscription string = ''
 param secretName string = ''
 param generateSas bool = false
+param ipRules array = []
+@allowed([
+  'Allow'
+  'Deny'
+])
+param networkDefaultAction string = 'Allow'
 @maxValue(10)
 @minValue(1)
 param expireInDays int = 1
@@ -61,6 +67,10 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = {
      allowBlobPublicAccess: disablePublicAccess
      supportsHttpsTrafficOnly: supportsHttpsTrafficOnly 
      publicNetworkAccess: publicNetworkAccess == false ? 'Disabled' : 'Enabled' 
+     networkAcls: {
+      defaultAction: networkDefaultAction
+      ipRules: ipRules  
+     } 
   }   
   tags: tags
 }

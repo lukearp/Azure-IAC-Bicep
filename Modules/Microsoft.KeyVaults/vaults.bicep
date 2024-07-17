@@ -37,6 +37,12 @@ param eventHubName string = ''
 param serviceBusRuleId string = ''
 param storageAccountId string = ''
 param workspaceId string = ''
+param ipRules array = []
+@allowed([
+  'Allow'
+  'Deny'
+])
+param networkDefaultAction string = 'Allow'
 param tags object = {}
 
 resource keyvault 'Microsoft.KeyVault/vaults@2023-02-01' = {
@@ -55,6 +61,10 @@ resource keyvault 'Microsoft.KeyVault/vaults@2023-02-01' = {
     enablePurgeProtection: enablePurgeProtection
     enableRbacAuthorization: enableRbacAuthorization
     enableSoftDelete: enableSoftDelete
+    networkAcls: {
+      ipRules: ipRules
+      defaultAction: networkDefaultAction  
+    } 
   }
 }
 

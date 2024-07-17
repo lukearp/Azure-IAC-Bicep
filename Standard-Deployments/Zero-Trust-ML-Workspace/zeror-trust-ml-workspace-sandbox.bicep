@@ -34,7 +34,7 @@ module storage '../../Modules/Microsoft.Storage/storageAccounts/storageAccounts.
     enableDiagnostics: enableDiagnostics
     workspaceId: logAnalyticsResourceId  
     enableHierarchicalNamespace: false 
-    disablePubliAccess: true
+    publicNetworkAccess: true
     supportsHttpsTrafficOnly: true   
     tags: tags    
    } 

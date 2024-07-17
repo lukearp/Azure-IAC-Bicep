@@ -14,6 +14,12 @@ param anonymousPullEnabled bool = false
   'Disabled'
 ])
 param zoneRedundancy string = 'Disabled'
+param ipRules array = []
+@allowed([
+  'Allow'
+  'Deny'
+])
+param networkDefaultAction string = 'Allow'
 param tags object = {}
 
 resource acr 'Microsoft.ContainerRegistry/registries@2021-12-01-preview' = {
@@ -28,7 +34,11 @@ resource acr 'Microsoft.ContainerRegistry/registries@2021-12-01-preview' = {
   properties: {
     adminUserEnabled: adminUserEnabled
     anonymousPullEnabled: anonymousPullEnabled 
-    zoneRedundancy: zoneRedundancy      
+    zoneRedundancy: zoneRedundancy 
+    networkRuleSet: {
+      defaultAction: networkDefaultAction
+      ipRules: ipRules 
+    }      
   } 
   tags: tags 
 }

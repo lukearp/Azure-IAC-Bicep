@@ -12,6 +12,13 @@ param tier string = 'Basic'
   'None'
 ])
 param identity string
+@allowed([
+  'Default'
+  'FeatureStore'
+  'Hub'
+  'Project'
+])
+param kind string = 'Default'
 param storageAccountId string
 param keyVaultId string
 param containerRegisteryId string
@@ -22,9 +29,10 @@ param v1LegacyMode bool = false
   'Disabled'
 ])
 param publicNetworkAccess string = 'Enabled'
+param ipRules array = []
 param tags object = {}
 
-resource ml 'Microsoft.MachineLearningServices/workspaces@2022-05-01' = {
+resource ml 'Microsoft.MachineLearningServices/workspaces@2024-01-01-preview' = {
   name: name
   sku: {
      name: tier
@@ -33,6 +41,7 @@ resource ml 'Microsoft.MachineLearningServices/workspaces@2022-05-01' = {
   identity: {
     type: identity
   } 
+  kind: kind 
   location: location
   properties: {
     friendlyName: name
@@ -41,7 +50,8 @@ resource ml 'Microsoft.MachineLearningServices/workspaces@2022-05-01' = {
     containerRegistry: containerRegisteryId
     v1LegacyMode: v1LegacyMode 
     publicNetworkAccess: publicNetworkAccess 
-    applicationInsights: applicationInsightsId 
+    applicationInsights: applicationInsightsId  
+    ipAllowlist: ipRules
   }  
   tags: tags  
 }
