@@ -1,0 +1,378 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "contentVersion": "1.0.0.0",
+        "triggers": {
+            "When_a_HTTP_request_is_received": {
+                "type": "Request",
+                "kind": "Http",
+                "inputs": {
+                    "schema": {
+                        "properties": {
+                            "alertContext": {
+                                "properties": {
+                                    "condition": {
+                                        "properties": {
+                                            "allOf": {
+                                                "items": {
+                                                    "properties": {
+                                                        "dimensions": {
+                                                            "type": "array"
+                                                        },
+                                                        "event": {},
+                                                        "failingPeriods": {
+                                                            "properties": {
+                                                                "minFailingPeriodsToAlert": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "numberOfEvaluationPeriods": {
+                                                                    "type": "integer"
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        },
+                                                        "linkToFilteredSearchResultsAPI": {
+                                                            "type": "string"
+                                                        },
+                                                        "linkToFilteredSearchResultsUI": {
+                                                            "type": "string"
+                                                        },
+                                                        "linkToSearchResultsAPI": {
+                                                            "type": "string"
+                                                        },
+                                                        "linkToSearchResultsUI": {
+                                                            "type": "string"
+                                                        },
+                                                        "metricMeasureColumn": {},
+                                                        "metricValue": {
+                                                            "type": "integer"
+                                                        },
+                                                        "operator": {
+                                                            "type": "string"
+                                                        },
+                                                        "searchQuery": {
+                                                            "type": "string"
+                                                        },
+                                                        "targetResourceTypes": {
+                                                            "type": "string"
+                                                        },
+                                                        "threshold": {
+                                                            "type": "string"
+                                                        },
+                                                        "timeAggregation": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "searchQuery",
+                                                        "metricMeasureColumn",
+                                                        "targetResourceTypes",
+                                                        "operator",
+                                                        "threshold",
+                                                        "timeAggregation",
+                                                        "dimensions",
+                                                        "metricValue",
+                                                        "failingPeriods",
+                                                        "linkToSearchResultsUI",
+                                                        "linkToFilteredSearchResultsUI",
+                                                        "linkToSearchResultsAPI",
+                                                        "linkToFilteredSearchResultsAPI",
+                                                        "event"
+                                                    ],
+                                                    "type": "object"
+                                                },
+                                                "type": "array"
+                                            },
+                                            "windowEndTime": {
+                                                "type": "string"
+                                            },
+                                            "windowSize": {
+                                                "type": "string"
+                                            },
+                                            "windowStartTime": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "type": "object"
+                                    },
+                                    "conditionType": {
+                                        "type": "string"
+                                    },
+                                    "properties": {
+                                        "properties": {},
+                                        "type": "object"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "customProperties": {
+                                "properties": {},
+                                "type": "object"
+                            },
+                            "essentials": {
+                                "properties": {
+                                    "alertContextVersion": {
+                                        "type": "string"
+                                    },
+                                    "alertId": {
+                                        "type": "string"
+                                    },
+                                    "alertRule": {
+                                        "type": "string"
+                                    },
+                                    "alertTargetIDs": {
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "type": "array"
+                                    },
+                                    "configurationItems": {
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "type": "array"
+                                    },
+                                    "description": {
+                                        "type": "string"
+                                    },
+                                    "essentialsVersion": {
+                                        "type": "string"
+                                    },
+                                    "firedDateTime": {
+                                        "type": "string"
+                                    },
+                                    "investigationLink": {
+                                        "type": "string"
+                                    },
+                                    "monitorCondition": {
+                                        "type": "string"
+                                    },
+                                    "monitoringService": {
+                                        "type": "string"
+                                    },
+                                    "originAlertId": {
+                                        "type": "string"
+                                    },
+                                    "severity": {
+                                        "type": "string"
+                                    },
+                                    "signalType": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        },
+                        "type": "object"
+                    }
+                }
+            }
+        },
+        "actions": {
+            "Compose": {
+                "type": "Compose",
+                "inputs": "@item()?['searchQuery']",
+                "runAfter": {
+                    "Initialize_variable": [
+                        "Succeeded"
+                    ]
+                }
+            },
+            "Compose_1": {
+                "type": "Compose",
+                "inputs": "@item()['linkToSearchResultsUI']",
+                "runAfter": {
+                    "Parse_JSON": [
+                        "Succeeded"
+                    ]
+                }
+            },
+            "For_each_1": {
+                "type": "Foreach",
+                "foreach": "@outputs('Parse_JSON')?['body']?['value']",
+                "actions": {
+                    "Send_an_email_(V2)": {
+                        "runAfter": {
+                            "Switch": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "ApiConnection",
+                        "inputs": {
+                            "body": {
+                                "Body": "<table style=\"border-collapse: collapse;width: 100%;text-align: left;border: 1px solid black;\">\n <tbody><tr style=\"background-color: white;\">\n  <th style=\"border: 1px solid black; text-align: left;\">Time Generated [UTC]</th>\n  <td style=\"border: 1px solid black; text-align: left;\">@{item()?['TimeGenerated']}</td> \n </tr>\n <tr style=\"background-color: #F0F0F0;\">\n  <th style=\"border: 1px solid black; text-align: left;\">Operation Name</th>\n  <td style=\"border: 1px solid black; text-align: left;\">@{item()?['OperationName']}</td>\n </tr>\n <tr style=\"background-color: white;\">\n  <th style=\"border: 1px solid black; text-align: left;\">Remote IP</th>\n  <td style=\"border: 1px solid black; text-align: left;\">@{item()?['remoteIP_s']}</td>  \n </tr>\n <tr style=\"background-color: #F0F0F0;\">\n  <th style=\"border: 1px solid black; text-align: left;\">State Changed Reason</th>\n  <td style=\"border: 1px solid black; text-align: left;\">@{item()?['stateChangeReason_s']}</td>\n </tr>\n <tr style=\"background-color: white;\">\n  <th style=\"border: 1px solid black; text-align: left;\">GatewayName</th>\n  <td style=\"border: 1px solid black; text-align: left;\">@{item()?['GatewayName']}</td>\n </tr>\n <tr style=\"background-color: #F0F0F0;\">\n  <th style=\"border: 1px solid black; text-align: left;\">Connection</th>\n  <td style=\"border: 1px solid black; text-align: left;\">@{variables('Connection Name')}</td>\n </tr>\n <tr style=\"background-color: white;\">\n  <th style=\"border: 1px solid black; text-align: left;\">Link</th>\n  <td style=\"border: 1px solid black; text-align: left;\"><a href=\"\\&quot;@{outputs('Compose_1')}\\&quot;\">Click Here</a></td>\n </tr>\n</tbody></table>\n ",
+                                "Importance": "High",
+                                "Subject": "@{concat(variables('Connection Name'),' - ',item()?['OperationName'],' From ',item()?['GatewayName'])}",
+                                "To": "OM@ezpassva.com"
+                            },
+                            "host": {
+                                "connection": {
+                                    "name": "@parameters('$connections')['office365-1']['connectionId']"
+                                }
+                            },
+                            "method": "post",
+                            "path": "/v2/Mail"
+                        }
+                    },
+                    "Switch": {
+                        "type": "Switch",
+                        "expression": "@items('For_each_1')?['remoteIP_s']",
+                        "default": {
+                            "actions": {
+                                "Set_variable": {
+                                    "type": "SetVariable",
+                                    "inputs": {
+                                        "name": "Connection Name",
+                                        "value": "Not Matched"
+                                    }
+                                }
+                            }
+                        },
+                        "cases": {
+                            "Case": {
+                                "actions": {
+                                    "Set_variable_1": {
+                                        "type": "SetVariable",
+                                        "inputs": {
+                                            "name": "Connection Name",
+                                            "value": "EASTUS-IAG-CORE"
+                                        }
+                                    }
+                                },
+                                "case": "172.171.179.100"
+                            },
+                            "Case 2": {
+                                "actions": {
+                                    "Set_variable_2": {
+                                        "type": "SetVariable",
+                                        "inputs": {
+                                            "name": "Connection Name",
+                                            "value": "Connection-DMV"
+                                        }
+                                    }
+                                },
+                                "case": "208.127.228.76"
+                            }
+                        }
+                    }
+                },
+                "runAfter": {
+                    "Compose_1": [
+                        "Succeeded"
+                    ]
+                }
+            },
+            "Initialize_variable": {
+                "type": "InitializeVariable",
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "Connection Name",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "runAfter": {}
+            },
+            "Parse_JSON": {
+                "type": "ParseJson",
+                "inputs": {
+                    "content": "@body('Run_query_and_list_results')",
+                    "schema": {
+                        "properties": {
+                            "value": {
+                                "items": {
+                                    "properties": {
+                                        "GatewayName": {
+                                            "type": "string"
+                                        },
+                                        "OperationName": {
+                                            "type": "string"
+                                        },
+                                        "TimeGenerated": {
+                                            "type": "string"
+                                        },
+                                        "remoteIP_s": {
+                                            "type": "string"
+                                        },
+                                        "stateChangeReason_s": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "TimeGenerated",
+                                        "OperationName",
+                                        "remoteIP_s",
+                                        "stateChangeReason_s",
+                                        "GatewayName"
+                                    ],
+                                    "type": "object"
+                                },
+                                "type": "array"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "runAfter": {
+                    "Run_query_and_list_results": [
+                        "Succeeded"
+                    ]
+                }
+            },
+            "Run_query_and_list_results": {
+                "runAfter": {
+                    "Compose": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "ApiConnection",
+                "inputs": {
+                    "body": "@{concat('AzureDiagnostics | where Category == \"TunnelDiagnosticLog\" | project TimeGenerated, OperationName, remoteIP_s, stateChangeReason_s, GatewayName=split(_ResourceId,\"/\")[8] | sort by TimeGenerated desc | where TimeGenerated > todatetime(\"',triggerBody()?['alertContext']['condition']['windowStartTime'],'\") and TimeGenerated < todatetime(\"',triggerBody()?['alertContext']['condition']['windowEndTime'],'\")')}",
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['azuremonitorlogs']['connectionId']"
+                        }
+                    },
+                    "method": "post",
+                    "path": "/queryData",
+                    "queries": {
+                        "resourcegroups": "EASTUS-CORE-LOGS-RG",
+                        "resourcename": "EASTUS-CORE-LOGS-LAW",
+                        "resourcetype": "Log Analytics Workspace",
+                        "subscriptions": "9d4fa9b6-65ad-447c-b05c-ced65ce47fbe",
+                        "timerange": "PT1H"
+                    }
+                }
+            }
+        },
+        "outputs": {},
+        "parameters": {
+            "$connections": {
+                "type": "Object",
+                "defaultValue": {}
+            }
+        }
+    },
+    "parameters": {
+        "$connections": {
+            "value": {
+                "azuremonitorlogs": {
+                    "id": "/subscriptions/9d4fa9b6-65ad-447c-b05c-ced65ce47fbe/providers/Microsoft.Web/locations/eastus/managedApis/azuremonitorlogs",
+                    "connectionId": "/subscriptions/9d4fa9b6-65ad-447c-b05c-ced65ce47fbe/resourceGroups/EASTUS-CORE-LOGS-RG/providers/Microsoft.Web/connections/azuremonitorlogs",
+                    "connectionName": "azuremonitorlogs",
+                    "connectionProperties": {
+                        "authentication": {
+                            "type": "ManagedServiceIdentity"
+                        }
+                    }
+                },
+                "office365-1": {
+                    "id": "/subscriptions/9d4fa9b6-65ad-447c-b05c-ced65ce47fbe/providers/Microsoft.Web/locations/eastus/managedApis/office365",
+                    "connectionId": "/subscriptions/9d4fa9b6-65ad-447c-b05c-ced65ce47fbe/resourceGroups/EASTUS-CORE-LOGS-RG/providers/Microsoft.Web/connections/office365-1",
+                    "connectionName": "office365-1"
+                }
+            }
+        }
+    }
+}

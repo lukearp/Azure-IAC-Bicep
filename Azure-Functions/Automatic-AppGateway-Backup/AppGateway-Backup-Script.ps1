@@ -463,7 +463,10 @@ $appGwResourceString = @'
         "privateLinkConfigurations": [],
         "sslPolicy": {{}},
         "enableHttp2": true,
-        "autoscaleConfiguration": {{}}
+        "autoscaleConfiguration": {{}},
+        "firewallPolicy": {{
+            "id": "[resourceId('Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies',parameters('{2}'))]"
+        }}
     }}
 }}
 '@

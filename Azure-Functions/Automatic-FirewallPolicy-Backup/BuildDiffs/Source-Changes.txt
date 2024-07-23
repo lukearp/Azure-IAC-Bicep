@@ -1,0 +1,1073 @@
+
+     Type Position Text
+     ---- -------- ----                                                                                                                                                 
+Unchanged        1 {                                                                                                                                                    
+Unchanged        2   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",                                                      
+Unchanged        3   "contentVersion": "1.0.0.0",                                                                                                                       
+Unchanged        4   "parameters": {                                                                                                                                    
+Unchanged        5     "firewallPolicies_Parent_Policy_name": {                                                                                                         
+Unchanged        6       "type": "String",                                                                                                                              
+ Modified        7       "defaultValue": "Parent-Policy"                                                                                                                
+Unchanged        8     },                                                                                                                                               
+Unchanged        9     "ipGroups_test_group_externalid": {                                                                                                              
+Imaginary                                                                                                                                                               
+Imaginary                                                                                                                                                               
+Imaginary                                                                                                                                                               
+Imaginary                                                                                                                                                               
+Unchanged       10       "type": "String",                                                                                                                              
+ Modified       11       "defaultValue": "/subscriptions/32eb88b4-4029-4094-85e3-ec8b7ce1fc00/resourcegroups/firewall-policies/providers/Microsoft.Network/ipGroups/tes…
+Unchanged       12     }                                                                                                                                                
+Unchanged       13   },                                                                                                                                                 
+Unchanged       14   "variables": {                                                                                                                                     
+Unchanged       15     "User": "testuser@test.com"                                                                                                                      
+Unchanged       16   },                                                                                                                                                 
+Unchanged       17   "resources": [                                                                                                                                     
+Unchanged       18     {                                                                                                                                                
+Unchanged       19       "type": "Microsoft.Network/firewallPolicies",                                                                                                  
+Unchanged       20       "apiVersion": "2023-06-01",                                                                                                                    
+Unchanged       21       "name": "[parameters('firewallPolicies_Parent_Policy_name')]",                                                                                 
+Unchanged       22       "location": "eastus",                                                                                                                          
+Unchanged       23       "tags": {                                                                                                                                      
+Unchanged       24         "My-Tag": "Testing"                                                                                                                          
+Unchanged       25       },                                                                                                                                             
+Unchanged       26       "identity": {                                                                                                                                  
+Unchanged       27         "type": "UserAssigned",                                                                                                                      
+Unchanged       28         "userAssignedIdentities": {                                                                                                                  
+Unchanged       29           "/subscriptions/32eb88b4-4029-4094-85e3-ec8b7ce1fc00/resourceGroups/temp-appgw/providers/Microsoft.ManagedIdentity/userAssignedIdentities/…
+Unchanged       30         }                                                                                                                                            
+Unchanged       31       },                                                                                                                                             
+Unchanged       32       "properties": {                                                                                                                                
+Unchanged       33         "sku": {                                                                                                                                     
+Unchanged       34           "tier": "Premium"                                                                                                                          
+Unchanged       35         },                                                                                                                                           
+Unchanged       36         "transportSecurity": {                                                                                                                       
+Unchanged       37           "certificateAuthority": {                                                                                                                  
+Unchanged       38             "name": "tls-intermediate",                                                                                                              
+Unchanged       39             "keyVaultSecretId": "https://luke-keyvault-enterprise.vault.azure.net/secrets/tls-intermediate/6605d9c1aee34849ac1417688f6c89da"         
+Unchanged       40           }                                                                                                                                          
+Unchanged       41         },                                                                                                                                           
+Unchanged       42         "threatIntelMode": "Alert",                                                                                                                  
+Unchanged       43         "threatIntelWhitelist": {                                                                                                                    
+Unchanged       44           "fqdns": [],                                                                                                                               
+Unchanged       45           "ipAddresses": []                                                                                                                          
+Unchanged       46         },                                                                                                                                           
+Unchanged       47         "snat": {                                                                                                                                    
+Unchanged       48           "privateRanges": [                                                                                                                         
+Unchanged       49             "10.0.0.0/8",                                                                                                                            
+ Modified       50             "192.168.0.0/16",                                                                                                                        
+  Deleted       51             "172.16.0.0/12",                                                                                                                         
+  Deleted       52             "100.64.0.0/10"                                                                                                                          
+Unchanged       53           ]                                                                                                                                          
+Unchanged       54         },                                                                                                                                           
+Unchanged       55         "intrusionDetection": {                                                                                                                      
+Unchanged       56           "mode": "Deny",                                                                                                                            
+Unchanged       57           "configuration": {                                                                                                                         
+Unchanged       58             "signatureOverrides": [                                                                                                                  
+Unchanged       59               {                                                                                                                                      
+Unchanged       60                 "id": "2000015",                                                                                                                     
+Unchanged       61                 "mode": "Deny"                                                                                                                       
+Unchanged       62               }                                                                                                                                      
+Unchanged       63             ],                                                                                                                                       
+Unchanged       64             "bypassTrafficSettings": []                                                                                                              
+Unchanged       65           }                                                                                                                                          
+Unchanged       66         }                                                                                                                                            
+Unchanged       67       }                                                                                                                                              
+Unchanged       68     },                                                                                                                                               
+Unchanged       69     {                                                                                                                                                
+Unchanged       70       "type": "Microsoft.Network/firewallPolicies/ruleCollectionGroups",                                                                             
+Unchanged       71       "apiVersion": "2023-06-01",                                                                                                                    
+Unchanged       72       "name": "[concat(parameters('firewallPolicies_Parent_Policy_name'), '/DefaultApplicationRuleCollectionGroup')]",                               
+Unchanged       73       "location": "eastus",                                                                                                                          
+Unchanged       74       "dependsOn": [                                                                                                                                 
+Unchanged       75         "[resourceId('Microsoft.Network/firewallPolicies', parameters('firewallPolicies_Parent_Policy_name'))]"                                      
+Unchanged       76       ],                                                                                                                                             
+Unchanged       77       "properties": {                                                                                                                                
+Unchanged       78         "priority": 300,                                                                                                                             
+Unchanged       79         "ruleCollections": [                                                                                                                         
+Unchanged       80           {                                                                                                                                          
+Unchanged       81             "ruleCollectionType": "FirewallPolicyFilterRuleCollection",                                                                              
+Unchanged       82             "action": {                                                                                                                              
+Unchanged       83               "type": "Allow"                                                                                                                        
+Unchanged       84             },                                                                                                                                       
+Unchanged       85             "rules": [                                                                                                                               
+Unchanged       86               {                                                                                                                                      
+Unchanged       87                 "ruleType": "ApplicationRule",                                                                                                       
+Unchanged       88                 "name": "application",                                                                                                               
+Unchanged       89                 "protocols": [                                                                                                                       
+Unchanged       90                   {                                                                                                                                  
+Unchanged       91                     "protocolType": "Https",                                                                                                         
+Unchanged       92                     "port": 443                                                                                                                      
+Unchanged       93                   }                                                                                                                                  
+Unchanged       94                 ],                                                                                                                                   
+Unchanged       95                 "fqdnTags": [],                                                                                                                      
+Unchanged       96                 "webCategories": [],                                                                                                                 
+Unchanged       97                 "targetFqdns": [                                                                                                                     
+Unchanged       98                   "*"                                                                                                                                
+Unchanged       99                 ],                                                                                                                                   
+Unchanged      100                 "targetUrls": [],                                                                                                                    
+Unchanged      101                 "terminateTLS": true,                                                                                                                
+Unchanged      102                 "sourceAddresses": [                                                                                                                 
+Unchanged      103                   "*"                                                                                                                                
+Unchanged      104                 ],                                                                                                                                   
+Unchanged      105                 "destinationAddresses": [],                                                                                                          
+Unchanged      106                 "sourceIpGroups": [],                                                                                                                
+Unchanged      107                 "httpHeadersToInsert": []                                                                                                            
+Unchanged      108               }                                                                                                                                      
+Unchanged      109             ],                                                                                                                                       
+Unchanged      110             "name": "test",                                                                                                                          
+Unchanged      111             "priority": 100                                                                                                                          
+Unchanged      112           },                                                                                                                                         
+Unchanged      113           {                                                                                                                                          
+Unchanged      114             "ruleCollectionType": "FirewallPolicyFilterRuleCollection",                                                                              
+Unchanged      115             "action": {                                                                                                                              
+Unchanged      116               "type": "Allow"                                                                                                                        
+Unchanged      117             },                                                                                                                                       
+Unchanged      118             "rules": [                                                                                                                               
+Unchanged      119               {                                                                                                                                      
+Unchanged      120                 "ruleType": "ApplicationRule",                                                                                                       
+Unchanged      121                 "name": "test",                                                                                                                      
+Unchanged      122                 "protocols": [                                                                                                                       
+Unchanged      123                   {                                                                                                                                  
+Unchanged      124                     "protocolType": "Https",                                                                                                         
+Unchanged      125                     "port": 443                                                                                                                      
+Unchanged      126                   }                                                                                                                                  
+Unchanged      127                 ],                                                                                                                                   
+Unchanged      128                 "fqdnTags": [],                                                                                                                      
+Unchanged      129                 "webCategories": [],                                                                                                                 
+Unchanged      130                 "targetFqdns": [                                                                                                                     
+Unchanged      131                   "*"                                                                                                                                
+Unchanged      132                 ],                                                                                                                                   
+Unchanged      133                 "targetUrls": [],                                                                                                                    
+Unchanged      134                 "terminateTLS": false,                                                                                                               
+Unchanged      135                 "sourceAddresses": [                                                                                                                 
+Unchanged      136                   "*"                                                                                                                                
+Unchanged      137                 ],                                                                                                                                   
+Unchanged      138                 "destinationAddresses": [],                                                                                                          
+Unchanged      139                 "sourceIpGroups": [],                                                                                                                
+Unchanged      140                 "httpHeadersToInsert": []                                                                                                            
+Unchanged      141               }                                                                                                                                      
+Unchanged      142             ],                                                                                                                                       
+Unchanged      143             "name": "AppAllow",                                                                                                                      
+Unchanged      144             "priority": 200                                                                                                                          
+Unchanged      145           }                                                                                                                                          
+Unchanged      146         ]                                                                                                                                            
+Unchanged      147       }                                                                                                                                              
+Unchanged      148     },                                                                                                                                               
+Unchanged      149     {                                                                                                                                                
+Unchanged      150       "type": "Microsoft.Network/firewallPolicies/ruleCollectionGroups",                                                                             
+Unchanged      151       "apiVersion": "2023-06-01",                                                                                                                    
+Unchanged      152       "name": "[concat(parameters('firewallPolicies_Parent_Policy_name'), '/DefaultNetworkRuleCollectionGroup')]",                                   
+Unchanged      153       "location": "eastus",                                                                                                                          
+Unchanged      154       "dependsOn": [                                                                                                                                 
+Unchanged      155         "[resourceId('Microsoft.Network/firewallPolicies', parameters('firewallPolicies_Parent_Policy_name'))]",                                     
+Unchanged      156         "[resourceId('Microsoft.Network/firewallPolicies/ruleCollectionGroups',parameters('firewallPolicies_Parent_Policy_name'),'DefaultApplication…
+Unchanged      157       ],                                                                                                                                             
+Unchanged      158       "properties": {                                                                                                                                
+Unchanged      159         "priority": 200,                                                                                                                             
+Unchanged      160         "ruleCollections": [                                                                                                                         
+Unchanged      161           {                                                                                                                                          
+Unchanged      162             "ruleCollectionType": "FirewallPolicyFilterRuleCollection",                                                                              
+Unchanged      163             "action": {                                                                                                                              
+Unchanged      164               "type": "Allow"                                                                                                                        
+Unchanged      165             },                                                                                                                                       
+Unchanged      166             "rules": [                                                                                                                               
+Unchanged      167               {                                                                                                                                      
+Unchanged      168                 "ruleType": "NetworkRule",                                                                                                           
+Unchanged      169                 "name": "Allow",                                                                                                                     
+Unchanged      170                 "ipProtocols": [                                                                                                                     
+Unchanged      171                   "Any"                                                                                                                              
+Unchanged      172                 ],                                                                                                                                   
+Unchanged      173                 "sourceAddresses": [                                                                                                                 
+Unchanged      174                   "10.0.20.0/22",                                                                                                                    
+Unchanged      175                   "192.168.1.0/24"                                                                                                                   
+Unchanged      176                 ],                                                                                                                                   
+Unchanged      177                 "sourceIpGroups": [],                                                                                                                
+Unchanged      178                 "destinationAddresses": [                                                                                                            
+Unchanged      179                   "10.0.16.0/22",                                                                                                                    
+Unchanged      180                   "10.0.20.0/22",                                                                                                                    
+Unchanged      181                   "192.168.1.0/24"                                                                                                                   
+Unchanged      182                 ],                                                                                                                                   
+Unchanged      183                 "destinationIpGroups": [],                                                                                                           
+Unchanged      184                 "destinationFqdns": [],                                                                                                              
+Unchanged      185                 "destinationPorts": [                                                                                                                
+Unchanged      186                   "*"                                                                                                                                
+Unchanged      187                 ]                                                                                                                                    
+Unchanged      188               },                                                                                                                                     
+Unchanged      189               {                                                                                                                                      
+Unchanged      190                 "ruleType": "NetworkRule",                                                                                                           
+Unchanged      191                 "name": "ALLOW-DEVDC-ALL-UDP",                                                                                                       
+Unchanged      192                 "ipProtocols": [                                                                                                                     
+Unchanged      193                   "UDP"                                                                                                                              
+Unchanged      194                 ],                                                                                                                                   
+Unchanged      195                 "sourceAddresses": [                                                                                                                 
+Unchanged      196                   "10.1.150.100",                                                                                                                    
+Unchanged      197                   "10.1.150.101",                                                                                                                    
+Unchanged      198                   "10.101.150.100",                                                                                                                  
+Unchanged      199                   "10.101.150.101"                                                                                                                   
+Unchanged      200                 ],                                                                                                                                   
+Unchanged      201                 "sourceIpGroups": [],                                                                                                                
+Unchanged      202                 "destinationAddresses": [                                                                                                            
+Unchanged      203                   "0.0.0.0/0"                                                                                                                        
+Unchanged      204                 ],                                                                                                                                   
+Unchanged      205                 "destinationIpGroups": [],                                                                                                           
+Unchanged      206                 "destinationFqdns": [],                                                                                                              
+Unchanged      207                 "destinationPorts": [                                                                                                                
+Unchanged      208                   "137",                                                                                                                             
+Unchanged      209                   "3389"                                                                                                                             
+Unchanged      210                 ]                                                                                                                                    
+Unchanged      211               },                                                                                                                                     
+Unchanged      212               {                                                                                                                                      
+Unchanged      213                 "ruleType": "NetworkRule",                                                                                                           
+Unchanged      214                 "name": "ALLOW-DEV-DRWAFIT-TCP",                                                                                                     
+Unchanged      215                 "ipProtocols": [                                                                                                                     
+Unchanged      216                   "TCP"                                                                                                                              
+Unchanged      217                 ],                                                                                                                                   
+Unchanged      218                 "sourceAddresses": [                                                                                                                 
+Unchanged      219                   "10.1.150.0/24",                                                                                                                   
+Unchanged      220                   "10.101.150.0/24",                                                                                                                 
+Unchanged      221                   "10.102.150.0/24"                                                                                                                  
+Unchanged      222                 ],                                                                                                                                   
+Unchanged      223                 "sourceIpGroups": [],                                                                                                                
+Unchanged      224                 "destinationAddresses": [                                                                                                            
+Unchanged      225                   "172.16.220.61"                                                                                                                    
+Unchanged      226                 ],                                                                                                                                   
+Unchanged      227                 "destinationIpGroups": [],                                                                                                           
+Unchanged      228                 "destinationFqdns": [],                                                                                                              
+Unchanged      229                 "destinationPorts": [                                                                                                                
+Unchanged      230                   "10001",                                                                                                                           
+Unchanged      231                   "20002",                                                                                                                           
+Unchanged      232                   "21",                                                                                                                              
+Unchanged      233                   "30003",                                                                                                                           
+Unchanged      234                   "40004",                                                                                                                           
+Unchanged      235                   "443",                                                                                                                             
+Unchanged      236                   "55000",                                                                                                                           
+Unchanged      237                   "7070",                                                                                                                            
+Unchanged      238                   "80",                                                                                                                              
+Unchanged      239                   "8012",                                                                                                                            
+Unchanged      240                   "8028",                                                                                                                            
+Unchanged      241                   "8080",                                                                                                                            
+Unchanged      242                   "8443",                                                                                                                            
+Unchanged      243                   "8444",                                                                                                                            
+Unchanged      244                   "8445",                                                                                                                            
+Unchanged      245                   "9090"                                                                                                                             
+Unchanged      246                 ]                                                                                                                                    
+Unchanged      247               },                                                                                                                                     
+Unchanged      248               {                                                                                                                                      
+Unchanged      249                 "ruleType": "NetworkRule",                                                                                                           
+Unchanged      250                 "name": "ALLOW-DEV-WAF-TCP",                                                                                                         
+Unchanged      251                 "ipProtocols": [                                                                                                                     
+Unchanged      252                   "TCP"                                                                                                                              
+Unchanged      253                 ],                                                                                                                                   
+Unchanged      254                 "sourceAddresses": [                                                                                                                 
+Unchanged      255                   "10.1.150.0/24",                                                                                                                   
+Unchanged      256                   "10.101.150.0/24",                                                                                                                 
+Unchanged      257                   "10.102.150.0/24"                                                                                                                  
+Unchanged      258                 ],                                                                                                                                   
+Unchanged      259                 "sourceIpGroups": [],                                                                                                                
+Unchanged      260                 "destinationAddresses": [                                                                                                            
+Unchanged      261                   "10.156.3.16/29",                                                                                                                  
+Unchanged      262                   "10.156.3.18",                                                                                                                     
+Unchanged      263                   "10.156.3.19",                                                                                                                     
+Unchanged      264                   "10.156.3.8/29",                                                                                                                   
+Unchanged      265                   "172.16.203.3",                                                                                                                    
+Unchanged      266                   "172.16.203.4",                                                                                                                    
+Unchanged      267                   "172.16.214.20",                                                                                                                   
+Unchanged      268                   "172.16.214.21",                                                                                                                   
+Unchanged      269                   "172.16.220.0/24",                                                                                                                 
+Unchanged      270                   "172.16.223.2",                                                                                                                    
+Unchanged      271                   "172.16.230.0/24",                                                                                                                 
+Unchanged      272                   "172.16.70.49"                                                                                                                     
+Unchanged      273                 ],                                                                                                                                   
+Unchanged      274                 "destinationIpGroups": [],                                                                                                           
+Unchanged      275                 "destinationFqdns": [],                                                                                                              
+Unchanged      276                 "destinationPorts": [                                                                                                                
+Unchanged      277                   "10001",                                                                                                                           
+Unchanged      278                   "20002",                                                                                                                           
+Unchanged      279                   "21",                                                                                                                              
+Unchanged      280                   "30003",                                                                                                                           
+Unchanged      281                   "40004",                                                                                                                           
+Unchanged      282                   "443",                                                                                                                             
+Unchanged      283                   "55000",                                                                                                                           
+Unchanged      284                   "7070",                                                                                                                            
+Unchanged      285                   "80",                                                                                                                              
+Unchanged      286                   "8012",                                                                                                                            
+Unchanged      287                   "8028",                                                                                                                            
+Unchanged      288                   "8080",                                                                                                                            
+Unchanged      289                   "8443",                                                                                                                            
+Unchanged      290                   "8444",                                                                                                                            
+Unchanged      291                   "8445",                                                                                                                            
+Unchanged      292                   "9090"                                                                                                                             
+Unchanged      293                 ]                                                                                                                                    
+Unchanged      294               },                                                                                                                                     
+Unchanged      295               {                                                                                                                                      
+Unchanged      296                 "ruleType": "NetworkRule",                                                                                                           
+Unchanged      297                 "name": "ALLOW-DEV-WAFIT-TCP",                                                                                                       
+Unchanged      298                 "ipProtocols": [                                                                                                                     
+Unchanged      299                   "TCP"                                                                                                                              
+Unchanged      300                 ],                                                                                                                                   
+Unchanged      301                 "sourceAddresses": [                                                                                                                 
+Unchanged      302                   "10.1.150.0/24",                                                                                                                   
+Unchanged      303                   "10.101.150.0/24",                                                                                                                 
+Unchanged      304                   "10.102.150.0/24"                                                                                                                  
+Unchanged      305                 ],                                                                                                                                   
+Unchanged      306                 "sourceIpGroups": [],                                                                                                                
+Unchanged      307                 "destinationAddresses": [                                                                                                            
+Unchanged      308                   "172.16.230.61"                                                                                                                    
+Unchanged      309                 ],                                                                                                                                   
+Unchanged      310                 "destinationIpGroups": [],                                                                                                           
+Unchanged      311                 "destinationFqdns": [],                                                                                                              
+Unchanged      312                 "destinationPorts": [                                                                                                                
+Unchanged      313                   "10001",                                                                                                                           
+Unchanged      314                   "20002",                                                                                                                           
+Unchanged      315                   "21",                                                                                                                              
+Unchanged      316                   "30003",                                                                                                                           
+Unchanged      317                   "40004",                                                                                                                           
+Unchanged      318                   "443",                                                                                                                             
+Unchanged      319                   "55000",                                                                                                                           
+Unchanged      320                   "7070",                                                                                                                            
+Unchanged      321                   "80",                                                                                                                              
+Unchanged      322                   "8012",                                                                                                                            
+Unchanged      323                   "8028",                                                                                                                            
+Unchanged      324                   "8080",                                                                                                                            
+Unchanged      325                   "8443",                                                                                                                            
+Unchanged      326                   "8444",                                                                                                                            
+Unchanged      327                   "8445",                                                                                                                            
+Unchanged      328                   "9090"                                                                                                                             
+Unchanged      329                 ]                                                                                                                                    
+Unchanged      330               },                                                                                                                                     
+Unchanged      331               {                                                                                                                                      
+Unchanged      332                 "ruleType": "NetworkRule",                                                                                                           
+Unchanged      333                 "name": "TEMP-ALLOW-DEV-UAT-FTP-TCP",                                                                                                
+Unchanged      334                 "ipProtocols": [                                                                                                                     
+Unchanged      335                   "TCP"                                                                                                                              
+Unchanged      336                 ],                                                                                                                                   
+Unchanged      337                 "sourceAddresses": [                                                                                                                 
+Unchanged      338                   "10.1.150.0/24",                                                                                                                   
+Unchanged      339                   "10.101.150.0/24",                                                                                                                 
+Unchanged      340                   "10.102.150.0/24"                                                                                                                  
+Unchanged      341                 ],                                                                                                                                   
+Unchanged      342                 "sourceIpGroups": [],                                                                                                                
+Unchanged      343                 "destinationAddresses": [                                                                                                            
+Unchanged      344                   "10.1.151.0/24",                                                                                                                   
+Unchanged      345                   "10.101.151.0/24",                                                                                                                 
+Unchanged      346                   "10.102.151.0/24"                                                                                                                  
+Unchanged      347                 ],                                                                                                                                   
+Unchanged      348                 "destinationIpGroups": [],                                                                                                           
+Unchanged      349                 "destinationFqdns": [],                                                                                                              
+Unchanged      350                 "destinationPorts": [                                                                                                                
+Unchanged      351                   "21"                                                                                                                               
+Unchanged      352                 ]                                                                                                                                    
+Unchanged      353               },                                                                                                                                     
+Unchanged      354               {                                                                                                                                      
+Unchanged      355                 "ruleType": "NetworkRule",                                                                                                           
+Unchanged      356                 "name": "TEMP-ALLOW-DEV-UAT-SSL-TCP",                                                                                                
+Unchanged      357                 "ipProtocols": [                                                                                                                     
+Unchanged      358                   "TCP"                                                                                                                              
+Unchanged      359                 ],                                                                                                                                   
+Unchanged      360                 "sourceAddresses": [                                                                                                                 
+Unchanged      361                   "10.1.150.0/24",                                                                                                                   
+Unchanged      362                   "10.101.150.0/24",                                                                                                                 
+Unchanged      363                   "10.102.150.0/24"                                                                                                                  
+Unchanged      364                 ],                                                                                                                                   
+Unchanged      365                 "sourceIpGroups": [],                                                                                                                
+Unchanged      366                 "destinationAddresses": [                                                                                                            
+Unchanged      367                   "10.1.151.0/24",                                                                                                                   
+Unchanged      368                   "10.101.151.0/24",                                                                                                                 
+Unchanged      369                   "10.102.151.0/24"                                                                                                                  
+Unchanged      370                 ],                                                                                                                                   
+Unchanged      371                 "destinationIpGroups": [],                                                                                                           
+Unchanged      372                 "destinationFqdns": [],                                                                                                              
+Unchanged      373                 "destinationPorts": [                                                                                                                
+Unchanged      374                   "443"                                                                                                                              
+Unchanged      375                 ]                                                                                                                                    
+Unchanged      376               },                                                                                                                                     
+Unchanged      377               {                                                                                                                                      
+Unchanged      378                 "ruleType": "NetworkRule",                                                                                                           
+Unchanged      379                 "name": "ALLOW-DEVDC-UATDC-TCP",                                                                                                     
+Unchanged      380                 "ipProtocols": [                                                                                                                     
+Unchanged      381                   "TCP"                                                                                                                              
+Unchanged      382                 ],                                                                                                                                   
+Unchanged      383                 "sourceAddresses": [                                                                                                                 
+Unchanged      384                   "10.1.150.100",                                                                                                                    
+Unchanged      385                   "10.1.150.101",                                                                                                                    
+Unchanged      386                   "10.101.150.100",                                                                                                                  
+Unchanged      387                   "10.101.150.101"                                                                                                                   
+Unchanged      388                 ],                                                                                                                                   
+Unchanged      389                 "sourceIpGroups": [],                                                                                                                
+Unchanged      390                 "destinationAddresses": [                                                                                                            
+Unchanged      391                   "10.1.151.100",                                                                                                                    
+Unchanged      392                   "10.1.151.101",                                                                                                                    
+Unchanged      393                   "10.101.151.100",                                                                                                                  
+Unchanged      394                   "10.101.151.101"                                                                                                                   
+Unchanged      395                 ],                                                                                                                                   
+Unchanged      396                 "destinationIpGroups": [],                                                                                                           
+Unchanged      397                 "destinationFqdns": [],                                                                                                              
+Unchanged      398                 "destinationPorts": [                                                                                                                
+Unchanged      399                   "123",                                                                                                                             
+Unchanged      400                   "135",                                                                                                                             
+Unchanged      401                   "3268",                                                                                                                            
+Unchanged      402                   "389",                                                                                                                             
+Unchanged      403                   "443",                                                                                                                             
+Unchanged      404                   "445",                                                                                                                             
+Unchanged      405                   "464",                                                                                                                             
+Unchanged      406                   "55555",                                                                                                                           
+Unchanged      407                   "55557",                                                                                                                           
+Unchanged      408                   "636",                                                                                                                             
+Unchanged      409                   "7000",                                                                                                                            
+Unchanged      410                   "80",                                                                                                                              
+Unchanged      411                   "88",                                                                                                                              
+Unchanged      412                   "9389"                                                                                                                             
+Unchanged      413                 ]                                                                                                                                    
+Unchanged      414               },                                                                                                                                     
+Unchanged      415               {                                                                                                                                      
+Unchanged      416                 "ruleType": "NetworkRule",                                                                                                           
+Unchanged      417                 "name": "ALLOW-DEVDC-UATDC-UDP",                                                                                                     
+Unchanged      418                 "ipProtocols": [                                                                                                                     
+Unchanged      419                   "UDP"                                                                                                                              
+Unchanged      420                 ],                                                                                                                                   
+Unchanged      421                 "sourceAddresses": [                                                                                                                 
+Unchanged      422                   "10.1.150.100",                                                                                                                    
+Unchanged      423                   "10.1.150.101",                                                                                                                    
+Unchanged      424                   "10.101.150.100",                                                                                                                  
+Unchanged      425                   "10.101.150.101"                                                                                                                   
+Unchanged      426                 ],                                                                                                                                   
+Unchanged      427                 "sourceIpGroups": [],                                                                                                                
+Unchanged      428                 "destinationAddresses": [                                                                                                            
+Unchanged      429                   "10.1.151.100",                                                                                                                    
+Unchanged      430                   "10.1.151.101",                                                                                                                    
+Unchanged      431                   "10.101.151.100",                                                                                                                  
+Unchanged      432                   "10.101.151.101"                                                                                                                   
+Unchanged      433                 ],                                                                                                                                   
+Unchanged      434                 "destinationIpGroups": [],                                                                                                           
+Unchanged      435                 "destinationFqdns": [],                                                                                                              
+Unchanged      436                 "destinationPorts": [                                                                                                                
+Unchanged      437                   "123",                                                                                                                             
+Unchanged      438                   "389",                                                                                                                             
+Unchanged      439                   "464",                                                                                                                             
+Unchanged      440                   "88"                                                                                                                               
+Unchanged      441                 ]                                                                                                                                    
+Unchanged      442               },                                                                                                                                     
+Unchanged      443               {                                                                                                                                      
+Unchanged      444                 "ruleType": "NetworkRule",                                                                                                           
+Unchanged      445                 "name": "ALLOW-DEV-MANAGEENG-TCP",                                                                                                   
+Unchanged      446                 "ipProtocols": [                                                                                                                     
+Unchanged      447                   "TCP"                                                                                                                              
+Unchanged      448                 ],                                                                                                                                   
+Unchanged      449                 "sourceAddresses": [                                                                                                                 
+Unchanged      450                   "10.1.150.0/24",                                                                                                                   
+Unchanged      451                   "10.101.150.0/24",                                                                                                                 
+Unchanged      452                   "10.102.150.0/24"                                                                                                                  
+Unchanged      453                 ],                                                                                                                                   
+Unchanged      454                 "sourceIpGroups": [],                                                                                                                
+Unchanged      455                 "destinationAddresses": [                                                                                                            
+Unchanged      456                   "*"                                                                                                                                
+Unchanged      457                 ],                                                                                                                                   
+Unchanged      458                 "destinationIpGroups": [],                                                                                                           
+Unchanged      459                 "destinationFqdns": [],                                                                                                              
+Unchanged      460                 "destinationPorts": [                                                                                                                
+Unchanged      461                   "443",                                                                                                                             
+Unchanged      462                   "8022",                                                                                                                            
+Unchanged      463                   "8027",                                                                                                                            
+Unchanged      464                   "8031",                                                                                                                            
+Unchanged      465                   "8040",                                                                                                                            
+Unchanged      466                   "8047",                                                                                                                            
+Unchanged      467                   "8053",                                                                                                                            
+Unchanged      468                   "8057",                                                                                                                            
+Unchanged      469                   "8443"                                                                                                                             
+Unchanged      470                 ]                                                                                                                                    
+Unchanged      471               },                                                                                                                                     
+Unchanged      472               {                                                                                                                                      
+Unchanged      473                 "ruleType": "NetworkRule",                                                                                                           
+Unchanged      474                 "name": "ALLOW-DEV-MANAGEENG-UDP",                                                                                                   
+Unchanged      475                 "ipProtocols": [                                                                                                                     
+Unchanged      476                   "UDP"                                                                                                                              
+Unchanged      477                 ],                                                                                                                                   
+Unchanged      478                 "sourceAddresses": [                                                                                                                 
+Unchanged      479                   "10.1.150.0/24",                                                                                                                   
+Unchanged      480                   "10.101.150.0/24",                                                                                                                 
+Unchanged      481                   "10.102.150.0/24"                                                                                                                  
+Unchanged      482                 ],                                                                                                                                   
+Unchanged      483                 "sourceIpGroups": [],                                                                                                                
+Unchanged      484                 "destinationAddresses": [                                                                                                            
+Unchanged      485                   ""                                                                                                                                 
+Unchanged      486                 ],                                                                                                                                   
+Unchanged      487                 "destinationIpGroups": [],                                                                                                           
+Unchanged      488                 "destinationFqdns": [],                                                                                                              
+Unchanged      489                 "destinationPorts": [                                                                                                                
+Unchanged      490                   "8047"                                                                                                                             
+Unchanged      491                 ]                                                                                                                                    
+Unchanged      492               },                                                                                                                                     
+Unchanged      493               {                                                                                                                                      
+Unchanged      494                 "ruleType": "NetworkRule",                                                                                                           
+Unchanged      495                 "name": "ALLOW-DEV-CAWEB-TCP",                                                                                                       
+Unchanged      496                 "ipProtocols": [                                                                                                                     
+Unchanged      497                   "TCP"                                                                                                                              
+Unchanged      498                 ],                                                                                                                                   
+Unchanged      499                 "sourceAddresses": [                                                                                                                 
+Unchanged      500                   "10.1.150.0/24",                                                                                                                   
+Unchanged      501                   "10.101.150.0/24",                                                                                                                 
+Unchanged      502                   "10.102.150.0/24"                                                                                                                  
+Unchanged      503                 ],                                                                                                                                   
+Unchanged      504                 "sourceIpGroups": [],                                                                                                                
+Unchanged      505                 "destinationAddresses": [                                                                                                            
+Unchanged      506                   ""                                                                                                                                 
+Unchanged      507                 ],                                                                                                                                   
+Unchanged      508                 "destinationIpGroups": [],                                                                                                           
+Unchanged      509                 "destinationFqdns": [],                                                                                                              
+Unchanged      510                 "destinationPorts": [                                                                                                                
+Unchanged      511                   "80"                                                                                                                               
+Unchanged      512                 ]                                                                                                                                    
+Unchanged      513               },                                                                                                                                     
+Unchanged      514               {                                                                                                                                      
+Unchanged      515                 "ruleType": "NetworkRule",                                                                                                           
+Unchanged      516                 "name": "ALLOW-DEV--EXCHANGE-TCP",                                                                                                   
+Unchanged      517                 "ipProtocols": [                                                                                                                     
+Unchanged      518                   "TCP"                                                                                                                              
+Unchanged      519                 ],                                                                                                                                   
+Unchanged      520                 "sourceAddresses": [                                                                                                                 
+Unchanged      521                   "10.1.150.0/24",                                                                                                                   
+Unchanged      522                   "10.101.150.0/24",                                                                                                                 
+Unchanged      523                   "10.102.150.0/24"                                                                                                                  
+Unchanged      524                 ],                                                                                                                                   
+Unchanged      525                 "sourceIpGroups": [],                                                                                                                
+Unchanged      526                 "destinationAddresses": [                                                                                                            
+Unchanged      527                   ""                                                                                                                                 
+Unchanged      528                 ],                                                                                                                                   
+Unchanged      529                 "destinationIpGroups": [],                                                                                                           
+Unchanged      530                 "destinationFqdns": [],                                                                                                              
+Unchanged      531                 "destinationPorts": [                                                                                                                
+Unchanged      532                   "25"                                                                                                                               
+Unchanged      533                 ]                                                                                                                                    
+Unchanged      534               },                                                                                                                                     
+Unchanged      535               {                                                                                                                                      
+Unchanged      536                 "ruleType": "NetworkRule",                                                                                                           
+Unchanged      537                 "name": "ALLOW-DEVDC-SSDC-TCP",                                                                                                      
+Unchanged      538                 "ipProtocols": [                                                                                                                     
+Unchanged      539                   "TCP"                                                                                                                              
+Unchanged      540                 ],                                                                                                                                   
+Unchanged      541                 "sourceAddresses": [                                                                                                                 
+Unchanged      542                   "10.1.150.100",                                                                                                                    
+Unchanged      543                   "10.1.150.101",                                                                                                                    
+Unchanged      544                   "10.101.150.100",                                                                                                                  
+Unchanged      545                   "10.101.150.101"                                                                                                                   
+Unchanged      546                 ],                                                                                                                                   
+Unchanged      547                 "sourceIpGroups": [],                                                                                                                
+Unchanged      548                 "destinationAddresses": [                                                                                                            
+Unchanged      549                   "172.16.202.100",                                                                                                                  
+Unchanged      550                   "172.16.202.101",                                                                                                                  
+Unchanged      551                   "172.16.202.45",                                                                                                                   
+Unchanged      552                   "172.16.71.100",                                                                                                                   
+Unchanged      553                   "172.16.71.101"                                                                                                                    
+Unchanged      554                 ],                                                                                                                                   
+Unchanged      555                 "destinationIpGroups": [],                                                                                                           
+Unchanged      556                 "destinationFqdns": [],                                                                                                              
+Unchanged      557                 "destinationPorts": [                                                                                                                
+Unchanged      558                   "123",                                                                                                                             
+Unchanged      559                   "135",                                                                                                                             
+Unchanged      560                   "3268",                                                                                                                            
+Unchanged      561                   "389",                                                                                                                             
+Unchanged      562                   "443",                                                                                                                             
+Unchanged      563                   "445",                                                                                                                             
+Unchanged      564                   "464",                                                                                                                             
+Unchanged      565                   "55555",                                                                                                                           
+Unchanged      566                   "55557",                                                                                                                           
+Unchanged      567                   "636",                                                                                                                             
+Unchanged      568                   "7000",                                                                                                                            
+Unchanged      569                   "80",                                                                                                                              
+Unchanged      570                   "88",                                                                                                                              
+Unchanged      571                   "9389"                                                                                                                             
+Unchanged      572                 ]                                                                                                                                    
+Unchanged      573               },                                                                                                                                     
+Unchanged      574               {                                                                                                                                      
+Unchanged      575                 "ruleType": "NetworkRule",                                                                                                           
+Unchanged      576                 "name": "ALLOW-DEVDC-SSDC-UDP",                                                                                                      
+Unchanged      577                 "ipProtocols": [                                                                                                                     
+Unchanged      578                   "UDP"                                                                                                                              
+Unchanged      579                 ],                                                                                                                                   
+Unchanged      580                 "sourceAddresses": [                                                                                                                 
+Unchanged      581                   "10.1.150.100",                                                                                                                    
+Unchanged      582                   "10.1.150.101",                                                                                                                    
+Unchanged      583                   "10.101.150.100",                                                                                                                  
+Unchanged      584                   "10.101.150.101"                                                                                                                   
+Unchanged      585                 ],                                                                                                                                   
+Unchanged      586                 "sourceIpGroups": [],                                                                                                                
+Unchanged      587                 "destinationAddresses": [                                                                                                            
+Unchanged      588                   "172.16.202.100",                                                                                                                  
+Unchanged      589                   "172.16.202.101",                                                                                                                  
+Unchanged      590                   "172.16.202.45",                                                                                                                   
+Unchanged      591                   "172.16.71.100",                                                                                                                   
+Unchanged      592                   "172.16.71.101"                                                                                                                    
+Unchanged      593                 ],                                                                                                                                   
+Unchanged      594                 "destinationIpGroups": [],                                                                                                           
+Unchanged      595                 "destinationFqdns": [],                                                                                                              
+Unchanged      596                 "destinationPorts": [                                                                                                                
+Unchanged      597                   "123",                                                                                                                             
+Unchanged      598                   "389",                                                                                                                             
+Unchanged      599                   "464",                                                                                                                             
+Unchanged      600                   "88"                                                                                                                               
+Unchanged      601                 ]                                                                                                                                    
+Unchanged      602               },                                                                                                                                     
+Unchanged      603               {                                                                                                                                      
+Unchanged      604                 "ruleType": "NetworkRule",                                                                                                           
+Unchanged      605                 "name": "ALLOW-DEV-SSDC-TCP",                                                                                                        
+Unchanged      606                 "ipProtocols": [                                                                                                                     
+Unchanged      607                   "TCP"                                                                                                                              
+Unchanged      608                 ],                                                                                                                                   
+Unchanged      609                 "sourceAddresses": [                                                                                                                 
+Unchanged      610                   "10.1.150.0/24",                                                                                                                   
+Unchanged      611                   "10.101.150.0/24",                                                                                                                 
+Unchanged      612                   "10.102.150.0/24"                                                                                                                  
+Unchanged      613                 ],                                                                                                                                   
+Unchanged      614                 "sourceIpGroups": [],                                                                                                                
+Unchanged      615                 "destinationAddresses": [                                                                                                            
+Unchanged      616                   "172.16.202.100",                                                                                                                  
+Unchanged      617                   "172.16.202.101",                                                                                                                  
+Unchanged      618                   "172.16.202.45",                                                                                                                   
+Unchanged      619                   "172.16.71.100",                                                                                                                   
+Unchanged      620                   "172.16.71.101"                                                                                                                    
+Unchanged      621                 ],                                                                                                                                   
+Unchanged      622                 "destinationIpGroups": [],                                                                                                           
+Unchanged      623                 "destinationFqdns": [],                                                                                                              
+Unchanged      624                 "destinationPorts": [                                                                                                                
+Unchanged      625                   "123",                                                                                                                             
+Unchanged      626                   "135",                                                                                                                             
+Unchanged      627                   "3268",                                                                                                                            
+Unchanged      628                   "389",                                                                                                                             
+Unchanged      629                   "443",                                                                                                                             
+Unchanged      630                   "445",                                                                                                                             
+Unchanged      631                   "464",                                                                                                                             
+Unchanged      632                   "55555",                                                                                                                           
+Unchanged      633                   "636",                                                                                                                             
+Unchanged      634                   "7000",                                                                                                                            
+Unchanged      635                   "80",                                                                                                                              
+Unchanged      636                   "88"                                                                                                                               
+Unchanged      637                 ]                                                                                                                                    
+Unchanged      638               },                                                                                                                                     
+Unchanged      639               {                                                                                                                                      
+Unchanged      640                 "ruleType": "NetworkRule",                                                                                                           
+Unchanged      641                 "name": "ALLOW-DEV-SSDC-UDP",                                                                                                        
+Unchanged      642                 "ipProtocols": [                                                                                                                     
+Unchanged      643                   "UDP"                                                                                                                              
+Unchanged      644                 ],                                                                                                                                   
+Unchanged      645                 "sourceAddresses": [                                                                                                                 
+Unchanged      646                   "10.1.150.0/24",                                                                                                                   
+Unchanged      647                   "10.101.150.0/24",                                                                                                                 
+Unchanged      648                   "10.102.150.0/24"                                                                                                                  
+Unchanged      649                 ],                                                                                                                                   
+Unchanged      650                 "sourceIpGroups": [],                                                                                                                
+Unchanged      651                 "destinationAddresses": [                                                                                                            
+Unchanged      652                   "172.16.202.100",                                                                                                                  
+Unchanged      653                   "172.16.202.101",                                                                                                                  
+Unchanged      654                   "172.16.202.45",                                                                                                                   
+Unchanged      655                   "172.16.71.100",                                                                                                                   
+Unchanged      656                   "172.16.71.101"                                                                                                                    
+Unchanged      657                 ],                                                                                                                                   
+Unchanged      658                 "destinationIpGroups": [],                                                                                                           
+Unchanged      659                 "destinationFqdns": [],                                                                                                              
+Unchanged      660                 "destinationPorts": [                                                                                                                
+Unchanged      661                   "123",                                                                                                                             
+Unchanged      662                   "389",                                                                                                                             
+Unchanged      663                   "464",                                                                                                                             
+Unchanged      664                   "88"                                                                                                                               
+Unchanged      665                 ]                                                                                                                                    
+Unchanged      666               },                                                                                                                                     
+Unchanged      667               {                                                                                                                                      
+Unchanged      668                 "ruleType": "NetworkRule",                                                                                                           
+Unchanged      669                 "name": "ALLOW-DEV-WSUS-TCP",                                                                                                        
+Unchanged      670                 "ipProtocols": [                                                                                                                     
+Unchanged      671                   "TCP"                                                                                                                              
+Unchanged      672                 ],                                                                                                                                   
+Unchanged      673                 "sourceAddresses": [                                                                                                                 
+Unchanged      674                   "10.1.150.0/24",                                                                                                                   
+Unchanged      675                   "10.101.150.0/24",                                                                                                                 
+Unchanged      676                   "10.102.150.0/24"                                                                                                                  
+Unchanged      677                 ],                                                                                                                                   
+Unchanged      678                 "sourceIpGroups": [],                                                                                                                
+Unchanged      679                 "destinationAddresses": [                                                                                                            
+Unchanged      680                   ""                                                                                                                                 
+Unchanged      681                 ],                                                                                                                                   
+Unchanged      682                 "destinationIpGroups": [],                                                                                                           
+Unchanged      683                 "destinationFqdns": [],                                                                                                              
+Unchanged      684                 "destinationPorts": [                                                                                                                
+Unchanged      685                   "8530"                                                                                                                             
+Unchanged      686                 ]                                                                                                                                    
+Unchanged      687               },                                                                                                                                     
+Unchanged      688               {                                                                                                                                      
+Unchanged      689                 "ruleType": "NetworkRule",                                                                                                           
+Unchanged      690                 "name": "ALLOW-DEV-SPLUNK-TCP",                                                                                                      
+Unchanged      691                 "ipProtocols": [                                                                                                                     
+Unchanged      692                   "TCP"                                                                                                                              
+Unchanged      693                 ],                                                                                                                                   
+Unchanged      694                 "sourceAddresses": [                                                                                                                 
+Unchanged      695                   "10.1.150.0/24",                                                                                                                   
+Unchanged      696                   "10.101.150.0/24",                                                                                                                 
+Unchanged      697                   "10.102.150.0/24"                                                                                                                  
+Unchanged      698                 ],                                                                                                                                   
+Unchanged      699                 "sourceIpGroups": [],                                                                                                                
+Unchanged      700                 "destinationAddresses": [                                                                                                            
+Unchanged      701                   "172.16.202.206"                                                                                                                   
+Unchanged      702                 ],                                                                                                                                   
+Unchanged      703                 "destinationIpGroups": [],                                                                                                           
+Unchanged      704                 "destinationFqdns": [],                                                                                                              
+Unchanged      705                 "destinationPorts": [                                                                                                                
+Unchanged      706                   "514",                                                                                                                             
+Unchanged      707                   "8089",                                                                                                                            
+Unchanged      708                   "9997"                                                                                                                             
+Unchanged      709                 ]                                                                                                                                    
+Unchanged      710               },                                                                                                                                     
+Unchanged      711               {                                                                                                                                      
+Unchanged      712                 "ruleType": "NetworkRule",                                                                                                           
+Unchanged      713                 "name": "ALLOW-DEV-SPLUNK-UDP",                                                                                                      
+Unchanged      714                 "ipProtocols": [                                                                                                                     
+Unchanged      715                   "UDP"                                                                                                                              
+Unchanged      716                 ],                                                                                                                                   
+Unchanged      717                 "sourceAddresses": [                                                                                                                 
+Unchanged      718                   "10.1.150.0/24",                                                                                                                   
+Unchanged      719                   "10.101.150.0/24",                                                                                                                 
+Unchanged      720                   "10.102.150.0/24"                                                                                                                  
+Unchanged      721                 ],                                                                                                                                   
+Unchanged      722                 "sourceIpGroups": [],                                                                                                                
+Unchanged      723                 "destinationAddresses": [                                                                                                            
+Unchanged      724                   "172.16.202.206"                                                                                                                   
+Unchanged      725                 ],                                                                                                                                   
+Unchanged      726                 "destinationIpGroups": [],                                                                                                           
+Unchanged      727                 "destinationFqdns": [],                                                                                                              
+Unchanged      728                 "destinationPorts": [                                                                                                                
+Unchanged      729                   "514",                                                                                                                             
+Unchanged      730                   "9521"                                                                                                                             
+Unchanged      731                 ]                                                                                                                                    
+Unchanged      732               },                                                                                                                                     
+Unchanged      733               {                                                                                                                                      
+Unchanged      734                 "ruleType": "NetworkRule",                                                                                                           
+Unchanged      735                 "name": "ALLOW-DEV-CLOUD-TCP",                                                                                                       
+Unchanged      736                 "ipProtocols": [                                                                                                                     
+Unchanged      737                   "TCP"                                                                                                                              
+Unchanged      738                 ],                                                                                                                                   
+Unchanged      739                 "sourceAddresses": [                                                                                                                 
+Unchanged      740                   "10.1.150.0/24",                                                                                                                   
+Unchanged      741                   "10.101.150.0/24",                                                                                                                 
+Unchanged      742                   "10.102.150.0/24"                                                                                                                  
+Unchanged      743                 ],                                                                                                                                   
+Unchanged      744                 "sourceIpGroups": [],                                                                                                                
+Unchanged      745                 "destinationAddresses": [                                                                                                            
+Unchanged      746                   "10.1.100.100",                                                                                                                    
+Unchanged      747                   "10.2.100.100",                                                                                                                    
+Unchanged      748                   "10.2.100.105"                                                                                                                     
+Unchanged      749                 ],                                                                                                                                   
+Unchanged      750                 "destinationIpGroups": [],                                                                                                           
+Unchanged      751                 "destinationFqdns": [],                                                                                                              
+Unchanged      752                 "destinationPorts": [                                                                                                                
+Unchanged      753                   "123",                                                                                                                             
+Unchanged      754                   "135",                                                                                                                             
+Unchanged      755                   "3268",                                                                                                                            
+Unchanged      756                   "389",                                                                                                                             
+Unchanged      757                   "443",                                                                                                                             
+Unchanged      758                   "445",                                                                                                                             
+Unchanged      759                   "464",                                                                                                                             
+Unchanged      760                   "55555",                                                                                                                           
+Unchanged      761                   "55557",                                                                                                                           
+Unchanged      762                   "636",                                                                                                                             
+Unchanged      763                   "7000",                                                                                                                            
+Unchanged      764                   "80",                                                                                                                              
+Unchanged      765                   "88",                                                                                                                              
+Unchanged      766                   "9389"                                                                                                                             
+Unchanged      767                 ]                                                                                                                                    
+Unchanged      768               },                                                                                                                                     
+Unchanged      769               {                                                                                                                                      
+Unchanged      770                 "ruleType": "NetworkRule",                                                                                                           
+Unchanged      771                 "name": "ALLOW-DEV-CLOUD-UDP",                                                                                                       
+Unchanged      772                 "ipProtocols": [                                                                                                                     
+Unchanged      773                   "UDP"                                                                                                                              
+Unchanged      774                 ],                                                                                                                                   
+Unchanged      775                 "sourceAddresses": [                                                                                                                 
+Unchanged      776                   "10.1.150.0/24",                                                                                                                   
+Unchanged      777                   "10.101.150.0/24",                                                                                                                 
+Unchanged      778                   "10.102.150.0/24"                                                                                                                  
+Unchanged      779                 ],                                                                                                                                   
+Unchanged      780                 "sourceIpGroups": [],                                                                                                                
+Unchanged      781                 "destinationAddresses": [                                                                                                            
+Unchanged      782                   "10.1.100.100",                                                                                                                    
+Unchanged      783                   "10.2.100.100"                                                                                                                     
+Unchanged      784                 ],                                                                                                                                   
+Unchanged      785                 "destinationIpGroups": [],                                                                                                           
+Unchanged      786                 "destinationFqdns": [],                                                                                                              
+Unchanged      787                 "destinationPorts": [                                                                                                                
+Unchanged      788                   "123",                                                                                                                             
+Unchanged      789                   "389",                                                                                                                             
+Unchanged      790                   "464",                                                                                                                             
+Unchanged      791                   "88"                                                                                                                               
+Unchanged      792                 ]                                                                                                                                    
+Unchanged      793               },                                                                                                                                     
+Unchanged      794               {                                                                                                                                      
+Unchanged      795                 "ruleType": "NetworkRule",                                                                                                           
+Unchanged      796                 "name": "ALLOW-DEV-CHDDC-TCP",                                                                                                       
+Unchanged      797                 "ipProtocols": [                                                                                                                     
+Unchanged      798                   "TCP"                                                                                                                              
+Unchanged      799                 ],                                                                                                                                   
+Unchanged      800                 "sourceAddresses": [                                                                                                                 
+Unchanged      801                   "10.1.150.0/24",                                                                                                                   
+Unchanged      802                   "10.101.150.0/24",                                                                                                                 
+Unchanged      803                   "10.102.150.0/24"                                                                                                                  
+Unchanged      804                 ],                                                                                                                                   
+Unchanged      805                 "sourceIpGroups": [],                                                                                                                
+Unchanged      806                 "destinationAddresses": [                                                                                                            
+Unchanged      807                   "172.16.75.30",                                                                                                                    
+Unchanged      808                   "172.16.75.31"                                                                                                                     
+Unchanged      809                 ],                                                                                                                                   
+Unchanged      810                 "destinationIpGroups": [],                                                                                                           
+Unchanged      811                 "destinationFqdns": [],                                                                                                              
+Unchanged      812                 "destinationPorts": [                                                                                                                
+Unchanged      813                   "123",                                                                                                                             
+Unchanged      814                   "135",                                                                                                                             
+Unchanged      815                   "3268",                                                                                                                            
+Unchanged      816                   "389",                                                                                                                             
+Unchanged      817                   "443",                                                                                                                             
+Unchanged      818                   "445",                                                                                                                             
+Unchanged      819                   "464",                                                                                                                             
+Unchanged      820                   "55555",                                                                                                                           
+Unchanged      821                   "636",                                                                                                                             
+Unchanged      822                   "7000",                                                                                                                            
+Unchanged      823                   "80",                                                                                                                              
+Unchanged      824                   "88"                                                                                                                               
+Unchanged      825                 ]                                                                                                                                    
+Unchanged      826               },                                                                                                                                     
+Unchanged      827               {                                                                                                                                      
+Unchanged      828                 "ruleType": "NetworkRule",                                                                                                           
+Unchanged      829                 "name": "ALLOW-DEV-CHDDC-UDP",                                                                                                       
+Unchanged      830                 "ipProtocols": [                                                                                                                     
+Unchanged      831                   "UDP"                                                                                                                              
+Unchanged      832                 ],                                                                                                                                   
+Unchanged      833                 "sourceAddresses": [                                                                                                                 
+Unchanged      834                   "10.1.150.0/24",                                                                                                                   
+Unchanged      835                   "10.101.150.0/24",                                                                                                                 
+Unchanged      836                   "10.102.150.0/24"                                                                                                                  
+Unchanged      837                 ],                                                                                                                                   
+Unchanged      838                 "sourceIpGroups": [],                                                                                                                
+Unchanged      839                 "destinationAddresses": [                                                                                                            
+Unchanged      840                   "172.16.75.30",                                                                                                                    
+Unchanged      841                   "172.16.75.31"                                                                                                                     
+Unchanged      842                 ],                                                                                                                                   
+Unchanged      843                 "destinationIpGroups": [],                                                                                                           
+Unchanged      844                 "destinationFqdns": [],                                                                                                              
+Unchanged      845                 "destinationPorts": [                                                                                                                
+Unchanged      846                   "123",                                                                                                                             
+Unchanged      847                   "389",                                                                                                                             
+Unchanged      848                   "464",                                                                                                                             
+Unchanged      849                   "88"                                                                                                                               
+Unchanged      850                 ]                                                                                                                                    
+Unchanged      851               },                                                                                                                                     
+Unchanged      852               {                                                                                                                                      
+Unchanged      853                 "ruleType": "NetworkRule",                                                                                                           
+Unchanged      854                 "name": "ALLOW-DEVDC-CHDDC-TCP",                                                                                                     
+Unchanged      855                 "ipProtocols": [                                                                                                                     
+Unchanged      856                   "TCP"                                                                                                                              
+Unchanged      857                 ],                                                                                                                                   
+Unchanged      858                 "sourceAddresses": [                                                                                                                 
+Unchanged      859                   "10.1.150.100",                                                                                                                    
+Unchanged      860                   "10.1.150.101",                                                                                                                    
+Unchanged      861                   "10.101.150.100",                                                                                                                  
+Unchanged      862                   "10.101.150.101"                                                                                                                   
+Unchanged      863                 ],                                                                                                                                   
+Unchanged      864                 "sourceIpGroups": [],                                                                                                                
+Unchanged      865                 "destinationAddresses": [                                                                                                            
+Unchanged      866                   "172.16.75.30",                                                                                                                    
+Unchanged      867                   "172.16.75.31"                                                                                                                     
+Unchanged      868                 ],                                                                                                                                   
+Unchanged      869                 "destinationIpGroups": [],                                                                                                           
+Unchanged      870                 "destinationFqdns": [],                                                                                                              
+Unchanged      871                 "destinationPorts": [                                                                                                                
+Unchanged      872                   "123",                                                                                                                             
+Unchanged      873                   "135",                                                                                                                             
+Unchanged      874                   "3268",                                                                                                                            
+Unchanged      875                   "389",                                                                                                                             
+Unchanged      876                   "443",                                                                                                                             
+Unchanged      877                   "445",                                                                                                                             
+Unchanged      878                   "464",                                                                                                                             
+Unchanged      879                   "55555",                                                                                                                           
+Unchanged      880                   "55557",                                                                                                                           
+Unchanged      881                   "636",                                                                                                                             
+Unchanged      882                   "7000",                                                                                                                            
+Unchanged      883                   "80",                                                                                                                              
+Unchanged      884                   "88",                                                                                                                              
+Unchanged      885                   "9389"                                                                                                                             
+Unchanged      886                 ]                                                                                                                                    
+Unchanged      887               },                                                                                                                                     
+Unchanged      888               {                                                                                                                                      
+Unchanged      889                 "ruleType": "NetworkRule",                                                                                                           
+Unchanged      890                 "name": "ALLOW-DEVDC-CHDDC-UDP",                                                                                                     
+Unchanged      891                 "ipProtocols": [                                                                                                                     
+Unchanged      892                   "UDP"                                                                                                                              
+Unchanged      893                 ],                                                                                                                                   
+Unchanged      894                 "sourceAddresses": [                                                                                                                 
+Unchanged      895                   "10.1.150.100",                                                                                                                    
+Unchanged      896                   "10.1.150.101",                                                                                                                    
+Unchanged      897                   "10.101.150.100",                                                                                                                  
+Unchanged      898                   "10.101.150.101"                                                                                                                   
+Unchanged      899                 ],                                                                                                                                   
+Unchanged      900                 "sourceIpGroups": [],                                                                                                                
+Unchanged      901                 "destinationAddresses": [                                                                                                            
+Unchanged      902                   "172.16.75.30",                                                                                                                    
+Unchanged      903                   "172.16.75.31"                                                                                                                     
+Unchanged      904                 ],                                                                                                                                   
+Unchanged      905                 "destinationIpGroups": [],                                                                                                           
+Unchanged      906                 "destinationFqdns": [],                                                                                                              
+Unchanged      907                 "destinationPorts": [                                                                                                                
+Unchanged      908                   "123",                                                                                                                             
+Unchanged      909                   "389",                                                                                                                             
+Unchanged      910                   "464",                                                                                                                             
+Unchanged      911                   "88"                                                                                                                               
+Unchanged      912                 ]                                                                                                                                    
+Unchanged      913               },                                                                                                                                     
+Unchanged      914               {                                                                                                                                      
+Unchanged      915                 "ruleType": "NetworkRule",                                                                                                           
+Unchanged      916                 "name": "ALLOW-DEV-CROWDSTIKE-TCP",                                                                                                  
+Unchanged      917                 "ipProtocols": [                                                                                                                     
+Unchanged      918                   "TCP"                                                                                                                              
+Unchanged      919                 ],                                                                                                                                   
+Unchanged      920                 "sourceAddresses": [                                                                                                                 
+Unchanged      921                   "10.1.150.0/24",                                                                                                                   
+Unchanged      922                   "10.101.150.0/24",                                                                                                                 
+Unchanged      923                   "10.102.150.0/24"                                                                                                                  
+Unchanged      924                 ],                                                                                                                                   
+Unchanged      925                 "sourceIpGroups": [],                                                                                                                
+Unchanged      926                 "destinationAddresses": [                                                                                                            
+Unchanged      927                   "ts01-gyr-maverick.cloudsink.net",                                                                                                 
+Unchanged      928                   "Ref:lfodown01-gyr-maverick.cloudsink.net"                                                                                         
+Unchanged      929                 ],                                                                                                                                   
+Unchanged      930                 "destinationIpGroups": [],                                                                                                           
+Unchanged      931                 "destinationFqdns": [],                                                                                                              
+Unchanged      932                 "destinationPorts": [                                                                                                                
+Unchanged      933                   "443"                                                                                                                              
+Unchanged      934                 ]                                                                                                                                    
+Unchanged      935               },                                                                                                                                     
+Unchanged      936               {                                                                                                                                      
+Unchanged      937                 "ruleType": "NetworkRule",                                                                                                           
+Unchanged      938                 "name": "ALLOW-DEV-ELAVONDEMO-TCP",                                                                                                  
+Unchanged      939                 "ipProtocols": [                                                                                                                     
+Unchanged      940                   "TCP"                                                                                                                              
+Unchanged      941                 ],                                                                                                                                   
+Unchanged      942                 "sourceAddresses": [                                                                                                                 
+Unchanged      943                   "10.1.150.0/24",                                                                                                                   
+Unchanged      944                   "10.101.150.0/24",                                                                                                                 
+Unchanged      945                   "10.102.150.0/24"                                                                                                                  
+Unchanged      946                 ],                                                                                                                                   
+Unchanged      947                 "sourceIpGroups": [],                                                                                                                
+Unchanged      948                 "destinationAddresses": [                                                                                                            
+Unchanged      949                   "198.203.191.110",                                                                                                                 
+Unchanged      950                   "198.203.192.118",                                                                                                                 
+Unchanged      951                   "216.235.178.25",                                                                                                                  
+Unchanged      952                   "216.235.188.25"                                                                                                                   
+Unchanged      953                 ],                                                                                                                                   
+Unchanged      954                 "destinationIpGroups": [],                                                                                                           
+Unchanged      955                 "destinationFqdns": [],                                                                                                              
+Unchanged      956                 "destinationPorts": [                                                                                                                
+Unchanged      957                   "443",                                                                                                                             
+Unchanged      958                   "80"                                                                                                                               
+Unchanged      959                 ]                                                                                                                                    
+Unchanged      960               },                                                                                                                                     
+Unchanged      961               {                                                                                                                                      
+Unchanged      962                 "ruleType": "NetworkRule",                                                                                                           
+Unchanged      963                 "name": "ALLOW-WAF-DEV-TCP",                                                                                                         
+Unchanged      964                 "ipProtocols": [                                                                                                                     
+Unchanged      965                   "TCP"                                                                                                                              
+Unchanged      966                 ],                                                                                                                                   
+Unchanged      967                 "sourceAddresses": [                                                                                                                 
+Unchanged      968                   "10.156.3.16/29",                                                                                                                  
+Unchanged      969                   "10.156.3.18",                                                                                                                     
+Unchanged      970                   "10.156.3.19",                                                                                                                     
+Unchanged      971                   "10.156.3.8/29",                                                                                                                   
+Unchanged      972                   "172.16.203.3",                                                                                                                    
+Unchanged      973                   "172.16.203.4",                                                                                                                    
+Unchanged      974                   "172.16.214.20",                                                                                                                   
+Unchanged      975                   "172.16.214.21",                                                                                                                   
+Unchanged      976                   "172.16.220.0/24",                                                                                                                 
+Unchanged      977                   "172.16.223.2",                                                                                                                    
+Unchanged      978                   "172.16.230.0/24",                                                                                                                 
+Unchanged      979                   "172.16.70.49"                                                                                                                     
+Unchanged      980                 ],                                                                                                                                   
+Unchanged      981                 "sourceIpGroups": [],                                                                                                                
+ Modified      982                 "destinationAddresses": [                                                                                                            
+ Modified      983                   "10.1.150.0/24",                                                                                                                   
+ Modified      984                   "10.101.150.0/24",                                                                                                                 
+ Modified      985                   "10.102.150.0/24"                                                                                                                  
+Unchanged      986                 ],                                                                                                                                   
+  Deleted      987                 "destinationIpGroups": [],                                                                                                           
+Unchanged      988                 "destinationFqdns": [],                                                                                                              
+Unchanged      989                 "destinationPorts": [                                                                                                                
+Unchanged      990                   "10001",                                                                                                                           
+Unchanged      991                   "20002",                                                                                                                           
+Unchanged      992                   "21",                                                                                                                              
+Unchanged      993                   "25",                                                                                                                              
+Unchanged      994                   "30003",                                                                                                                           
+Unchanged      995                   "40004",                                                                                                                           
+Unchanged      996                   "443",                                                                                                                             
+Unchanged      997                   "55000",                                                                                                                           
+Unchanged      998                   "7070",                                                                                                                            
+Unchanged      999                   "80",                                                                                                                              
+Unchanged     1000                   "8012",                                                                                                                            
+Unchanged     1001                   "8028",                                                                                                                            
+Unchanged     1002                   "8080",                                                                                                                            
+Unchanged     1003                   "8443",                                                                                                                            
+Unchanged     1004                   "8444",                                                                                                                            
+Unchanged     1005                   "8445",                                                                                                                            
+Unchanged     1006                   "9090"                                                                                                                             
+Unchanged     1007                 ]                                                                                                                                    
+Unchanged     1008               },                                                                                                                                     
+Unchanged     1009               {                                                                                                                                      
+Unchanged     1010                 "ruleType": "NetworkRule",                                                                                                           
+Unchanged     1011                 "name": "test-function",                                                                                                             
+Unchanged     1012                 "ipProtocols": [                                                                                                                     
+Unchanged     1013                   "ICMP"                                                                                                                             
+Unchanged     1014                 ],                                                                                                                                   
+Unchanged     1015                 "sourceAddresses": [                                                                                                                 
+Unchanged     1016                   "*"                                                                                                                                
+Unchanged     1017                 ],                                                                                                                                   
+Unchanged     1018                 "sourceIpGroups": [],                                                                                                                
+Unchanged     1019                 "destinationAddresses": [                                                                                                            
+Unchanged     1020                   "*"                                                                                                                                
+Unchanged     1021                 ],                                                                                                                                   
+Unchanged     1022                 "destinationIpGroups": [],                                                                                                           
+Unchanged     1023                 "destinationFqdns": [],                                                                                                              
+Unchanged     1024                 "destinationPorts": [                                                                                                                
+Unchanged     1025                   "*"                                                                                                                                
+Unchanged     1026                 ]                                                                                                                                    
+Unchanged     1027               }                                                                                                                                      
+Unchanged     1028             ],                                                                                                                                       
+Unchanged     1029             "name": "Network-Allow",                                                                                                                 
+Unchanged     1030             "priority": 300                                                                                                                          
+Unchanged     1031           },                                                                                                                                         
+Unchanged     1032           {                                                                                                                                          
+Unchanged     1033             "ruleCollectionType": "FirewallPolicyFilterRuleCollection",                                                                              
+Unchanged     1034             "action": {                                                                                                                              
+Unchanged     1035               "type": "Deny"                                                                                                                         
+Unchanged     1036             },                                                                                                                                       
+Unchanged     1037             "rules": [                                                                                                                               
+Unchanged     1038               {                                                                                                                                      
+Unchanged     1039                 "ruleType": "NetworkRule",                                                                                                           
+Unchanged     1040                 "name": "TEst",                                                                                                                      
+Unchanged     1041                 "ipProtocols": [                                                                                                                     
+Unchanged     1042                   "UDP"                                                                                                                              
+Unchanged     1043                 ],                                                                                                                                   
+Unchanged     1044                 "sourceAddresses": [],                                                                                                               
+Unchanged     1045                 "sourceIpGroups": [                                                                                                                  
+Unchanged     1046                   "[parameters('ipGroups_test_group_externalid')]"                                                                                   
+Unchanged     1047                 ],                                                                                                                                   
+Unchanged     1048                 "destinationAddresses": [                                                                                                            
+Unchanged     1049                   "AppConfiguration"                                                                                                                 
+Unchanged     1050                 ],                                                                                                                                   
+Unchanged     1051                 "destinationIpGroups": [],                                                                                                           
+Unchanged     1052                 "destinationFqdns": [],                                                                                                              
+Unchanged     1053                 "destinationPorts": [                                                                                                                
+Unchanged     1054                   "80"                                                                                                                               
+Unchanged     1055                 ]                                                                                                                                    
+Unchanged     1056               }                                                                                                                                      
+Unchanged     1057             ],                                                                                                                                       
+Unchanged     1058             "name": "Luke-Test",                                                                                                                     
+Unchanged     1059             "priority": 500                                                                                                                          
+Unchanged     1060           }                                                                                                                                          
+Unchanged     1061         ]                                                                                                                                            
+Unchanged     1062       }                                                                                                                                              
+Unchanged     1063     }                                                                                                                                                
+Unchanged     1064   ]                                                                                                                                                  
+Unchanged     1065 }                                                                                                                                                    
+

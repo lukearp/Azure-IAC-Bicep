@@ -1,7 +1,5 @@
-using namespace System.Net
-
 # Input bindings are passed in via param block.
-param($Request, $TriggerMetadata)
+param($Timer)
 
 $ContainerName = $env:ContainerName #"Storage Container Name"
 $TargetContainer = $env:TargetContainer
@@ -9,10 +7,7 @@ $StorageAccountName = $env:StorageAccountName #"Storage Account Name"
 $StorageAccountResourceGroupName = $env:StorageAccountResourceGroupName #Resource Group of Storage Account"
 $StorageAccountSubscription = $env:StorageAccountSubscription #"Subscription of storage account"
 $LogicAppEndpoint = $env:LogicAppEndpoint
-$testing = $env:Testing #$true for True $false for False
-$testFirewallPolicyName = $env:testFirewallPolicyName # Resource ID of test firewall policy
 
-#$policyName = $testing -eq $true ? $testFirewallPolicyName : $TriggerMetadata.Name
 $lastHour = [datetime]::UtcNow.AddHours(-1);
 Select-AzSubscription -Subscription $StorageAccountSubscription
 $storageAccount = Get-AzStorageAccount -Name $StorageAccountName -ResourceGroupName $StorageAccountResourceGroupName

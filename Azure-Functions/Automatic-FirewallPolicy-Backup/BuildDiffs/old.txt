@@ -1,0 +1,1068 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "firewallPolicies_Parent_Policy_name": {
+      "type": "String",
+      "defaultValue": "Parent-Policy-Backup"
+    },
+    "ipGroups_test_group_externalid": {
+      "type": "String",
+      "defaultValue": "/subscriptions/32eb88b4-4029-4094-85e3-ec8b7ce1fc00/resourceGroups/firewall-policies/providers/Microsoft.Network/ipGroups/test-group"
+    },
+    "ipGroups_test_externalid": {
+      "type": "String",
+      "defaultValue": "/subscriptions/25e4426f-86da-474c-bc01-effa647780b1/resourceGroups/cisco/providers/Microsoft.Network/ipGroups/test"
+    }
+  },
+  "variables": {
+    "User": "testuser@test.com"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Network/firewallPolicies",
+      "apiVersion": "2023-06-01",
+      "name": "[parameters('firewallPolicies_Parent_Policy_name')]",
+      "location": "eastus",
+      "tags": {
+        "My-Tag": "Testing"
+      },
+      "identity": {
+        "type": "UserAssigned",
+        "userAssignedIdentities": {
+          "/subscriptions/32eb88b4-4029-4094-85e3-ec8b7ce1fc00/resourceGroups/temp-appgw/providers/Microsoft.ManagedIdentity/userAssignedIdentities/app-gw-keyvault": {}
+        }
+      },
+      "properties": {
+        "sku": {
+          "tier": "Premium"
+        },
+        "transportSecurity": {
+          "certificateAuthority": {
+            "name": "tls-intermediate",
+            "keyVaultSecretId": "https://luke-keyvault-enterprise.vault.azure.net/secrets/tls-intermediate/6605d9c1aee34849ac1417688f6c89da"
+          }
+        },
+        "threatIntelMode": "Alert",
+        "threatIntelWhitelist": {
+          "fqdns": [],
+          "ipAddresses": []
+        },
+        "snat": {
+          "privateRanges": [
+            "10.0.0.0/8",
+            "192.168.0.0/16",
+            "172.16.0.0/12",
+            "100.64.0.0/10"
+          ]
+        },
+        "intrusionDetection": {
+          "mode": "Deny",
+          "configuration": {
+            "signatureOverrides": [
+              {
+                "id": "2000015",
+                "mode": "Deny"
+              }
+            ],
+            "bypassTrafficSettings": []
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Network/firewallPolicies/ruleCollectionGroups",
+      "apiVersion": "2023-06-01",
+      "name": "[concat(parameters('firewallPolicies_Parent_Policy_name'), '/DefaultApplicationRuleCollectionGroup')]",
+      "location": "eastus",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/firewallPolicies', parameters('firewallPolicies_Parent_Policy_name'))]"
+      ],
+      "properties": {
+        "priority": 300,
+        "ruleCollections": [
+          {
+            "ruleCollectionType": "FirewallPolicyFilterRuleCollection",
+            "action": {
+              "type": "Allow"
+            },
+            "rules": [
+              {
+                "ruleType": "ApplicationRule",
+                "name": "application",
+                "protocols": [
+                  {
+                    "protocolType": "Https",
+                    "port": 443
+                  }
+                ],
+                "fqdnTags": [],
+                "webCategories": [],
+                "targetFqdns": [
+                  "*"
+                ],
+                "targetUrls": [],
+                "terminateTLS": true,
+                "sourceAddresses": [
+                  "*"
+                ],
+                "destinationAddresses": [],
+                "sourceIpGroups": [],
+                "httpHeadersToInsert": []
+              }
+            ],
+            "name": "test",
+            "priority": 100
+          },
+          {
+            "ruleCollectionType": "FirewallPolicyFilterRuleCollection",
+            "action": {
+              "type": "Allow"
+            },
+            "rules": [
+              {
+                "ruleType": "ApplicationRule",
+                "name": "test",
+                "protocols": [
+                  {
+                    "protocolType": "Https",
+                    "port": 443
+                  }
+                ],
+                "fqdnTags": [],
+                "webCategories": [],
+                "targetFqdns": [
+                  "*"
+                ],
+                "targetUrls": [],
+                "terminateTLS": false,
+                "sourceAddresses": [
+                  "*"
+                ],
+                "destinationAddresses": [],
+                "sourceIpGroups": [],
+                "httpHeadersToInsert": []
+              }
+            ],
+            "name": "AppAllow",
+            "priority": 200
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/firewallPolicies/ruleCollectionGroups",
+      "apiVersion": "2023-06-01",
+      "name": "[concat(parameters('firewallPolicies_Parent_Policy_name'), '/DefaultNetworkRuleCollectionGroup')]",
+      "location": "eastus",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/firewallPolicies', parameters('firewallPolicies_Parent_Policy_name'))]",
+        "[resourceId('Microsoft.Network/firewallPolicies/ruleCollectionGroups',parameters('firewallPolicies_Parent_Policy_name'),'DefaultApplicationRuleCollectionGroup')]"
+      ],
+      "properties": {
+        "priority": 200,
+        "ruleCollections": [
+          {
+            "ruleCollectionType": "FirewallPolicyFilterRuleCollection",
+            "action": {
+              "type": "Allow"
+            },
+            "rules": [
+              {
+                "ruleType": "NetworkRule",
+                "name": "Allow",
+                "ipProtocols": [
+                  "Any"
+                ],
+                "sourceAddresses": [
+                  "10.0.20.0/22",
+                  "192.168.1.0/24"
+                ],
+                "sourceIpGroups": [],
+                "destinationAddresses": [
+                  "10.0.16.0/22",
+                  "10.0.20.0/22",
+                  "192.168.1.0/24"
+                ],
+                "destinationIpGroups": [],
+                "destinationFqdns": [],
+                "destinationPorts": [
+                  "*"
+                ]
+              },
+              {
+                "ruleType": "NetworkRule",
+                "name": "ALLOW-DEVDC-ALL-UDP",
+                "ipProtocols": [
+                  "UDP"
+                ],
+                "sourceAddresses": [
+                  "10.1.150.100",
+                  "10.1.150.101",
+                  "10.101.150.100",
+                  "10.101.150.101"
+                ],
+                "sourceIpGroups": [],
+                "destinationAddresses": [
+                  "0.0.0.0/0"
+                ],
+                "destinationIpGroups": [],
+                "destinationFqdns": [],
+                "destinationPorts": [
+                  "137",
+                  "3389"
+                ]
+              },
+              {
+                "ruleType": "NetworkRule",
+                "name": "ALLOW-DEV-DRWAFIT-TCP",
+                "ipProtocols": [
+                  "TCP"
+                ],
+                "sourceAddresses": [
+                  "10.1.150.0/24",
+                  "10.101.150.0/24",
+                  "10.102.150.0/24"
+                ],
+                "sourceIpGroups": [],
+                "destinationAddresses": [
+                  "172.16.220.61"
+                ],
+                "destinationIpGroups": [],
+                "destinationFqdns": [],
+                "destinationPorts": [
+                  "10001",
+                  "20002",
+                  "21",
+                  "30003",
+                  "40004",
+                  "443",
+                  "55000",
+                  "7070",
+                  "80",
+                  "8012",
+                  "8028",
+                  "8080",
+                  "8443",
+                  "8444",
+                  "8445",
+                  "9090"
+                ]
+              },
+              {
+                "ruleType": "NetworkRule",
+                "name": "ALLOW-DEV-WAF-TCP",
+                "ipProtocols": [
+                  "TCP"
+                ],
+                "sourceAddresses": [
+                  "10.1.150.0/24",
+                  "10.101.150.0/24",
+                  "10.102.150.0/24"
+                ],
+                "sourceIpGroups": [],
+                "destinationAddresses": [
+                  "10.156.3.16/29",
+                  "10.156.3.18",
+                  "10.156.3.19",
+                  "10.156.3.8/29",
+                  "172.16.203.3",
+                  "172.16.203.4",
+                  "172.16.214.20",
+                  "172.16.214.21",
+                  "172.16.220.0/24",
+                  "172.16.223.2",
+                  "172.16.230.0/24",
+                  "172.16.70.49"
+                ],
+                "destinationIpGroups": [],
+                "destinationFqdns": [],
+                "destinationPorts": [
+                  "10001",
+                  "20002",
+                  "21",
+                  "30003",
+                  "40004",
+                  "443",
+                  "55000",
+                  "7070",
+                  "80",
+                  "8012",
+                  "8028",
+                  "8080",
+                  "8443",
+                  "8444",
+                  "8445",
+                  "9090"
+                ]
+              },
+              {
+                "ruleType": "NetworkRule",
+                "name": "ALLOW-DEV-WAFIT-TCP",
+                "ipProtocols": [
+                  "TCP"
+                ],
+                "sourceAddresses": [
+                  "10.1.150.0/24",
+                  "10.101.150.0/24",
+                  "10.102.150.0/24"
+                ],
+                "sourceIpGroups": [],
+                "destinationAddresses": [
+                  "172.16.230.61"
+                ],
+                "destinationIpGroups": [],
+                "destinationFqdns": [],
+                "destinationPorts": [
+                  "10001",
+                  "20002",
+                  "21",
+                  "30003",
+                  "40004",
+                  "443",
+                  "55000",
+                  "7070",
+                  "80",
+                  "8012",
+                  "8028",
+                  "8080",
+                  "8443",
+                  "8444",
+                  "8445",
+                  "9090"
+                ]
+              },
+              {
+                "ruleType": "NetworkRule",
+                "name": "TEMP-ALLOW-DEV-UAT-FTP-TCP",
+                "ipProtocols": [
+                  "TCP"
+                ],
+                "sourceAddresses": [
+                  "10.1.150.0/24",
+                  "10.101.150.0/24",
+                  "10.102.150.0/24"
+                ],
+                "sourceIpGroups": [],
+                "destinationAddresses": [
+                  "10.1.151.0/24",
+                  "10.101.151.0/24",
+                  "10.102.151.0/24"
+                ],
+                "destinationIpGroups": [],
+                "destinationFqdns": [],
+                "destinationPorts": [
+                  "21"
+                ]
+              },
+              {
+                "ruleType": "NetworkRule",
+                "name": "TEMP-ALLOW-DEV-UAT-SSL-TCP",
+                "ipProtocols": [
+                  "TCP"
+                ],
+                "sourceAddresses": [
+                  "10.1.150.0/24",
+                  "10.101.150.0/24",
+                  "10.102.150.0/24"
+                ],
+                "sourceIpGroups": [],
+                "destinationAddresses": [
+                  "10.1.151.0/24",
+                  "10.101.151.0/24",
+                  "10.102.151.0/24"
+                ],
+                "destinationIpGroups": [],
+                "destinationFqdns": [],
+                "destinationPorts": [
+                  "443"
+                ]
+              },
+              {
+                "ruleType": "NetworkRule",
+                "name": "ALLOW-DEVDC-UATDC-TCP",
+                "ipProtocols": [
+                  "TCP"
+                ],
+                "sourceAddresses": [
+                  "10.1.150.100",
+                  "10.1.150.101",
+                  "10.101.150.100",
+                  "10.101.150.101"
+                ],
+                "sourceIpGroups": [],
+                "destinationAddresses": [
+                  "10.1.151.100",
+                  "10.1.151.101",
+                  "10.101.151.100",
+                  "10.101.151.101"
+                ],
+                "destinationIpGroups": [],
+                "destinationFqdns": [],
+                "destinationPorts": [
+                  "123",
+                  "135",
+                  "3268",
+                  "389",
+                  "443",
+                  "445",
+                  "464",
+                  "55555",
+                  "55557",
+                  "636",
+                  "7000",
+                  "80",
+                  "88",
+                  "9389"
+                ]
+              },
+              {
+                "ruleType": "NetworkRule",
+                "name": "ALLOW-DEVDC-UATDC-UDP",
+                "ipProtocols": [
+                  "UDP"
+                ],
+                "sourceAddresses": [
+                  "10.1.150.100",
+                  "10.1.150.101",
+                  "10.101.150.100",
+                  "10.101.150.101"
+                ],
+                "sourceIpGroups": [],
+                "destinationAddresses": [
+                  "10.1.151.100",
+                  "10.1.151.101",
+                  "10.101.151.100",
+                  "10.101.151.101"
+                ],
+                "destinationIpGroups": [],
+                "destinationFqdns": [],
+                "destinationPorts": [
+                  "123",
+                  "389",
+                  "464",
+                  "88"
+                ]
+              },
+              {
+                "ruleType": "NetworkRule",
+                "name": "ALLOW-DEV-MANAGEENG-TCP",
+                "ipProtocols": [
+                  "TCP"
+                ],
+                "sourceAddresses": [
+                  "10.1.150.0/24",
+                  "10.101.150.0/24",
+                  "10.102.150.0/24"
+                ],
+                "sourceIpGroups": [],
+                "destinationAddresses": [
+                  "*"
+                ],
+                "destinationIpGroups": [],
+                "destinationFqdns": [],
+                "destinationPorts": [
+                  "443",
+                  "8022",
+                  "8027",
+                  "8031",
+                  "8040",
+                  "8047",
+                  "8053",
+                  "8057",
+                  "8443"
+                ]
+              },
+              {
+                "ruleType": "NetworkRule",
+                "name": "ALLOW-DEV-MANAGEENG-UDP",
+                "ipProtocols": [
+                  "UDP"
+                ],
+                "sourceAddresses": [
+                  "10.1.150.0/24",
+                  "10.101.150.0/24",
+                  "10.102.150.0/24"
+                ],
+                "sourceIpGroups": [],
+                "destinationAddresses": [
+                  ""
+                ],
+                "destinationIpGroups": [],
+                "destinationFqdns": [],
+                "destinationPorts": [
+                  "8047"
+                ]
+              },
+              {
+                "ruleType": "NetworkRule",
+                "name": "ALLOW-DEV-CAWEB-TCP",
+                "ipProtocols": [
+                  "TCP"
+                ],
+                "sourceAddresses": [
+                  "10.1.150.0/24",
+                  "10.101.150.0/24",
+                  "10.102.150.0/24"
+                ],
+                "sourceIpGroups": [],
+                "destinationAddresses": [
+                  ""
+                ],
+                "destinationIpGroups": [],
+                "destinationFqdns": [],
+                "destinationPorts": [
+                  "80"
+                ]
+              },
+              {
+                "ruleType": "NetworkRule",
+                "name": "ALLOW-DEV--EXCHANGE-TCP",
+                "ipProtocols": [
+                  "TCP"
+                ],
+                "sourceAddresses": [
+                  "10.1.150.0/24",
+                  "10.101.150.0/24",
+                  "10.102.150.0/24"
+                ],
+                "sourceIpGroups": [],
+                "destinationAddresses": [
+                  ""
+                ],
+                "destinationIpGroups": [],
+                "destinationFqdns": [],
+                "destinationPorts": [
+                  "25"
+                ]
+              },
+              {
+                "ruleType": "NetworkRule",
+                "name": "ALLOW-DEVDC-SSDC-TCP",
+                "ipProtocols": [
+                  "TCP"
+                ],
+                "sourceAddresses": [
+                  "10.1.150.100",
+                  "10.1.150.101",
+                  "10.101.150.100",
+                  "10.101.150.101"
+                ],
+                "sourceIpGroups": [],
+                "destinationAddresses": [
+                  "172.16.202.100",
+                  "172.16.202.101",
+                  "172.16.202.45",
+                  "172.16.71.100",
+                  "172.16.71.101"
+                ],
+                "destinationIpGroups": [],
+                "destinationFqdns": [],
+                "destinationPorts": [
+                  "123",
+                  "135",
+                  "3268",
+                  "389",
+                  "443",
+                  "445",
+                  "464",
+                  "55555",
+                  "55557",
+                  "636",
+                  "7000",
+                  "80",
+                  "88",
+                  "9389"
+                ]
+              },
+              {
+                "ruleType": "NetworkRule",
+                "name": "ALLOW-DEVDC-SSDC-UDP",
+                "ipProtocols": [
+                  "UDP"
+                ],
+                "sourceAddresses": [
+                  "10.1.150.100",
+                  "10.1.150.101",
+                  "10.101.150.100",
+                  "10.101.150.101"
+                ],
+                "sourceIpGroups": [],
+                "destinationAddresses": [
+                  "172.16.202.100",
+                  "172.16.202.101",
+                  "172.16.202.45",
+                  "172.16.71.100",
+                  "172.16.71.101"
+                ],
+                "destinationIpGroups": [],
+                "destinationFqdns": [],
+                "destinationPorts": [
+                  "123",
+                  "389",
+                  "464",
+                  "88"
+                ]
+              },
+              {
+                "ruleType": "NetworkRule",
+                "name": "ALLOW-DEV-SSDC-TCP",
+                "ipProtocols": [
+                  "TCP"
+                ],
+                "sourceAddresses": [
+                  "10.1.150.0/24",
+                  "10.101.150.0/24",
+                  "10.102.150.0/24"
+                ],
+                "sourceIpGroups": [],
+                "destinationAddresses": [
+                  "172.16.202.100",
+                  "172.16.202.101",
+                  "172.16.202.45",
+                  "172.16.71.100",
+                  "172.16.71.101"
+                ],
+                "destinationIpGroups": [],
+                "destinationFqdns": [],
+                "destinationPorts": [
+                  "123",
+                  "135",
+                  "3268",
+                  "389",
+                  "443",
+                  "445",
+                  "464",
+                  "55555",
+                  "636",
+                  "7000",
+                  "80",
+                  "88"
+                ]
+              },
+              {
+                "ruleType": "NetworkRule",
+                "name": "ALLOW-DEV-SSDC-UDP",
+                "ipProtocols": [
+                  "UDP"
+                ],
+                "sourceAddresses": [
+                  "10.1.150.0/24",
+                  "10.101.150.0/24",
+                  "10.102.150.0/24"
+                ],
+                "sourceIpGroups": [],
+                "destinationAddresses": [
+                  "172.16.202.100",
+                  "172.16.202.101",
+                  "172.16.202.45",
+                  "172.16.71.100",
+                  "172.16.71.101"
+                ],
+                "destinationIpGroups": [],
+                "destinationFqdns": [],
+                "destinationPorts": [
+                  "123",
+                  "389",
+                  "464",
+                  "88"
+                ]
+              },
+              {
+                "ruleType": "NetworkRule",
+                "name": "ALLOW-DEV-WSUS-TCP",
+                "ipProtocols": [
+                  "TCP"
+                ],
+                "sourceAddresses": [
+                  "10.1.150.0/24",
+                  "10.101.150.0/24",
+                  "10.102.150.0/24"
+                ],
+                "sourceIpGroups": [],
+                "destinationAddresses": [
+                  ""
+                ],
+                "destinationIpGroups": [],
+                "destinationFqdns": [],
+                "destinationPorts": [
+                  "8530"
+                ]
+              },
+              {
+                "ruleType": "NetworkRule",
+                "name": "ALLOW-DEV-SPLUNK-TCP",
+                "ipProtocols": [
+                  "TCP"
+                ],
+                "sourceAddresses": [
+                  "10.1.150.0/24",
+                  "10.101.150.0/24",
+                  "10.102.150.0/24"
+                ],
+                "sourceIpGroups": [],
+                "destinationAddresses": [
+                  "172.16.202.206"
+                ],
+                "destinationIpGroups": [],
+                "destinationFqdns": [],
+                "destinationPorts": [
+                  "514",
+                  "8089",
+                  "9997"
+                ]
+              },
+              {
+                "ruleType": "NetworkRule",
+                "name": "ALLOW-DEV-SPLUNK-UDP",
+                "ipProtocols": [
+                  "UDP"
+                ],
+                "sourceAddresses": [
+                  "10.1.150.0/24",
+                  "10.101.150.0/24",
+                  "10.102.150.0/24"
+                ],
+                "sourceIpGroups": [],
+                "destinationAddresses": [
+                  "172.16.202.206"
+                ],
+                "destinationIpGroups": [],
+                "destinationFqdns": [],
+                "destinationPorts": [
+                  "514",
+                  "9521"
+                ]
+              },
+              {
+                "ruleType": "NetworkRule",
+                "name": "ALLOW-DEV-CLOUD-TCP",
+                "ipProtocols": [
+                  "TCP"
+                ],
+                "sourceAddresses": [
+                  "10.1.150.0/24",
+                  "10.101.150.0/24",
+                  "10.102.150.0/24"
+                ],
+                "sourceIpGroups": [],
+                "destinationAddresses": [
+                  "10.1.100.100",
+                  "10.2.100.100",
+                  "10.2.100.105"
+                ],
+                "destinationIpGroups": [],
+                "destinationFqdns": [],
+                "destinationPorts": [
+                  "123",
+                  "135",
+                  "3268",
+                  "389",
+                  "443",
+                  "445",
+                  "464",
+                  "55555",
+                  "55557",
+                  "636",
+                  "7000",
+                  "80",
+                  "88",
+                  "9389"
+                ]
+              },
+              {
+                "ruleType": "NetworkRule",
+                "name": "ALLOW-DEV-CLOUD-UDP",
+                "ipProtocols": [
+                  "UDP"
+                ],
+                "sourceAddresses": [
+                  "10.1.150.0/24",
+                  "10.101.150.0/24",
+                  "10.102.150.0/24"
+                ],
+                "sourceIpGroups": [],
+                "destinationAddresses": [
+                  "10.1.100.100",
+                  "10.2.100.100"
+                ],
+                "destinationIpGroups": [],
+                "destinationFqdns": [],
+                "destinationPorts": [
+                  "123",
+                  "389",
+                  "464",
+                  "88"
+                ]
+              },
+              {
+                "ruleType": "NetworkRule",
+                "name": "ALLOW-DEV-CHDDC-TCP",
+                "ipProtocols": [
+                  "TCP"
+                ],
+                "sourceAddresses": [
+                  "10.1.150.0/24",
+                  "10.101.150.0/24",
+                  "10.102.150.0/24"
+                ],
+                "sourceIpGroups": [],
+                "destinationAddresses": [
+                  "172.16.75.30",
+                  "172.16.75.31"
+                ],
+                "destinationIpGroups": [],
+                "destinationFqdns": [],
+                "destinationPorts": [
+                  "123",
+                  "135",
+                  "3268",
+                  "389",
+                  "443",
+                  "445",
+                  "464",
+                  "55555",
+                  "636",
+                  "7000",
+                  "80",
+                  "88"
+                ]
+              },
+              {
+                "ruleType": "NetworkRule",
+                "name": "ALLOW-DEV-CHDDC-UDP",
+                "ipProtocols": [
+                  "UDP"
+                ],
+                "sourceAddresses": [
+                  "10.1.150.0/24",
+                  "10.101.150.0/24",
+                  "10.102.150.0/24"
+                ],
+                "sourceIpGroups": [],
+                "destinationAddresses": [
+                  "172.16.75.30",
+                  "172.16.75.31"
+                ],
+                "destinationIpGroups": [],
+                "destinationFqdns": [],
+                "destinationPorts": [
+                  "123",
+                  "389",
+                  "464",
+                  "88"
+                ]
+              },
+              {
+                "ruleType": "NetworkRule",
+                "name": "ALLOW-DEVDC-CHDDC-TCP",
+                "ipProtocols": [
+                  "TCP"
+                ],
+                "sourceAddresses": [
+                  "10.1.150.100",
+                  "10.1.150.101",
+                  "10.101.150.100",
+                  "10.101.150.101"
+                ],
+                "sourceIpGroups": [],
+                "destinationAddresses": [
+                  "172.16.75.30",
+                  "172.16.75.31"
+                ],
+                "destinationIpGroups": [],
+                "destinationFqdns": [],
+                "destinationPorts": [
+                  "123",
+                  "135",
+                  "3268",
+                  "389",
+                  "443",
+                  "445",
+                  "464",
+                  "55555",
+                  "55557",
+                  "636",
+                  "7000",
+                  "80",
+                  "88",
+                  "9389"
+                ]
+              },
+              {
+                "ruleType": "NetworkRule",
+                "name": "ALLOW-DEVDC-CHDDC-UDP",
+                "ipProtocols": [
+                  "UDP"
+                ],
+                "sourceAddresses": [
+                  "10.1.150.100",
+                  "10.1.150.101",
+                  "10.101.150.100",
+                  "10.101.150.101"
+                ],
+                "sourceIpGroups": [],
+                "destinationAddresses": [
+                  "172.16.75.30",
+                  "172.16.75.31"
+                ],
+                "destinationIpGroups": [],
+                "destinationFqdns": [],
+                "destinationPorts": [
+                  "123",
+                  "389",
+                  "464",
+                  "88"
+                ]
+              },
+              {
+                "ruleType": "NetworkRule",
+                "name": "ALLOW-DEV-CROWDSTIKE-TCP",
+                "ipProtocols": [
+                  "TCP"
+                ],
+                "sourceAddresses": [
+                  "10.1.150.0/24",
+                  "10.101.150.0/24",
+                  "10.102.150.0/24"
+                ],
+                "sourceIpGroups": [],
+                "destinationAddresses": [
+                  "ts01-gyr-maverick.cloudsink.net",
+                  "Ref:lfodown01-gyr-maverick.cloudsink.net"
+                ],
+                "destinationIpGroups": [],
+                "destinationFqdns": [],
+                "destinationPorts": [
+                  "443"
+                ]
+              },
+              {
+                "ruleType": "NetworkRule",
+                "name": "ALLOW-DEV-ELAVONDEMO-TCP",
+                "ipProtocols": [
+                  "TCP"
+                ],
+                "sourceAddresses": [
+                  "10.1.150.0/24",
+                  "10.101.150.0/24",
+                  "10.102.150.0/24"
+                ],
+                "sourceIpGroups": [],
+                "destinationAddresses": [
+                  "198.203.191.110",
+                  "198.203.192.118",
+                  "216.235.178.25",
+                  "216.235.188.25"
+                ],
+                "destinationIpGroups": [],
+                "destinationFqdns": [],
+                "destinationPorts": [
+                  "443",
+                  "80"
+                ]
+              },
+              {
+                "ruleType": "NetworkRule",
+                "name": "ALLOW-WAF-DEV-TCP",
+                "ipProtocols": [
+                  "TCP"
+                ],
+                "sourceAddresses": [
+                  "10.156.3.16/29",
+                  "10.156.3.18",
+                  "10.156.3.19",
+                  "10.156.3.8/29",
+                  "172.16.203.3",
+                  "172.16.203.4",
+                  "172.16.214.20",
+                  "172.16.214.21",
+                  "172.16.220.0/24",
+                  "172.16.223.2",
+                  "172.16.230.0/24",
+                  "172.16.70.49"
+                ],
+                "sourceIpGroups": [],
+                "destinationAddresses": [],
+                "destinationIpGroups": [
+                  "[parameters('ipGroups_test_group_externalid')]",
+                  "[parameters('ipGroups_test_externalid')]"
+                ],
+                "destinationFqdns": [],
+                "destinationPorts": [
+                  "10001",
+                  "20002",
+                  "21",
+                  "25",
+                  "30003",
+                  "40004",
+                  "443",
+                  "55000",
+                  "7070",
+                  "80",
+                  "8012",
+                  "8028",
+                  "8080",
+                  "8443",
+                  "8444",
+                  "8445",
+                  "9090"
+                ]
+              },
+              {
+                "ruleType": "NetworkRule",
+                "name": "test-function",
+                "ipProtocols": [
+                  "ICMP"
+                ],
+                "sourceAddresses": [
+                  "*"
+                ],
+                "sourceIpGroups": [],
+                "destinationAddresses": [
+                  "*"
+                ],
+                "destinationIpGroups": [],
+                "destinationFqdns": [],
+                "destinationPorts": [
+                  "*"
+                ]
+              }
+            ],
+            "name": "Network-Allow",
+            "priority": 300
+          },
+          {
+            "ruleCollectionType": "FirewallPolicyFilterRuleCollection",
+            "action": {
+              "type": "Deny"
+            },
+            "rules": [
+              {
+                "ruleType": "NetworkRule",
+                "name": "TEst",
+                "ipProtocols": [
+                  "UDP"
+                ],
+                "sourceAddresses": [],
+                "sourceIpGroups": [
+                  "[parameters('ipGroups_test_group_externalid')]"
+                ],
+                "destinationAddresses": [
+                  "AppConfiguration"
+                ],
+                "destinationIpGroups": [],
+                "destinationFqdns": [],
+                "destinationPorts": [
+                  "80"
+                ]
+              }
+            ],
+            "name": "Luke-Test",
+            "priority": 500
+          }
+        ]
+      }
+    }
+  ]
+}
