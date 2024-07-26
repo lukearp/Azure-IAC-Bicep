@@ -15,6 +15,7 @@ foreach($vm in $arcSqlVms)
     if($null -eq $arcVMExtension)
     {
         Write-Host "Installing Extension on $($vm.name)"
+        Add-Content -Path ".\SQL-Install-Extension.log" -Value $vm.name
         Select-AzSubscription $vm.subscriptionId
         New-AzConnectedMachineExtension -Name "WindowsAgent.SqlServer" -ResourceGroupName $vm.resourceGroup -MachineName $vm.name -Location $vm.location -Publisher "Microsoft.AzureData" -Settings $Settings -ExtensionType "WindowsAgent.SqlServer" -AsJob
     }
