@@ -4,6 +4,7 @@ param policyId string
 param pipId string
 param subnetId string 
 @allowed([
+//  'Basic'
   'Standard'
   'Premium'
 ])
