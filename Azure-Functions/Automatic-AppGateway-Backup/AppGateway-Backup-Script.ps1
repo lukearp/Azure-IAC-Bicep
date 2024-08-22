@@ -281,6 +281,12 @@ $pathRedirectRuleResourceString = @'
 }}
 '@
 
+$pathRewriteRuleResourceString = @'
+{{
+    "Id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('appGateway_name')), '/rewriteRuleSets/{0}')]"
+}}
+'@
+
 $routingRuleBackendResourceString = @'
 {{
     "Id": "[concat(resourceId('Microsoft.Network/applicationGateways',parameters('appGateway_name')),'/backendAddressPools/{0}')]"
@@ -761,7 +767,7 @@ foreach($listener in $appGateway.HttpListeners)
 }
 foreach($urlPathMap in $appGateway.UrlPathMaps)
 {
-    $map = ConvertFrom-Json -InputObject $($urlPathMapResourceString -f $urlPathMap.Name,$urlPathMap.DefaultBackendAddressPool.Id.Split("/")[10],$urlPathMap.DefaultBackendHttpSettings.Id.Split("/")[10],$($urlPathMap.DefaultRewriteRuleSet -eq $null ? "null" : $(pathRewriteRuleResourceString -f $urlPathMap.DefaultRewriteRuleSet.Id.Split("/")[10])),$($urlPathMap.DefaultRedirectConfiguration -eq $null ? "null" : $($pathRedirectRuleResourceString -f $urlPathMap.DefaultRedirectConfiguration.Id.Split("/")[10]))) -Depth 20
+    $map = ConvertFrom-Json -InputObject $($urlPathMapResourceString -f $urlPathMap.Name,$urlPathMap.DefaultBackendAddressPool.Id.Split("/")[10],$urlPathMap.DefaultBackendHttpSettings.Id.Split("/")[10],$($urlPathMap.DefaultRewriteRuleSet -eq $null ? "null" : $($pathRewriteRuleResourceString -f $urlPathMap.DefaultRewriteRuleSet.Id.Split("/")[10])),$($urlPathMap.DefaultRedirectConfiguration -eq $null ? "null" : $($pathRedirectRuleResourceString -f $urlPathMap.DefaultRedirectConfiguration.Id.Split("/")[10]))) -Depth 20
     foreach($rule in $urlPathMap.PathRules)
     {
         $pathRule = ConvertFrom-Json -InputObject $($pathRulesResourceString -f $rule.Name,$($rule.BackendAddressPool -eq $null ? "null" : $routingRuleBackendResourceString -f $rule.BackendAddressPool.Id.Split("/")[10]),$($rule.BackendHttpSettings -eq $null ? "null" : $routingRuleBackendHttpSettingsResourceString -f $rule.BackendHttpSettings.Id.Split("/")[10]),$($rule.RewriteRuleSet -eq $null ? "null" : $($pathRewriteRuleResourceString -f $rule.RewriteRuleSet.Id.Split("/")[10])),$($rule.RedirectConfiguration -eq $null ? "null" : $pathRedirectRuleResourceString -f $rule.RedirectConfiguration.Id.Split("/")[10]),$($rule.FirewallPolicy -eq $null ? "null" : $($firewallPolicyResourceString -f $rule.FirewallPolicy.Id.Split("/")[8])))
