@@ -623,7 +623,7 @@ $template = ConvertFrom-Json -InputObject $rootTemplate -Depth 20
 $template.parameters | Add-Member -Name "location" -MemberType NoteProperty -Value $locationParameter
 $userIdentity = ""
 foreach ($key in $appGateway.Identity.UserAssignedIdentities.Keys) { $userIdentity = $key }
-if($null -eq $appGateway.FirewallPolicy.id -and $null -ne $appGatewayId.Identity) {
+if($null -eq $appGateway.FirewallPolicy.id -and $null -ne $appGateway.Identity) {
     Write-Output "No Firewall Policy and has Identity"
     $newAppGw = ConvertFrom-Json -InputObject $($appGwResourceNoPolicyString -f $($appGatewayIdentityResourceString -f $userIdentity),$(ConvertTo-Json -InputObject $appGateway.Sku -Depth 20))
 }
