@@ -357,7 +357,7 @@ $probeResourceString = @'
 {{
     "properties": {{
     "Protocol": "{1}",
-    "Host": "{2}",
+    "Host": {2},
     "Path": "{3}",
     "Interval": {4},
     "Timeout": {5},
@@ -623,23 +623,23 @@ $template = ConvertFrom-Json -InputObject $rootTemplate -Depth 20
 $template.parameters | Add-Member -Name "location" -MemberType NoteProperty -Value $locationParameter
 $userIdentity = ""
 foreach ($key in $appGateway.Identity.UserAssignedIdentities.Keys) { $userIdentity = $key }
-if($null -eq $appGateway.FirewallPolicy.id -and $null -eq $appGateway.Identity) {
-    Write-Output "No Firewall Policy No Identity"
-    $newAppGw = ConvertFrom-Json -InputObject $($appGwResourceNoPolicyNoIdenityString -f $(ConvertTo-Json -InputObject $appGateway.Sku -Depth 20))
-}
-elseif($null -eq $appGateway.FirewallPolicy.id -and $null -ne $appGateway.Identity) {
-    Write-Output "No Firewall Policy with Identity"
+if($null -eq $appGateway.FirewallPolicy.id -and $null -ne $appGatewayId.Identity) {
+    Write-Output "No Firewall Policy and has Identity"
     $newAppGw = ConvertFrom-Json -InputObject $($appGwResourceNoPolicyString -f $($appGatewayIdentityResourceString -f $userIdentity),$(ConvertTo-Json -InputObject $appGateway.Sku -Depth 20))
 }
-elseif($null -ne $appGateway.FirewallPolicy.id -and $null -eq $appGateway.Identity)
+elseif($null -ne $appGateway.Identity) {
+    Write-Output "Firewall Policy and has Identity"
+    $newAppGw = ConvertFrom-Json -InputObject $($appGwResourceString -f $($appGatewayIdentityResourceString -f $userIdentity),$(ConvertTo-Json -InputObject $appGateway.Sku -Depth 20),$($wafPolicies[0].split("/")[8]))
+}
+elseif($null -eq $appGateway.FirewallPolicy.id)
+{
+    Write-Output "No Firewall Policy and No Identity"
+    $newAppGw = ConvertFrom-Json -InputObject $($appGwResourceNoPolicyNoIdenityString -f $(ConvertTo-Json -InputObject $appGateway.Sku -Depth 20)) 
+}
+else 
 {
     Write-Output "Firewall Policy and No Identity"
-    $newAppGw = ConvertFrom-Json -InputObject $($appGwResourceNoIdentityString -f $(ConvertTo-Json -InputObject $appGateway.Sku -Depth 20),$($wafPolicies[0].split("/")[8])) 
-}
-elseif($null -ne $appGateway.FirewallPolicy.id -and $null -ne $appGateway.Identity)
-{
-    Write-Output "Firewall Policy and Identity"
-    $newAppGw = ConvertFrom-Json -InputObject $($appGwResourceString -f $($appGatewayIdentityResourceString -f $userIdentity),$(ConvertTo-Json -InputObject $appGateway.Sku -Depth 20),$($wafPolicies[0].split("/")[8]))
+    $newAppGw = ConvertFrom-Json -InputObject $($appGwResourceNoIdentityString -f $(ConvertTo-Json -InputObject $appGateway.Sku -Depth 20),$($wafPolicies[0].split("/")[8]))
 }
 foreach($policy in $wafPolicies)
 {
@@ -706,7 +706,7 @@ if($appGateway.FrontendIPConfigurations.Count -eq 1)
 else {
     $secondary = $appGateway.FrontendIPConfigurations[1].Name
 }
-$firstIpOfSubnet = "[format('{0}.{1}.{2}.{3}', split(split(reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, split(parameters('vnetResourceId'), '/')[4]), 'Microsoft.Network/virtualNetworks/subnets', split(parameters('vnetResourceId'), '/')[8], parameters('appGateway_subnet')), '2023-09-01').addressPrefix, '/')[0], '.')[0], split(split(reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, split(parameters('vnetResourceId'), '/')[4]), 'Microsoft.Network/virtualNetworks/subnets', split(parameters('vnetResourceId'), '/')[8], parameters('appGateway_subnet')), '2023-09-01').addressPrefix, '/')[0], '.')[1], split(split(reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, split(parameters('vnetResourceId'), '/')[4]), 'Microsoft.Network/virtualNetworks/subnets', split(parameters('vnetResourceId'), '/')[8], parameters('appGateway_subnet')), '2023-09-01').addressPrefix, '/')[0], '.')[2], string(add(int(split(split(reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, split(parameters('vnetResourceId'), '/')[4]), 'Microsoft.Network/virtualNetworks/subnets', split(parameters('vnetResourceId'), '/')[8], parameters('appGateway_subnet')), '2023-09-01').addressPrefix, '/')[0], '.')[3]), 4)))]"
+$firstIpOfSubnet = "[format('{0}.{1}.{2}.{3}', split(split(if(contains(reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, split(parameters('vnetResourceId'), '/')[4]), 'Microsoft.Network/virtualNetworks/subnets', split(parameters('vnetResourceId'), '/')[8], parameters('appGateway_subnet')), '2023-09-01'), 'addressPrefix'), tryGet(reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, split(parameters('vnetResourceId'), '/')[4]), 'Microsoft.Network/virtualNetworks/subnets', split(parameters('vnetResourceId'), '/')[8], parameters('appGateway_subnet')), '2023-09-01'), 'addressPrefix'), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, split(parameters('vnetResourceId'), '/')[4]), 'Microsoft.Network/virtualNetworks/subnets', split(parameters('vnetResourceId'), '/')[8], parameters('appGateway_subnet')), '2023-09-01').addressPrefixes[0]), '/')[0], '.')[0], split(split(if(contains(reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, split(parameters('vnetResourceId'), '/')[4]), 'Microsoft.Network/virtualNetworks/subnets', split(parameters('vnetResourceId'), '/')[8], parameters('appGateway_subnet')), '2023-09-01'), 'addressPrefix'), tryGet(reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, split(parameters('vnetResourceId'), '/')[4]), 'Microsoft.Network/virtualNetworks/subnets', split(parameters('vnetResourceId'), '/')[8], parameters('appGateway_subnet')), '2023-09-01'), 'addressPrefix'), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, split(parameters('vnetResourceId'), '/')[4]), 'Microsoft.Network/virtualNetworks/subnets', split(parameters('vnetResourceId'), '/')[8], parameters('appGateway_subnet')), '2023-09-01').addressPrefixes[0]), '/')[0], '.')[1], split(split(if(contains(reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, split(parameters('vnetResourceId'), '/')[4]), 'Microsoft.Network/virtualNetworks/subnets', split(parameters('vnetResourceId'), '/')[8], parameters('appGateway_subnet')), '2023-09-01'), 'addressPrefix'), tryGet(reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, split(parameters('vnetResourceId'), '/')[4]), 'Microsoft.Network/virtualNetworks/subnets', split(parameters('vnetResourceId'), '/')[8], parameters('appGateway_subnet')), '2023-09-01'), 'addressPrefix'), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, split(parameters('vnetResourceId'), '/')[4]), 'Microsoft.Network/virtualNetworks/subnets', split(parameters('vnetResourceId'), '/')[8], parameters('appGateway_subnet')), '2023-09-01').addressPrefixes[0]), '/')[0], '.')[2], add(int(split(split(if(contains(reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, split(parameters('vnetResourceId'), '/')[4]), 'Microsoft.Network/virtualNetworks/subnets', split(parameters('vnetResourceId'), '/')[8], parameters('appGateway_subnet')), '2023-09-01'), 'addressPrefix'), tryGet(reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, split(parameters('vnetResourceId'), '/')[4]), 'Microsoft.Network/virtualNetworks/subnets', split(parameters('vnetResourceId'), '/')[8], parameters('appGateway_subnet')), '2023-09-01'), 'addressPrefix'), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, split(parameters('vnetResourceId'), '/')[4]), 'Microsoft.Network/virtualNetworks/subnets', split(parameters('vnetResourceId'), '/')[8], parameters('appGateway_subnet')), '2023-09-01').addressPrefixes[0]), '/')[0], '.')[3]), 4))]"
 $newAppGw.properties.frontendIPConfigurations += ConvertFrom-Json -InputObject $($frontendIpResourceString -f $appGateway.FrontendIPConfigurations[0].Name,$secondary,$firstIpOfSubnet)
 foreach($frontEndPort in $appGateway.FrontendPorts)
 {
@@ -733,7 +733,7 @@ foreach($httpSetting in $appGateway.BackendHttpSettingsCollection)
         $newAppGw.properties.backendHttpSettingsCollection += $backendSetting
     }
     else {
-        $backendSetting = ConvertFrom-Json -InputObject $($backendHttpSettingResourceString -f $httpSetting.Name,$httpSetting.Port.ToString(),$httpSetting.Protocol,$httpSetting.CookieBasedAffinity,$httpSetting.RequestTimeout.ToString(),$($httpSetting.ConnectionDraining -eq $null ? "null" : "`"$($httpSetting.ConnectionDraining)`""),$($httpSetting.HostName -eq $null ? "null" : "`"$($httpSetting.HostName)`""),$httpSetting.PickHostNameFromBackendAddress.ToString().ToLower(),$httpSetting.AffinityCookieName,$($httpSetting.Path -eq $null ? "null" : "`"$($httpSetting.Path)`"")) -Depth 20
+        $backendSetting = ConvertFrom-Json -InputObject $($backendHttpSettingResourceString -f $httpSetting.Name,$httpSetting.Port.ToString(),$httpSetting.Protocol,$httpSetting.CookieBasedAffinity,$httpSetting.RequestTimeout.ToString(),$($httpSetting.ConnectionDraining -eq $null ? "null" : (ConvertTo-Json -InputObject $($httpSetting.ConnectionDraining))),$($httpSetting.HostName -eq $null ? "null" : "`"$($httpSetting.HostName)`""),$httpSetting.PickHostNameFromBackendAddress.ToString().ToLower(),$httpSetting.AffinityCookieName,$($httpSetting.Path -eq $null ? "null" : "`"$($httpSetting.Path)`"")) -Depth 20
         foreach($rootCert in $httpSetting.TrustedRootCertificates)
         {
             $backendSetting.properties.TrustedRootCertificates += New-Object -TypeName psobject -Property @{
@@ -776,7 +776,7 @@ foreach($routingRule in $appGateway.RequestRoutingRules)
 }
 foreach($probe in $appGateway.Probes)
 {
-    $newAppGw.properties.probes += ConvertFrom-Json -InputObject $($probeResourceString -f $probe.Name,$probe.Protocol,$($probe.Host -eq $null ? "null" : $probe.Host),$probe.Path,$probe.Interval,$probe.Timeout,$probe.UnhealthyThreshold,$probe.PickHostNameFromBackendHttpSettings.ToString().ToLower(),$probe.MinServers,$($probe.Port -eq $null ? "null" : $probe.Port),$(ConvertTo-Json -InputObject $probe.Match -Depth 20)) -Depth 20
+    $newAppGw.properties.probes += ConvertFrom-Json -InputObject $($probeResourceString -f $probe.Name,$probe.Protocol,$($probe.Host -eq $null ? "null" : "`"$probe.Host`""),$probe.Path,$probe.Interval,$probe.Timeout,$probe.UnhealthyThreshold,$probe.PickHostNameFromBackendHttpSettings.ToString().ToLower(),$probe.MinServers,$($probe.Port -eq $null ? "null" : $probe.Port),$(ConvertTo-Json -InputObject $probe.Match -Depth 20)) -Depth 20
 }
 foreach($rewrite in $appGateway.RewriteRuleSets)
 {
@@ -789,7 +789,7 @@ foreach($rewrite in $appGateway.RewriteRuleSets)
 }
 foreach($redirect in $appGateway.RedirectConfigurations)
 {
-    $redirectRule = ConvertFrom-Json -InputObject $($redirectRuleResourceString -f $redirect.Name,$redirect.RedirectType,$($redirect.TargetListener -eq $null ? "null" : $redirectTargetListenerResourceString -f $redirect.TargetListener.Id.Split("/")[10]),$($redirect.TargetUrl -eq $null ? "null" : "`"$($redirect.TargetUrl)`""),$redirect.IncludePath.ToString().ToLower(),$redirect.IncludeQueryString.ToString().ToLower())
+    $redirectRule = ConvertFrom-Json -InputObject $($redirectRuleResourceString -f $redirect.Name,$redirect.RedirectType,$($redirect.TargetListener -eq $null ? "null" : $redirectTargetListenerResourceString -f $redirect.TargetListener.Id.Split("/")[10]),$($redirect.TargetUrl -eq $null ? "null" : "`"$($redirect.TargetUrl)`""),($redirect.IncludePath -eq $null ? "null" : $redirect.IncludePath.ToString().ToLower()),$($redirect.IncludeQueryString -eq $null ? "null" : $redirect.IncludeQueryString.ToString().ToLower()))
     foreach($requestRouting in $redirect.RequestRoutingRules)
     {
         $redirectRule.properties.RequestRoutingRules += ConvertFrom-Json -InputObject $($routingRuleIdResoruceString -f $requestRouting.Id.Split("/")[10]) -Depth 20
