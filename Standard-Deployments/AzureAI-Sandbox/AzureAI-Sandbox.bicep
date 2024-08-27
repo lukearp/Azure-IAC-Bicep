@@ -5,6 +5,11 @@ param useExistingVnet bool = false
 param sampleDeploy bool = false
 param deployOpenAI bool = false
 param SubscriptionContributors array = []
+@allowed([
+  'User'
+  'Group'
+])
+param principalType string = 'User'
 param NetworkAddressPrefix string = '192.168.0.0/22'
 param allowedSources array = []
 @allowed([
@@ -19,7 +24,7 @@ param location string = 'eastus'
 resource rbacAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for contributor in SubscriptionContributors: {
   name: guid(contributor)
   properties: {
-    principalType: 'User'
+    principalType: principalType  
     principalId: contributor
     roleDefinitionId: '/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c'    
   }  
