@@ -30,8 +30,10 @@ param imageVersion string = 'latest'
   'Standard_DS3_v2'
   'Standard_DS4_v2'
   'Standard_DS5_v2'
+  'Standard_DS4_v5'
 ])
 param vmSize string
+param overProvision bool = true
 param managedIdentityId string
 param location string = resourceGroup().location
 param tags object = {}
@@ -129,6 +131,7 @@ var zones = location == 'eastus' || location == 'eastus2' || location == 'centra
 ] : []
 
 var zoneLb = zones == [] ? {
+  overprovision: overProvision
   upgradePolicy: {
     mode: 'Rolling'
     automaticOSUpgradePolicy: {
@@ -237,6 +240,7 @@ var zoneLb = zones == [] ? {
     }       
   }    
 } : {
+  overprovision: overProvision
   upgradePolicy: {
     mode: 'Rolling'
     automaticOSUpgradePolicy: {
