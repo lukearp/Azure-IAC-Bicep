@@ -13,7 +13,7 @@ Select-AzSubscription -Subscription $subscriptionId
 foreach($server in $servers)
 {
     $arcVMExtension = Get-AzConnectedMachineExtension -MachineName $server.name -ResourceGroupName $server.resourceGroup -SubscriptionId $subscriptionId -Name $extensionName
-    if($null -eq $arcVMExtension)
+    if($null -ne $arcVMExtension)
     {
         # Remove the extension
         Remove-AzConnectedMachineExtension -ResourceGroupName $server.resourceGroup -MachineName $server.name -Name $extensionName
