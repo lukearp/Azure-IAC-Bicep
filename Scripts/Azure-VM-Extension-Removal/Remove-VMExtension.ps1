@@ -16,6 +16,7 @@ foreach($server in $servers)
     if($null -ne $arcVMExtension)
     {
         # Remove the extension
-        Remove-AzConnectedMachineExtension -ResourceGroupName $server.resourceGroup -MachineName $server.name -Name $extensionName
+        Write-Output "Removing $($server.name)'s $($extensionName) extension"
+        Remove-AzConnectedMachineExtension -ResourceGroupName $server.resourceGroup -MachineName $server.name -Name $extensionName -AsJob
     }
 }
