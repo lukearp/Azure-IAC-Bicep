@@ -1,10 +1,15 @@
 #Connect-AzAccount
-$SubscriptionId = "32eb88b4-4029-4094-85e3-ec8b7ce1fc00"
-$ResourceGroupName = "devops-server"
-$DiskSku = "StandardSSD_ZRS" # Premium__ZRS
+param (
+    $SubscriptionId,
+    $ResourceGroupName,
+    $VMName,
+    [ValidateSet("StandardSSD_ZRS","PremiumSSD_ZRS")]
+    $DiskSku,
+    [switch]$replaceExisting
+)
+
 Select-AzSubscription -SubscriptionId $SubscriptionId
-$vms = Get-AzVM -ResourceGroupName $ResourceGroupName
-$replaceExisting = $true
+$vms = Get-AzVM -ResourceGroupName $ResourceGroupName -Name $VMName
 # Stop the VM before moving it
 $vmObjects = @()
 foreach($vm in $vms)
@@ -15,13 +20,15 @@ foreach($vm in $vms)
     $vm.OSProfile = $null
     # Take a snapshot of the current disk
     $snapshots = @()
+    $suffix = [datetime]::UtcNow.ToString("yyyy-MM-dd-") + $(New-Guid).Guid.Substring(4,8) + "-snapshot"
     $snapshotConfig = New-AzSnapshotConfig -SourceResourceId $vm.StorageProfile.OsDisk.ManagedDisk.Id -Location $Region -CreateOption Copy
-    $snapshots += New-AzSnapshot -Snapshot $snapshotConfig -SnapshotName ($vm.StorageProfile.OsDisk.ManagedDisk.Id.Split("/")[8] + "-" + [datetime]::UtcNow.ToString("yyyy-MM-dd") + "-snapshot") -ResourceGroupName $ResourceGroupName
-    
+    $snapshots += New-AzSnapshot -Snapshot $snapshotConfig -SnapshotName ($vm.Name + "-OSDisk-" + $suffix) -ResourceGroupName $ResourceGroupName
+    $count = 0
     foreach($dataDisk in $vm.StorageProfile.DataDisks)
     {
         $snapshotConfig = New-AzSnapshotConfig -SourceResourceId $dataDisk.ManagedDisk.Id -Location $Region -CreateOption Copy
-        $snapshots += New-AzSnapshot -Snapshot $snapshotConfig -SnapshotName ($dataDisk.ManagedDisk.Id.Split("/")[8] + "-" + [datetime]::UtcNow.ToString("yyyy-MM-dd") + "-snapshot") -ResourceGroupName $ResourceGroupName
+        $snapshots += New-AzSnapshot -Snapshot $snapshotConfig -SnapshotName ($vm.Name + "-DataDisk$($count)-" + $suffix) -ResourceGroupName $ResourceGroupName
+        $count++
     }
     # Create a new managed disk from the snapshot
     $disks = @()
@@ -32,6 +39,27 @@ foreach($vm in $vms)
     }
     
     # Update the VM's OS disk with the new disk
+    $count = 0
+    foreach ($disk in $disks)
+    {
+        if($count -eq 0)
+        {
+            $vm.StorageProfile.OsDisk.ManagedDisk.Id = $disk.Id
+            $vm.StorageProfile.OsDisk.Name = $disk.Name
+            $vm.StorageProfile.OsDisk.DeleteOption = "Detach"
+        }
+        else {
+            $vm.StorageProfile.DataDisks[($count - 1)].ManagedDisk.Id = $disk.Id
+            $vm.StorageProfile.DataDisks[($count - 1)].Name = $disk.Name
+            $vm.StorageProfile.DataDisks[($count - 1)].DeleteOption = "Detach"
+        }
+        $count++
+    }    
+    for($i = 0; $i -lt $vm.NetworkProfile.NetworkInterfaces.Count; $i++)
+    {
+        $vm.NetworkProfile.NetworkInterfaces[$i].DeleteOption = "Detach"
+    }  
+    Update-AzVM -ResourceGroupName $ResourceGroupName -VM $vm
     $count = 0
     foreach ($disk in $disks)
     {
@@ -49,11 +77,7 @@ foreach($vm in $vms)
             $vm.StorageProfile.DataDisks[($count - 1)].DeleteOption = "Detach"
         }
         $count++
-    }
-    for($i = 0; $i -lt $vm.NetworkProfile.NetworkInterfaces.Count; $i++)
-    {
-        $vm.NetworkProfile.NetworkInterfaces[$i].DeleteOption = "Detach"
-    }    
+    }  
     $vm.Zones = $null
     if($replaceExisting -ne $true)
     {
@@ -62,7 +86,7 @@ foreach($vm in $vms)
         foreach($nic in $vm.NetworkProfile.NetworkInterfaces)
         {
             $thisNic = Get-AzNetworkInterface -Name $nic.Id.Split("/")[8] -ResourceGroupName $ResourceGroupName
-            $nics += New-AzNetworkInterface -Name $($nic.Id.Split("/")[8] + "-zrs") -SubnetId $thisNic.IpConfigurations[0].Subnet.Id -ResourceGroupName $ResourceGroupName -Location $Region
+            $nics += New-AzNetworkInterface -Name $($nic.Id.Split("/")[8] + "-" + $(New-Guid).Guid.Substring(4,8) + "-zrs") -SubnetId $thisNic.IpConfigurations[0].Subnet.Id -ResourceGroupName $ResourceGroupName -Location $Region
         }
         $count = 0
         foreach($nic in $nics)
@@ -70,12 +94,20 @@ foreach($vm in $vms)
             $vm.NetworkProfile.NetworkInterfaces[$count].Id = $nic.Id
             $count++
         }
-        $vmObjects += $vm
+        $vmObjects += $vm | Select-Object -ExcludeProperty Id,ResourceGroupName,TimeCreated
     }
     else {
-        Update-AzVM -ResourceGroupName $ResourceGroupName -VM $vm
+        #Update-AzVM -ResourceGroupName $ResourceGroupName -VM $vm
         Remove-AzVM -Name $vm.Name -ResourceGroupName $vm.ResourceGroupName -Force
+        $vmObjects += $vm | Select-Object -ExcludeProperty Id,ResourceGroupName,TimeCreated
     }
-    New-AzVM -ResourceGroupName $ResourceGroupName -VM $vm -Location $Region
+    if($null -eq $vm.LicenseType)
+    {
+        $newVM = $vm | Select-Object -ExcludeProperty Id,ResourceGroupName,TimeCreated,LicenseType
+    }
+    else {
+        $newVM = $vm | Select-Object -ExcludeProperty Id,ResourceGroupName,TimeCreated
+    }
+    New-AzVM -ResourceGroupName $ResourceGroupName -VM $newVM -Location $Region -Tag $vm.Tags
 }
 $vmObjects | ConvertTo-Json -Depth 100 | Out-File -FilePath .\report.json
