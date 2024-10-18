@@ -15,7 +15,10 @@ $vmObjects = @()
 foreach($vm in $vms)
 {
     $Region = $vm.Location
-    Stop-AzVM -ResourceGroupName $vm.ResourceGroupName -Name $vm.Name -Force
+    if($replaceExisting)
+    {
+        Stop-AzVM -ResourceGroupName $vm.ResourceGroupName -Name $vm.Name -Force
+    }
     $vm.StorageProfile.ImageReference = $null
     $vm.OSProfile = $null
     # Take a snapshot of the current disk
@@ -58,8 +61,11 @@ foreach($vm in $vms)
     for($i = 0; $i -lt $vm.NetworkProfile.NetworkInterfaces.Count; $i++)
     {
         $vm.NetworkProfile.NetworkInterfaces[$i].DeleteOption = "Detach"
-    }  
-    Update-AzVM -ResourceGroupName $ResourceGroupName -VM $vm
+    } 
+    if($replaceExisting)
+    {
+        Update-AzVM -ResourceGroupName $ResourceGroupName -VM $vm
+    } 
     $count = 0
     foreach ($disk in $disks)
     {
