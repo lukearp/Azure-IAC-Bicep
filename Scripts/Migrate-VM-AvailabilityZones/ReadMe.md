@@ -9,3 +9,4 @@ ResourceGroupName | String | Resource Group Name of VM
 VMName | String | Name of VM
 DiskSku | String | Disk SKU, "StandardSSD_ZRS" or "PremiumSSD_ZRS"
 replaceExisting | Switch | If switch is present, original VM is deleted and replace.  If not present, new VM is created with -zrs to the name.
+powerDownExisting | Switch | If switch is present, original VM is powered down.  If not present, new VM is created and the original stays powered on.  If replaceExisting is present the original VM is always powered down.
