@@ -5,7 +5,8 @@ param (
     $VMName,
     [ValidateSet("StandardSSD_ZRS","PremiumSSD_ZRS")]
     $DiskSku,
-    [switch]$replaceExisting
+    [switch]$replaceExisting,
+    [switch]$powerDownExisting
 )
 
 Select-AzSubscription -SubscriptionId $SubscriptionId
@@ -15,7 +16,7 @@ $vmObjects = @()
 foreach($vm in $vms)
 {
     $Region = $vm.Location
-    if($replaceExisting)
+    if($replaceExisting -or $powerDownExisting)
     {
         Stop-AzVM -ResourceGroupName $vm.ResourceGroupName -Name $vm.Name -Force
     }
@@ -100,19 +101,19 @@ foreach($vm in $vms)
             $vm.NetworkProfile.NetworkInterfaces[$count].Id = $nic.Id
             $count++
         }
-        $vmObjects += $vm | Select-Object -ExcludeProperty Id,ResourceGroupName,TimeCreated
+        $vmObjects += $vm | Select-Object -ExcludeProperty Id,ResourceGroupName,TimeCreated,Etag
     }
     else {
         #Update-AzVM -ResourceGroupName $ResourceGroupName -VM $vm
         Remove-AzVM -Name $vm.Name -ResourceGroupName $vm.ResourceGroupName -Force
-        $vmObjects += $vm | Select-Object -ExcludeProperty Id,ResourceGroupName,TimeCreated
+        $vmObjects += $vm | Select-Object -ExcludeProperty Id,ResourceGroupName,TimeCreated,Etag
     }
     if($null -eq $vm.LicenseType)
     {
-        $newVM = $vm | Select-Object -ExcludeProperty Id,ResourceGroupName,TimeCreated,LicenseType
+        $newVM = $vm | Select-Object -ExcludeProperty Id,ResourceGroupName,TimeCreated,LicenseType,Etag
     }
     else {
-        $newVM = $vm | Select-Object -ExcludeProperty Id,ResourceGroupName,TimeCreated
+        $newVM = $vm | Select-Object -ExcludeProperty Id,ResourceGroupName,TimeCreated,Etag
     }
     New-AzVM -ResourceGroupName $ResourceGroupName -VM $newVM -Location $Region -Tag $vm.Tags
 }
