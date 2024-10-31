@@ -627,6 +627,7 @@ $locationParameter = New-Object -TypeName psobject -Property @{
 #$wafResources = @()
 $template = ConvertFrom-Json -InputObject $rootTemplate -Depth 20
 $template.parameters | Add-Member -Name "location" -MemberType NoteProperty -Value $locationParameter
+$template.parameters.appGateway_name.defaultValue = "$($appGatewayName)-DR"
 $userIdentity = ""
 foreach ($key in $appGateway.Identity.UserAssignedIdentities.Keys) { $userIdentity = $key }
 if($null -eq $appGateway.FirewallPolicy.id -and $null -ne $appGateway.Identity) {
@@ -782,7 +783,7 @@ foreach($routingRule in $appGateway.RequestRoutingRules)
 }
 foreach($probe in $appGateway.Probes)
 {
-    $newAppGw.properties.probes += ConvertFrom-Json -InputObject $($probeResourceString -f $probe.Name,$probe.Protocol,$($probe.Host -eq $null ? "null" : "`"$probe.Host`""),$probe.Path,$probe.Interval,$probe.Timeout,$probe.UnhealthyThreshold,$probe.PickHostNameFromBackendHttpSettings.ToString().ToLower(),$probe.MinServers,$($probe.Port -eq $null ? "null" : $probe.Port),$(ConvertTo-Json -InputObject $probe.Match -Depth 20)) -Depth 20
+    $newAppGw.properties.probes += ConvertFrom-Json -InputObject $($probeResourceString -f $probe.Name,$probe.Protocol,$($probe.Host -eq $null ? "null" : "`"$($probe.Host)`""),$probe.Path,$probe.Interval,$probe.Timeout,$probe.UnhealthyThreshold,$probe.PickHostNameFromBackendHttpSettings.ToString().ToLower(),$probe.MinServers,$($probe.Port -eq $null ? "null" : $probe.Port),$(ConvertTo-Json -InputObject $probe.Match -Depth 20)) -Depth 20
 }
 foreach($rewrite in $appGateway.RewriteRuleSets)
 {
