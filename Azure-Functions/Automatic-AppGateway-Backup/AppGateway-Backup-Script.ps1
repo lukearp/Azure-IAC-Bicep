@@ -64,7 +64,7 @@ $rootTemplate = @'
                 "name": "Standard",
                 "tier": "Regional"
             },
-            "zones": [parameters('zonal')],
+            "zones": "[parameters('zonal')]",
             "properties": {
                 "publicIPAddressVersion": "IPv4",
                 "publicIPAllocationMethod": "Static"
@@ -455,7 +455,7 @@ $appGwResourceString = @'
     "dependsOn": [
         "[resourceId('Microsoft.Network/publicIPAddresses', format('{{0}}-pip', parameters('appGateway_name')))]"
     ],
-    "zones": [parameters('zonal')],
+    "zones": "[parameters('zonal')]",
     "location": "[parameters('location')]",
     "identity": {0},
     "properties": {{
@@ -498,7 +498,7 @@ $appGwResourceNoIdentityString = @'
     "dependsOn": [
         "[resourceId('Microsoft.Network/publicIPAddresses', format('{{0}}-pip', parameters('appGateway_name')))]"
     ],
-    "zones": [parameters('zonal')],
+    "zones": "[parameters('zonal')]",
     "location": "[parameters('location')]",
     "identity": {{}},
     "properties": {{
@@ -542,7 +542,7 @@ $appGwResourceNoPolicyString = @'
         "[resourceId('Microsoft.Network/publicIPAddresses', format('{{0}}-pip', parameters('appGateway_name')))]"
     ],
     "location": "[parameters('location')]",
-    "zones": [parameters('zonal')],
+    "zones": "[parameters('zonal')]",
     "identity": {0},
     "properties": {{
         "sku": {1},
@@ -567,7 +567,7 @@ $appGwResourceNoPolicyString = @'
         "redirectConfigurations": [],
         "privateLinkConfigurations": [],
         "sslPolicy": {{}},
-        "enableHttp2": true,
+        "enableHttp2": {2},
         "autoscaleConfiguration": {{}}
     }}
 }}
@@ -583,7 +583,7 @@ $appGwResourceNoPolicyNoIdenityString = @'
         "[resourceId('Microsoft.Network/publicIPAddresses', format('{{0}}-pip', parameters('appGateway_name')))]"
     ],
     "location": "[parameters('location')]",
-    "zones": [parameters('zonal')],
+    "zones": "[parameters('zonal')]",
     "identity": {{}},
     "properties": {{
         "sku": {0},
@@ -652,17 +652,17 @@ if($null -eq $appGateway.FirewallPolicy.id -and $null -ne $appGateway.Identity) 
 }
 elseif($null -ne $appGateway.Identity) {
     Write-Output "Firewall Policy and has Identity"
-    $newAppGw = ConvertFrom-Json -InputObject $($appGwResourceString -f $($appGatewayIdentityResourceString -f $userIdentity),$(ConvertTo-Json -InputObject $appGateway.Sku -Depth 20),"concat(parameters('appGateway_name'),'-$($wafPolicies[0].split("/")[8])')",$appGateway.EnableHttp2)
+    $newAppGw = ConvertFrom-Json -InputObject $($appGwResourceString -f $($appGatewayIdentityResourceString -f $userIdentity),$(ConvertTo-Json -InputObject $appGateway.Sku -Depth 20),"concat(parameters('appGateway_name'),'-$($wafPolicies[0].split("/")[8])')",$appGateway.EnableHttp2.ToString().ToLower())
 }
 elseif($null -eq $appGateway.FirewallPolicy.id)
 {
     Write-Output "No Firewall Policy and No Identity"
-    $newAppGw = ConvertFrom-Json -InputObject $($appGwResourceNoPolicyNoIdenityString -f $(ConvertTo-Json -InputObject $appGateway.Sku -Depth 20),$appGateway.EnableHttp2) 
+    $newAppGw = ConvertFrom-Json -InputObject $($appGwResourceNoPolicyNoIdenityString -f $(ConvertTo-Json -InputObject $appGateway.Sku -Depth 20),$appGateway.EnableHttp2.ToString().ToLower()) 
 }
 else 
 {
     Write-Output "Firewall Policy and No Identity"
-    $newAppGw = ConvertFrom-Json -InputObject $($appGwResourceNoIdentityString -f $(ConvertTo-Json -InputObject $appGateway.Sku -Depth 20),"concat(parameters('appGateway_name'),'-$($wafPolicies[0].split("/")[8])')",$appGateway.EnableHttp2)
+    $newAppGw = ConvertFrom-Json -InputObject $($appGwResourceNoIdentityString -f $(ConvertTo-Json -InputObject $appGateway.Sku -Depth 20),"concat(parameters('appGateway_name'),'-$($wafPolicies[0].split("/")[8])')",$appGateway.EnableHttp2.ToString().ToLower())
 }
 foreach($policy in $wafPolicies)
 {
