@@ -119,7 +119,7 @@ $listnerResourceFirewallPolicyString = @'
     "RequireServerNameIndication": {6},
     "CustomErrorConfigurations": [],
     "FirewallPolicy": {{
-      "Id": "[resourceId('Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies', parameters('{0}'))]"
+      "Id": "[resourceId('Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies', {0})]"
     }},
     "SslProfile": {7}
 }},
@@ -129,7 +129,7 @@ $listnerResourceFirewallPolicyString = @'
 
 $firewallPolicyResourceString = @'
 {{
-    "Id": "[resourceId('Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies', parameters('{0}'))]"
+    "Id": "[resourceId('Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies', concat(parameters('appGateway_name'),'-{0}'))]"
 }}
 '@
 
@@ -468,10 +468,10 @@ $appGwResourceString = @'
         "redirectConfigurations": [],
         "privateLinkConfigurations": [],
         "sslPolicy": {{}},
-        "enableHttp2": true,
+        "enableHttp2": {3},
         "autoscaleConfiguration": {{}},
         "firewallPolicy": {{
-            "id": "[resourceId('Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies',parameters('{2}'))]"
+            "id": "[resourceId('Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies',{2})]"
         }}
     }}
 }}
@@ -510,10 +510,10 @@ $appGwResourceNoIdentityString = @'
         "redirectConfigurations": [],
         "privateLinkConfigurations": [],
         "sslPolicy": {{}},
-        "enableHttp2": true,
+        "enableHttp2": {2},
         "autoscaleConfiguration": {{}},
         "firewallPolicy": {{
-            "id": "[resourceId('Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies',parameters('{1}'))]"
+            "id": "[resourceId('Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies',{1})]"
         }}
     }}
 }}
@@ -592,7 +592,7 @@ $appGwResourceNoPolicyNoIdenityString = @'
         "redirectConfigurations": [],
         "privateLinkConfigurations": [],
         "sslPolicy": {{}},
-        "enableHttp2": true,
+        "enableHttp2": {1},
         "autoscaleConfiguration": {{}}
     }}
 }}
@@ -601,8 +601,8 @@ $appGwResourceNoPolicyNoIdenityString = @'
 $wafResourceString = @'
 {{
     "type": "Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies",
-    "apiVersion": "2023-09-01",
-    "name": "[parameters('{0}')]",
+    "apiVersion": "2023-11-01",
+    "name": "{0}",
     "location": "[parameters('location')]",
     "tags": {1},
     "properties": {2}
@@ -636,17 +636,17 @@ if($null -eq $appGateway.FirewallPolicy.id -and $null -ne $appGateway.Identity) 
 }
 elseif($null -ne $appGateway.Identity) {
     Write-Output "Firewall Policy and has Identity"
-    $newAppGw = ConvertFrom-Json -InputObject $($appGwResourceString -f $($appGatewayIdentityResourceString -f $userIdentity),$(ConvertTo-Json -InputObject $appGateway.Sku -Depth 20),$($wafPolicies[0].split("/")[8]))
+    $newAppGw = ConvertFrom-Json -InputObject $($appGwResourceString -f $($appGatewayIdentityResourceString -f $userIdentity),$(ConvertTo-Json -InputObject $appGateway.Sku -Depth 20),"concat(parameters('appGateway_name'),'-$($wafPolicies[0].split("/")[8])')",$appGateway.EnableHttp2)
 }
 elseif($null -eq $appGateway.FirewallPolicy.id)
 {
     Write-Output "No Firewall Policy and No Identity"
-    $newAppGw = ConvertFrom-Json -InputObject $($appGwResourceNoPolicyNoIdenityString -f $(ConvertTo-Json -InputObject $appGateway.Sku -Depth 20)) 
+    $newAppGw = ConvertFrom-Json -InputObject $($appGwResourceNoPolicyNoIdenityString -f $(ConvertTo-Json -InputObject $appGateway.Sku -Depth 20),$appGateway.EnableHttp2) 
 }
 else 
 {
     Write-Output "Firewall Policy and No Identity"
-    $newAppGw = ConvertFrom-Json -InputObject $($appGwResourceNoIdentityString -f $(ConvertTo-Json -InputObject $appGateway.Sku -Depth 20),$($wafPolicies[0].split("/")[8]))
+    $newAppGw = ConvertFrom-Json -InputObject $($appGwResourceNoIdentityString -f $(ConvertTo-Json -InputObject $appGateway.Sku -Depth 20),"concat(parameters('appGateway_name'),'-$($wafPolicies[0].split("/")[8])')",$appGateway.EnableHttp2)
 }
 foreach($policy in $wafPolicies)
 {
@@ -680,13 +680,13 @@ foreach($policy in $wafPolicies)
         PolicySettings = $wafPolicy.PolicySettings
         ManagedRules = $wafPolicy.ManagedRules        
     }
-    $template.resources += ConvertFrom-Json -InputObject $($wafResourceString -f $($wafPolicy.Name),$(ConvertTo-Json -InputObject $wafPolicy.Tag -Depth 20),$(ConvertTo-Json -InputObject $policyProperties -Depth 20)) -Depth 20
-    $paramVaule = New-Object -TypeName psobject -Property @{
+    $template.resources += ConvertFrom-Json -InputObject $($wafResourceString -f $("[concat(parameters('appGateway_name'),'-$($wafPolicy.Name)')]"),$(ConvertTo-Json -InputObject $wafPolicy.Tag -Depth 20),$(ConvertTo-Json -InputObject $policyProperties -Depth 20)) -Depth 20
+    <#$paramVaule = New-Object -TypeName psobject -Property @{
         type = "string"
         defaultValue = $wafPolicy.Name
-    }
-    $template.parameters | Add-Member -Name $wafPolicy.Name <#$($wafPolicy.Name + "-" + $count).ToString()#> -Value $paramVaule -MemberType NoteProperty
-    $newAppGw.dependsOn += "[resourceId('Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies',parameters('$($wafPolicy.Name)'))]"
+    }#>
+    #$template.parameters | Add-Member -Name $wafPolicy.Name <#$($wafPolicy.Name + "-" + $count).ToString()#> -Value $paramVaule -MemberType NoteProperty
+    $newAppGw.dependsOn += "[resourceId('Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies',concat(parameters('appGateway_name'),'-$($wafPolicy.Name)'))]"
     #$count++
 }
 if($null -ne $appGateway.AutoscaleConfiguration)
@@ -754,7 +754,7 @@ foreach($listener in $appGateway.HttpListeners)
 {
     if($null -ne $listener.FirewallPolicy)
     {
-        $wafName = ($template.parameters | Get-Member | ?{$_.Name -eq "$($listener.FirewallPolicy.Id.Split(`"/`")[8])"}).Name 
+        $wafName = "concat(parameters('appgateway_name'),'-$($listener.FirewallPolicy.Id.Split("/")[8])')" 
         $listenerSetting = ConvertFrom-Json -InputObject $($listnerResourceFirewallPolicyString -f $wafName,$listener.FrontendIpConfiguration.Id.Split("/")[10],$listener.FrontendPort.Id.Split("/")[10],$listener.Protocol,$($listener.HostName -eq $null ? "null" : "`"$($listener.HostName)`""),$($listener.SslCertificate -eq $null ? "null" : "{ `"id`":`"[concat(resourceId('Microsoft.Network/applicationGateways',parameters('appGateway_name')),'/sslCertificates/$($listener.SslCertificate.Id.Split("/")[10])')]`"}"),$listener.RequireServerNameIndication.ToString().ToLower(),$($listener.SslProfile -eq $null ? "null" : "{ `"id`":`"[concat(resourceId('Microsoft.Network/applicationGateways',parameters('appGateway_name')),'/sslProfiles/$($listener.SslProfile.Id.Split("/")[10])')]`"}"),$listener.Name )
         $listenerSetting.properties.HostNames += $listener.HostNames
         $newAppGw.properties.httpListeners += $listenerSetting
@@ -813,16 +813,27 @@ foreach($redirect in $appGateway.RedirectConfigurations)
 }
 foreach($sslProfile in $appGateway.SslProfiles)
 {
-    $profileSsl = ConvertFrom-Json -InputObject $($sslProfileResourceString -f $sslProfile.Name,$($sslProfile.SslPolicy -eq $null ? "null" : $(ConvertTo-Json -InputObject $($sslProfile.SslPolicy | Select PolicyType,PolicyName,CipherSuites,MinProtocolVersion) -Depth 20)),$(ConvertTo-Json -InputObject $sslProfile.ClientAuthConfiguration -Depth 20)) -Depth 20
+    $profileSsl = New-Object -TypeName psobject -Property @{
+        Name = $sslProfile.Name
+        properties = New-Object -TypeName psobject -Property @{
+            SslPolicy = $sslProfile.SslPolicy -eq $null ? $null : $sslProfile.SslPolicy | Select PolicyType,PolicyName,CipherSuites,MinProtocolVersion
+            ClientAuthConfiguration = $sslProfile.ClientAuthConfiguration
+            TrustedClientCertificates = @()
+        }
+    } 
+    #ConvertFrom-Json -InputObject $($sslProfileResourceString -f $sslProfile.Name,$($sslProfile.SslPolicy -eq $null ? "null" : $(ConvertTo-Json -InputObject $($sslProfile.SslPolicy | Select PolicyType,PolicyName,CipherSuites,MinProtocolVersion) -Depth 20)),$(ConvertTo-Json -InputObject $sslProfile.ClientAuthConfiguration -Depth 20)) -Depth 20
     foreach($trustedCert in $sslProfile.TrustedClientCertificates)
     {
-        $profileSsl.properties.TrustedClientCertificates += ConvertFrom-Json -InputObject $($sslProfileTrustedCertificateResourceString -f $trustedCert.Id.Split("/")[10]) -Depth 20
+        $profileSsl.properties.TrustedClientCertificates += New-Object -TypeName psobject -Property @{ 
+            id = "[concat(resourceId('Microsoft.Network/applicationGateways',parameters('appGateway_name')),'/trustedClientCertificates/$($trustedCert.Id.Split("/")[10])')]" 
+        }
+        #ConvertFrom-Json -InputObject $($sslProfileTrustedCertificateResourceString -f $trustedCert.Id.Split("/")[10]) -Depth 20
     }
     $newAppGw.properties.sslProfiles += $profileSsl
 }
 foreach($trustedClientCert in $appGateway.TrustedClientCertificates)
 {
-    $newAppGw.properties.trustedClientCertificates += ConvertFrom-Json -InputObject $($trustedClientCertResourceString -f $trustedClientCert.Name,$trustedClientCert.Data,$trustedClientCert.ClientCertIssuerDN) -Depth 20
+    $newAppGw.properties.trustedClientCertificates += ConvertFrom-Json -InputObject $($trustedClientCertResourceString -f $trustedClientCert.Name,$trustedClientCert.Data,$trustedClientCert.ClientCertIssuerDN.Replace("`"","\`"")) -Depth 20
 }
 $template.resources += $newAppGw
 $template.variables | Add-Member -MemberType NoteProperty -name "User" -Value $user
