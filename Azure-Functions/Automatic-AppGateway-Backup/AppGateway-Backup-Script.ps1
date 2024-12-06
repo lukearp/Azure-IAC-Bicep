@@ -39,6 +39,18 @@ $rootTemplate = @'
         "vnetResourceId": {
             "type": "string",
             "defaultValue": ""
+        },
+        "zonal": {
+            "type": "array",
+            "defaultValue": [],
+            "allowedValues": [
+                [],
+                [
+                    "1",
+                    "2",
+                    "3"
+                ]
+            ]
         }
     },
     "variables": {},
@@ -52,7 +64,7 @@ $rootTemplate = @'
                 "name": "Standard",
                 "tier": "Regional"
             },
-            "zones": [],
+            "zones": [parameters('zonal')],
             "properties": {
                 "publicIPAddressVersion": "IPv4",
                 "publicIPAllocationMethod": "Static"
@@ -443,6 +455,7 @@ $appGwResourceString = @'
     "dependsOn": [
         "[resourceId('Microsoft.Network/publicIPAddresses', format('{{0}}-pip', parameters('appGateway_name')))]"
     ],
+    "zones": [parameters('zonal')],
     "location": "[parameters('location')]",
     "identity": {0},
     "properties": {{
@@ -485,6 +498,7 @@ $appGwResourceNoIdentityString = @'
     "dependsOn": [
         "[resourceId('Microsoft.Network/publicIPAddresses', format('{{0}}-pip', parameters('appGateway_name')))]"
     ],
+    "zones": [parameters('zonal')],
     "location": "[parameters('location')]",
     "identity": {{}},
     "properties": {{
@@ -528,6 +542,7 @@ $appGwResourceNoPolicyString = @'
         "[resourceId('Microsoft.Network/publicIPAddresses', format('{{0}}-pip', parameters('appGateway_name')))]"
     ],
     "location": "[parameters('location')]",
+    "zones": [parameters('zonal')],
     "identity": {0},
     "properties": {{
         "sku": {1},
@@ -568,6 +583,7 @@ $appGwResourceNoPolicyNoIdenityString = @'
         "[resourceId('Microsoft.Network/publicIPAddresses', format('{{0}}-pip', parameters('appGateway_name')))]"
     ],
     "location": "[parameters('location')]",
+    "zones": [parameters('zonal')],
     "identity": {{}},
     "properties": {{
         "sku": {0},
