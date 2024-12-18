@@ -1,6 +1,6 @@
 param (
     [string]$ResourceId,
-    [ValidateSet(4, 8, 16)]
+    [ValidateSet(4, 8, 16, 24, 32, 40, 64, 80)]
     [int]$numberOfCores
 )
 
@@ -35,7 +35,6 @@ $updated = Invoke-AzRestMethod -Method PATCH -Uri "https://management.azure.com$
 $operations = (Invoke-AzRestMethod -Method Get -Uri "https://management.azure.com$($ResourceId)/operations?api-version=2021-11-01").Content
 $job = ($operations | ConvertFrom-Json).value.properties | ?{$_.operation -eq "UpsertManagedServer" -and $_.state -eq "InProgress"}
 $startTime = $job.startTime
-[string]$updateUri = $updated.Headers.GetValues("Azure-AsyncOperation")
 
 $currentStep = 1
 $notifiedStep = 1
@@ -44,19 +43,19 @@ while($job.state -eq "InProgress")
     sleep 120
     $operations = (Invoke-AzRestMethod -Method Get -Uri "https://management.azure.com$($ResourceId)/operations?api-version=2021-11-01").Content
     $job = ($operations | ConvertFrom-Json).value.properties | ?{$_.startTime -eq $startTime}
-    $currentStep = $job.operationSteps.currentStep
+    $currentStep = ($job.operationSteps.stepsList | ?{$_.status -eq "InProgress"}).order
     if($currentStep -ne $notifiedStep)
     {
-        Invoke-RestMethod -Method Post -Uri $sendNotificationUri -Body $($noticiationBody -f "false",$new.name, $originalCores, $numberOfCores, "Starting Step $($currentStep)","step $($currentStep - 1)",$job.operationSteps.stepsList[$notifiedStep].name,$failed) -ContentType "application/json"
-        $notifiedStep += 1
+        $notifiedStep = $currentStep
+        Invoke-RestMethod -Method Post -Uri $sendNotificationUri -Body $($noticiationBody -f "false",$new.name, $originalCores, $numberOfCores, "Starting Step $($currentStep)","step $($currentStep - 1)",$job.operationSteps.stepsList[$($notifiedStep - 1)].name,$failed) -ContentType "application/json"
     }
 }
 
-$managedInstance = (Invoke-AzRestMethod -Method Get -Uri "https://management.azure.com$($ResourceId)?api-version=2021-11-01").Content | Convert-FromJson -Depth 100
+$managedInstance = (Invoke-AzRestMethod -Method Get -Uri "https://management.azure.com$($ResourceId)?api-version=2021-11-01").Content | ConvertFrom-Json -Depth 100
 
 if($managedInstance.properties.vCores -ne $numberOfCores)
 {
     $failed = "true"
 }
 
-Invoke-RestMethod -Method Post -Uri $sendNotificationUri -Body $($noticiationBody -f "false",$new.name, $originalCores, $numberOfCores,"Complete","all steps","Completed Successfully",$failed) -ContentType "application/json"
+Invoke-RestMethod -Method Post -Uri $sendNotificationUri -Body $($noticiationBody -f "false",$new.name, $originalCores, $numberOfCores, "Completed","all steps",$job.operationSteps.stepsList[$($notifiedStep - 1)].name,$failed) -ContentType "application/json"
