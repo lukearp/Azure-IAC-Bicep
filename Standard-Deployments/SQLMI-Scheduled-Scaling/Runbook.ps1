@@ -19,14 +19,15 @@ $noticiationBody = @'
     "scaledCores": {3},
     "currentStep": "{4}",
     "previousStep": "{5}",
-    "failed": {6}
+    "description": "{6}",
+    "failed": {7}
 }}
 '@
 $failed = "false"
 $managedInstance = (Invoke-AzRestMethod -Method Get -Uri "https://management.azure.com$($ResourceId)?api-version=2021-11-01").Content
 $new = ConvertFrom-Json -Input $managedInstance -Depth 100
 $originalCores = $new.properties.vCores
-Invoke-RestMethod -Method Post -Uri $sendNotificationUri -Body $($noticiationBody -f "true",$new.name, $originalCores, $numberOfCores, "Starting Step 1", "",$failed) -ContentType "application/json"
+Invoke-RestMethod -Method Post -Uri $sendNotificationUri -Body $($noticiationBody -f "true",$new.name, $originalCores, $numberOfCores, "Starting Step 1", "","Request validation",$failed) -ContentType "application/json"
 $new.sku.capacity = $numberOfCores
 $new.properties.vCores = $numberOfCores
 
@@ -46,8 +47,8 @@ while($job.state -eq "InProgress")
     $currentStep = $job.operationSteps.currentStep
     if($currentStep -ne $notifiedStep)
     {
-        $notifiedStep = $currentStep
-        Invoke-RestMethod -Method Post -Uri $sendNotificationUri -Body $($noticiationBody -f "false",$new.name, $originalCores, $numberOfCores, "Starting Step $($currentStep)","step $($currentStep - 1)",$failed) -ContentType "application/json"
+        Invoke-RestMethod -Method Post -Uri $sendNotificationUri -Body $($noticiationBody -f "false",$new.name, $originalCores, $numberOfCores, "Starting Step $($currentStep)","step $($currentStep - 1)",$job.operationSteps.stepsList[$notifiedStep].name,$failed) -ContentType "application/json"
+        $notifiedStep += 1
     }
 }
 
@@ -58,4 +59,4 @@ if($managedInstance.properties.vCores -ne $numberOfCores)
     $failed = "true"
 }
 
-Invoke-RestMethod -Method Post -Uri $sendNotificationUri -Body $($noticiationBody -f "false",$ManagedInstanceName, $managedInstance.VCores, $numberOfCores,"Complete","all steps",$failed) -ContentType "application/json"
+Invoke-RestMethod -Method Post -Uri $sendNotificationUri -Body $($noticiationBody -f "false",$new.name, $originalCores, $numberOfCores,"Complete","all steps","Completed Successfully",$failed) -ContentType "application/json"
