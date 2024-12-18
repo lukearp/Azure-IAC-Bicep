@@ -44,7 +44,7 @@ while($job.state -eq "InProgress")
     $operations = (Invoke-AzRestMethod -Method Get -Uri "https://management.azure.com$($ResourceId)/operations?api-version=2021-11-01").Content
     $job = ($operations | ConvertFrom-Json).value.properties | ?{$_.startTime -eq $startTime}
     $currentStep = ($job.operationSteps.stepsList | ?{$_.status -eq "InProgress"}).order
-    if($currentStep -ne $notifiedStep)
+    if($currentStep -ne $notifiedStep -and $currentStep -ne $null)
     {
         $notifiedStep = $currentStep
         Invoke-RestMethod -Method Post -Uri $sendNotificationUri -Body $($noticiationBody -f "false",$new.name, $originalCores, $numberOfCores, "Starting Step $($currentStep)","step $($currentStep - 1)",$job.operationSteps.stepsList[$($notifiedStep - 1)].name,$failed) -ContentType "application/json"
