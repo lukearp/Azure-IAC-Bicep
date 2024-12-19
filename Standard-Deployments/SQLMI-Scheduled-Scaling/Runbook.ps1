@@ -1,12 +1,11 @@
 param (
-    [string]$ResourceId,
     [ValidateSet(4, 8, 16, 24, 32, 40, 64, 80)]
     [int]$numberOfCores
 )
 
-#$ResourceId = "/subscriptions/32eb88b4-4029-4094-85e3-ec8b7ce1fc00/resourceGroups/sqlmi/providers/Microsoft.Sql/managedInstances/lukemitest"
+$ResourceId = ""
 $SubscriptionId = $ResourceId.Split("/")[2]
-$sendNotificationUri = "https://prod-70.eastus.logic.azure.com:443/workflows/7fc02955ed4e4e649d17eb5d2c77cc66/triggers/When_a_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_a_HTTP_request_is_received%2Frun&sv=1.0&sig=rJ7Ln7XuoLn4KHDAhzTUSxIvY6Y8UAvXOEGWlp1JO5Q"
+$sendNotificationUri = ""
 #$numberOfCores = 8
 #update-azConfig -DefaultSubscriptionForLogin $SubscriptionId
 Connect-AzAccount -Identity -Subscription $SubscriptionId -Environment "AzureCloud"
@@ -58,4 +57,4 @@ if($managedInstance.properties.vCores -ne $numberOfCores)
     $failed = "true"
 }
 
-Invoke-RestMethod -Method Post -Uri $sendNotificationUri -Body $($noticiationBody -f "false",$new.name, $originalCores, $numberOfCores, "Completed","all steps",$job.operationSteps.stepsList[$($notifiedStep - 1)].name,$failed) -ContentType "application/json"
+Invoke-RestMethod -Method Post -Uri $sendNotificationUri -Body $($noticiationBody -f "false",$new.name, $originalCores, $numberOfCores, "Completed","all steps","Completed",$failed) -ContentType "application/json"
