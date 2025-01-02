@@ -1,5 +1,5 @@
 param (
-    [string]$localPath,
+    [string]$localPath = ".",
     [int]$maxIpGroups = 1000
 )
 
@@ -36,7 +36,7 @@ foreach ($sub in $($subscriptions | Select -Unique)) {
     Select-AzSubscription -Subscription $sub
     foreach ($policy in $firewallPolicies) {
         $csvPath = "$($localPath)\$($policy.Name)_$($csvSuffix)_$($count).csv"
-        Add-Content -Path $csvPath -Value "RuleCollection,CollectionPriority,CollectionGroup,GroupPriority,RuleName,SourceIPGroup,SourceIPs,DestinationIPGroup,DestinationIPs,DestinationPort,Action"
+        Add-Content -Path $csvPath -Value "RuleCollection,CollectionPriority,CollectionGroup,GroupPriority,RuleName,SourceIPGroup,SourceIPs,DestinationIPGroup,DestinationIPs,DestinationPort,Action,RuleType"
         $fullPolicy = Get-AzFirewallPolicy -Name $policy.Name -ResourceGroupName $policy.ResourceGroup
         foreach ($ruleGroup in $fullPolicy.RuleCollectionGroups) {
             $fullRuleGroup = Get-AzFirewallPolicyRuleCollectionGroup -Name $ruleGroup.Id.Split("/")[10] -ResourceGroupName $ruleGroup.Id.Split("/")[4] -AzureFirewallPolicyName $policy.Name
@@ -67,9 +67,18 @@ foreach ($sub in $($subscriptions | Select -Unique)) {
                         }
                     }
                     else {
-                        $destAddressPrefixes = $rule.DestinationAddresses
+                        if($rule.RuleType -ne "ApplicationRule")
+                        {
+                            $destAddressPrefixes = $rule.DestinationAddresses
+                        }
+                        else {
+                            $destAddressPrefixes = New-Object -TypeName psobject -Property @{
+                                TargetFqdns = $rule.TargetFqdns
+                                Protocols = $rule.Protocols 
+                            } | ConvertTo-Json -depth 10 -Compress
+                        }
                     }
-                    Add-Content -Path $csvPath -Value "$($collection.Name),$($collection.Priority),$($ruleGroup.Id.split("/")[10]),$($fullRuleGroup.Properties.Priority),$($rule.name.Replace(",","_")),$($source -join ";"),$($sourceAddressPrefixes -join ";"),$($destination -join ";"),$($destAddressPrefixes -join ";"),$($rule.DestinationPorts -join ";"),$($collection.Action.Type)"
+                    Add-Content -Path $csvPath -Value "$($collection.Name),$($collection.Priority),$($ruleGroup.Id.split("/")[10]),$($fullRuleGroup.Properties.Priority),$($rule.name.Replace(",","_")),$($source -join ";"),$($sourceAddressPrefixes -join ";"),$($destination -join ";"),$($destAddressPrefixes -join ";"),$($rule.DestinationPorts -join ";"),$($collection.Action.Type),$($rule.RuleType)"
                 }
             }
         }
