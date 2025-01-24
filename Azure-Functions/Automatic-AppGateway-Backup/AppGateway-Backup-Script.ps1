@@ -26,7 +26,7 @@ $wafAppGatewayGraphQuery = @'
 resources
 | where type == "microsoft.network/applicationgateways"
 | where properties contains "{0}"
-| project name, subscriptionId, resourceGroup
+| summarize by name, subscriptionId, resourceGroup
 '@
 if ($appGatewayId -like "*/applicationGatewayWebApplicationFirewallPolicies/*") {
     Select-AzSubscription $appGatewaySubscription
