@@ -670,7 +670,7 @@ if ($null -eq $appGwsWithWAF) {
     foreach ($key in $appGateway.Identity.UserAssignedIdentities.Keys) { $userIdentity = $key }
     if ($null -eq $appGateway.FirewallPolicy.id -and $null -ne $appGateway.Identity) {
         Write-Output "No Firewall Policy and has Identity"
-        $newAppGw = ConvertFrom-Json -InputObject $($appGwResourceNoPolicyString -f $($appGatewayIdentityResourceString -f $userIdentity), $(ConvertTo-Json -InputObject $appGateway.Sku -Depth 20),$appGateway.EnableHttp2.ToString().ToLower())
+        $newAppGw = ConvertFrom-Json -InputObject $($appGwResourceNoPolicyString -f $($appGatewayIdentityResourceString -f $userIdentity), $(ConvertTo-Json -InputObject $appGateway.Sku -Depth 20), $appGateway.EnableHttp2.ToString().ToLower())
     }
     elseif ($null -ne $appGateway.Identity) {
         Write-Output "Firewall Policy and has Identity"
@@ -730,9 +730,10 @@ if ($null -eq $appGwsWithWAF) {
     }
     $base64DummyCert = "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"
     foreach ($sslCertificate in $appGateway.SslCertificates) {
-        if($null -ne $sslCertificate.KeyVaultSecretId) {
+        if ($null -ne $sslCertificate.KeyVaultSecretId) {
             $newAppGw.properties.sslCertificates += ConvertFrom-Json -InputObject $($sslCertificatesResourceString -f $sslCertificate.Name, $sslCertificate.KeyVaultSecretId) -Depth 20
-        } else {
+        }
+        else {
             $newAppGw.properties.sslCertificates += ConvertFrom-Json -InputObject $($sslCertificatesDummyResourceString -f $sslCertificate.Name, $base64DummyCert, "azure1234") -Depth 20
         }
     }
@@ -946,12 +947,13 @@ else {
         foreach ($gatewayIpConfig in $appGateway.GatewayIPConfigurations) {
             $newAppGw.properties.gatewayIPConfigurations += ConvertFrom-Json -InputObject $($gatewayIpResourceString -f $gatewayIpConfig.Name) -Depth 20
         }
+        $base64DummyCert = "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"
         foreach ($sslCertificate in $appGateway.SslCertificates) {
-            if($null -eq $sslCertificate.KeyVaultSecretId) {
-                $cert = New-SelfSignedCertificate
+            if ($null -ne $sslCertificate.KeyVaultSecretId) {
+                $newAppGw.properties.sslCertificates += ConvertFrom-Json -InputObject $($sslCertificatesResourceString -f $sslCertificate.Name, $sslCertificate.KeyVaultSecretId) -Depth 20
             }
             else {
-                $newAppGw.properties.sslCertificates += ConvertFrom-Json -InputObject $($sslCertificatesResourceString -f $sslCertificate.Name, $sslCertificate.KeyVaultSecretId) -Depth 20
+                $newAppGw.properties.sslCertificates += ConvertFrom-Json -InputObject $($sslCertificatesDummyResourceString -f $sslCertificate.Name, $base64DummyCert, "azure1234") -Depth 20
             }
         }
         foreach ($rootCert in $appGateway.TrustedRootCertificates) {
@@ -1071,16 +1073,14 @@ else {
         $currentTemplateSpec = Get-AzTemplateSpec -ResourceGroupName $templateResourceGroup -Name $($appGateway.Name + "-DR-Template")
         if ($null -eq $currentTemplateSpec) {
             $newTemplateSpec = New-AzTemplateSpec -ResourceGroupName $templateResourceGroup -Name $($appGateway.Name + "-DR-Template") -Location $drRegion -TemplateJson $(ConvertTo-Json -InputObject $template -Depth 20) -Version "1"
-            if($null -eq $newTemplateSpec)
-            {
+            if ($null -eq $newTemplateSpec) {
                 throw "Failed to Update Template Spec"
             }
         }
         else {
             $version = $currentTemplateSpec.Versions.Count + 1
             $newTemplateSpec = New-AzTemplateSpec -ResourceGroupName $templateResourceGroup -Name $($appGateway.Name + "-DR-Template") -Location $drRegion -TemplateJson $(ConvertTo-Json -InputObject $template -Depth 20) -Version $version 
-            if($null -eq $newTemplateSpec)
-            {
+            if ($null -eq $newTemplateSpec) {
                 throw "Failed to Update Template Spec"
             }
         }
