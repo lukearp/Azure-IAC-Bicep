@@ -889,7 +889,7 @@ else {
         foreach ($key in $appGateway.Identity.UserAssignedIdentities.Keys) { $userIdentity = $key }
         if ($null -eq $appGateway.FirewallPolicy.id -and $null -ne $appGateway.Identity) {
             Write-Output "No Firewall Policy and has Identity"
-            $newAppGw = ConvertFrom-Json -InputObject $($appGwResourceNoPolicyString -f $($appGatewayIdentityResourceString -f $userIdentity), $(ConvertTo-Json -InputObject $appGateway.Sku -Depth 20))
+            $newAppGw = ConvertFrom-Json -InputObject $($appGwResourceNoPolicyString -f $($appGatewayIdentityResourceString -f $userIdentity), $(ConvertTo-Json -InputObject $appGateway.Sku -Depth 20)), $appGateway.EnableHttp2.ToString().ToLower()
         }
         elseif ($null -ne $appGateway.Identity) {
             Write-Output "Firewall Policy and has Identity"
