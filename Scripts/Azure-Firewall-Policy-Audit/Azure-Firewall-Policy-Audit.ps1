@@ -3,7 +3,8 @@ param (
     [int]$maxIpGroups = 1000
 )
 
-$ipGroups = Search-AzGraph -Query "resources | where type =~ `"Microsoft.Network/ipGroups`"" -First $maxIpGroups
+$tenantId = "92247f12-056e-4600-9248-fb43a78491c9"
+$ipGroups = Search-AzGraph -Query "resources | where type =~ `"Microsoft.Network/ipGroups`"" -First $maxIpGroups -ManagementGroup $tenantId
 $resourceIds = $ipGroups.ResourceId
 $subscriptions = @()
 foreach ($resourceId in $resourceIds) {
@@ -23,7 +24,7 @@ foreach ($sub in $($subscriptions | Select -Unique)) {
     }
 }
 
-$firewallPolicies = Search-AzGraph -Query "resources | where type =~ `"Microsoft.Network/firewallPolicies`"" -First $maxIpGroups
+$firewallPolicies = Search-AzGraph -Query "resources | where type =~ `"Microsoft.Network/firewallPolicies`"" -First $maxIpGroups -ManagementGroup $tenantId
 $resourceIds = $firewallPolicies.ResourceId
 $subscriptions = @()
 foreach ($resourceId in $resourceIds) {
@@ -72,13 +73,19 @@ foreach ($sub in $($subscriptions | Select -Unique)) {
                             $destAddressPrefixes = $rule.DestinationAddresses
                         }
                         else {
-                            $destAddressPrefixes = New-Object -TypeName psobject -Property @{
+                            $json = $(New-Object -TypeName psobject -Property @{
                                 TargetFqdns = $rule.TargetFqdns
                                 Protocols = $rule.Protocols 
-                            } | ConvertTo-Json -depth 10 -Compress
+                            } | ConvertTo-Json -depth 10 -Compress)
+                            $destAddressPrefixes = "$($json.replace('"','""'))"
                         }
                     }
-                    Add-Content -Path $csvPath -Value "$($collection.Name),$($collection.Priority),$($ruleGroup.Id.split("/")[10]),$($fullRuleGroup.Properties.Priority),$($rule.name.Replace(",","_")),$($source -join ";"),$($sourceAddressPrefixes -join ";"),$($destination -join ";"),$($destAddressPrefixes -join ";"),$($rule.DestinationPorts -join ";"),$($collection.Action.Type),$($rule.RuleType)"
+                    if($rule.RuleType -eq "ApplicationRule") {
+                        Add-Content -Path $csvPath -Value "$($collection.Name),$($collection.Priority),$($ruleGroup.Id.split("/")[10]),$($fullRuleGroup.Properties.Priority),$($rule.name.Replace(",","_")),$($source -join ";"),$($sourceAddressPrefixes -join ";"),$($destination -join ";"),"$($destAddressPrefixes)",$($rule.DestinationPorts -join ";"),$($collection.Action.Type),$($rule.RuleType)"
+                    }
+                    else {
+                        Add-Content -Path $csvPath -Value "$($collection.Name),$($collection.Priority),$($ruleGroup.Id.split("/")[10]),$($fullRuleGroup.Properties.Priority),$($rule.name.Replace(",","_")),$($source -join ";"),$($sourceAddressPrefixes -join ";"),$($destination -join ";"),$($destAddressPrefixes -join ";"),$($rule.DestinationPorts -join ";"),$($collection.Action.Type),$($rule.RuleType)"
+                    }
                 }
             }
         }
