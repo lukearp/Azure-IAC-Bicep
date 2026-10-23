@@ -1,0 +1,429 @@
+{
+  "properties": {
+    "displayName": "Enforce custom rules on Application Gateway WAF policies",
+    "description": "Enforces supplied Application Gateway custom rules with a PolicyEnforced name suffix and the selected action. Reconciles managed rule settings, preserves unrelated rules, and allocates conflicting priorities from 50 through 100.",
+    "policyType": "Custom",
+    "mode": "All",
+    "metadata": {
+      "category": "Network",
+      "version": "1.0.0"
+    },
+    "parameters": {
+      "customRules": {
+        "type": "Array",
+        "metadata": {
+          "displayName": "Custom WAF rules",
+          "description": "An array of 1 through 10 Application Gateway custom rule objects, with 1 through 10 conditions per rule and 1 through 10 match variables per condition. Names receive PolicyEnforced unless already suffixed. All managed settings are enforced. Unrelated rules are preserved. Requested priorities must be 1 through 100; conflicts use the lowest unused value from 50 through 100."
+        }
+      },
+      "ruleAction": {
+        "type": "String",
+        "metadata": {
+          "displayName": "Enforced custom rule action",
+          "description": "ARM action applied to every supplied rule. FromRule uses each object's action instead. Only matching PolicyEnforced rules are managed."
+        },
+        "allowedValues": [
+          "FromRule",
+          "Allow",
+          "Block",
+          "Log",
+          "JSChallenge"
+        ],
+        "defaultValue": "Log"
+      },
+      "effect": {
+        "type": "String",
+        "metadata": {
+          "displayName": "Effect",
+          "description": "Deploy or correct managed custom rules, audit any managed rule configuration drift, or disable evaluation."
+        },
+        "allowedValues": [
+          "DeployIfNotExists",
+          "AuditIfNotExists",
+          "Disabled"
+        ],
+        "defaultValue": "DeployIfNotExists"
+      }
+    },
+    "policyRule": {
+      "if": {
+        "field": "type",
+        "equals": "Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies"
+      },
+      "then": {
+        "effect": "[parameters('effect')]",
+        "details": {
+          "type": "Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies",
+          "name": "[field('name')]",
+          "existenceScope": "ResourceGroup",
+          "deploymentScope": "ResourceGroup",
+          "evaluationDelay": "AfterProvisioningSuccess",
+          "roleDefinitionIds": [
+            "/providers/Microsoft.Authorization/roleDefinitions/4d97b98b-1d4f-4787-a291-c67834d212e7"
+          ],
+          "existenceCondition": {
+            "allOf": [
+              {
+                "value": "[length(parameters('customRules'))]",
+                "greater": 0
+              },
+              {
+                "value": "[length(parameters('customRules'))]",
+                "lessOrEquals": 10
+              },
+              {
+                "count": {
+                  "value": "[take(parameters('customRules'), 10)]",
+                  "name": "requiredRule",
+                  "where": {
+                    "anyOf": [
+                      {
+                        "count": {
+                          "value": "[take(parameters('customRules'), 10)]",
+                          "name": "earlierDefinition",
+                          "where": {
+                            "allOf": [
+                              {
+                                "value": "[indexOf(parameters('customRules'), current('earlierDefinition'))]",
+                                "less": "[indexOf(parameters('customRules'), current('requiredRule'))]"
+                              },
+                              {
+                                "value": "[if(endsWith(toLower(current('earlierDefinition').name), 'policyenforced'), current('earlierDefinition').name, concat(current('earlierDefinition').name, 'PolicyEnforced'))]",
+                                "equals": "[if(endsWith(toLower(current('requiredRule').name), 'policyenforced'), current('requiredRule').name, concat(current('requiredRule').name, 'PolicyEnforced'))]"
+                              }
+                            ]
+                          }
+                        },
+                        "greater": 0
+                      },
+                      {
+                        "allOf": [
+                          {
+                            "value": "[equals(union(createObject('state', 'Enabled', 'groupByUserSession', createArray(), 'etag', ''), coalesce(tryGet(coalesce(field('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*]'), createArray()), max(0, indexOf(json(toLower(string(coalesce(field('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*].name'), createArray())))), toLower(if(endsWith(toLower(current('requiredRule').name), 'policyenforced'), current('requiredRule').name, concat(current('requiredRule').name, 'PolicyEnforced')))))), createObject('name', '', 'priority', 0, 'matchConditions', createArray())), createObject('etag', '', 'name', toLower(coalesce(tryGet(coalesce(tryGet(coalesce(field('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*]'), createArray()), max(0, indexOf(json(toLower(string(coalesce(field('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*].name'), createArray())))), toLower(if(endsWith(toLower(current('requiredRule').name), 'policyenforced'), current('requiredRule').name, concat(current('requiredRule').name, 'PolicyEnforced')))))), createObject('name', '', 'priority', 0, 'matchConditions', createArray())), 'name'), '')))), union(createObject('state', 'Enabled', 'groupByUserSession', createArray(), 'etag', ''), current('requiredRule'), createObject('etag', '', 'name', toLower(if(endsWith(toLower(current('requiredRule').name), 'policyenforced'), current('requiredRule').name, concat(current('requiredRule').name, 'PolicyEnforced'))), 'action', if(equals(parameters('ruleAction'), 'FromRule'), current('requiredRule').action, parameters('ruleAction')), 'priority', coalesce(tryGet(coalesce(tryGet(coalesce(field('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*]'), createArray()), max(0, indexOf(json(toLower(string(coalesce(field('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*].name'), createArray())))), toLower(if(endsWith(toLower(current('requiredRule').name), 'policyenforced'), current('requiredRule').name, concat(current('requiredRule').name, 'PolicyEnforced')))))), createObject('name', '', 'priority', 0, 'matchConditions', createArray())), 'priority'), 0), 'matchConditions', coalesce(tryGet(coalesce(tryGet(coalesce(field('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*]'), createArray()), max(0, indexOf(json(toLower(string(coalesce(field('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*].name'), createArray())))), toLower(if(endsWith(toLower(current('requiredRule').name), 'policyenforced'), current('requiredRule').name, concat(current('requiredRule').name, 'PolicyEnforced')))))), createObject('name', '', 'priority', 0, 'matchConditions', createArray())), 'matchConditions'), createArray()))))]",
+                            "equals": true
+                          },
+                          {
+                            "value": "[length(coalesce(tryGet(coalesce(tryGet(coalesce(field('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*]'), createArray()), max(0, indexOf(json(toLower(string(coalesce(field('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*].name'), createArray())))), toLower(if(endsWith(toLower(current('requiredRule').name), 'policyenforced'), current('requiredRule').name, concat(current('requiredRule').name, 'PolicyEnforced')))))), createObject('name', '', 'priority', 0, 'matchConditions', createArray())), 'matchConditions'), createArray()))]",
+                            "equals": "[length(current('requiredRule').matchConditions)]"
+                          },
+                          {
+                            "allOf": [
+                              {
+                                "value": "[length(current('requiredRule').matchConditions)]",
+                                "greater": 0
+                              },
+                              {
+                                "value": "[length(current('requiredRule').matchConditions)]",
+                                "lessOrEquals": 10
+                              },
+                              {
+                                "count": {
+                                  "value": "[range(0, 10)]",
+                                  "name": "conditionSlot",
+                                  "where": {
+                                    "allOf": [
+                                      {
+                                        "value": "[equals(union(createObject('negationConditon', false(), 'transforms', createArray()), coalesce(tryGet(coalesce(tryGet(coalesce(tryGet(coalesce(field('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*]'), createArray()), max(0, indexOf(json(toLower(string(coalesce(field('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*].name'), createArray())))), toLower(if(endsWith(toLower(current('requiredRule').name), 'policyenforced'), current('requiredRule').name, concat(current('requiredRule').name, 'PolicyEnforced')))))), createObject('name', '', 'priority', 0, 'matchConditions', createArray())), 'matchConditions'), createArray()), max(0, indexOf(range(0, 10), current('conditionSlot')))), createObject()), createObject('matchVariables', take(createArray(union(createObject('selector', json('null')), coalesce(tryGet(coalesce(tryGet(coalesce(tryGet(coalesce(tryGet(coalesce(tryGet(coalesce(field('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*]'), createArray()), max(0, indexOf(json(toLower(string(coalesce(field('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*].name'), createArray())))), toLower(if(endsWith(toLower(current('requiredRule').name), 'policyenforced'), current('requiredRule').name, concat(current('requiredRule').name, 'PolicyEnforced')))))), createObject('name', '', 'priority', 0, 'matchConditions', createArray())), 'matchConditions'), createArray()), max(0, indexOf(range(0, 10), current('conditionSlot')))), createObject()), 'matchVariables'), createArray()), 0), createObject())), union(createObject('selector', json('null')), coalesce(tryGet(coalesce(tryGet(coalesce(tryGet(coalesce(tryGet(coalesce(tryGet(coalesce(field('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*]'), createArray()), max(0, indexOf(json(toLower(string(coalesce(field('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*].name'), createArray())))), toLower(if(endsWith(toLower(current('requiredRule').name), 'policyenforced'), current('requiredRule').name, concat(current('requiredRule').name, 'PolicyEnforced')))))), createObject('name', '', 'priority', 0, 'matchConditions', createArray())), 'matchConditions'), createArray()), max(0, indexOf(range(0, 10), current('conditionSlot')))), createObject()), 'matchVariables'), createArray()), 1), createObject())), union(createObject('selector', json('null')), coalesce(tryGet(coalesce(tryGet(coalesce(tryGet(coalesce(tryGet(coalesce(tryGet(coalesce(field('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*]'), createArray()), max(0, indexOf(json(toLower(string(coalesce(field('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*].name'), createArray())))), toLower(if(endsWith(toLower(current('requiredRule').name), 'policyenforced'), current('requiredRule').name, concat(current('requiredRule').name, 'PolicyEnforced')))))), createObject('name', '', 'priority', 0, 'matchConditions', createArray())), 'matchConditions'), createArray()), max(0, indexOf(range(0, 10), current('conditionSlot')))), createObject()), 'matchVariables'), createArray()), 2), createObject())), union(createObject('selector', json('null')), coalesce(tryGet(coalesce(tryGet(coalesce(tryGet(coalesce(tryGet(coalesce(tryGet(coalesce(field('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*]'), createArray()), max(0, indexOf(json(toLower(string(coalesce(field('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*].name'), createArray())))), toLower(if(endsWith(toLower(current('requiredRule').name), 'policyenforced'), current('requiredRule').name, concat(current('requiredRule').name, 'PolicyEnforced')))))), createObject('name', '', 'priority', 0, 'matchConditions', createArray())), 'matchConditions'), createArray()), max(0, indexOf(range(0, 10), current('conditionSlot')))), createObject()), 'matchVariables'), createArray()), 3), createObject())), union(createObject('selector', json('null')), coalesce(tryGet(coalesce(tryGet(coalesce(tryGet(coalesce(tryGet(coalesce(tryGet(coalesce(field('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*]'), createArray()), max(0, indexOf(json(toLower(string(coalesce(field('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*].name'), createArray())))), toLower(if(endsWith(toLower(current('requiredRule').name), 'policyenforced'), current('requiredRule').name, concat(current('requiredRule').name, 'PolicyEnforced')))))), createObject('name', '', 'priority', 0, 'matchConditions', createArray())), 'matchConditions'), createArray()), max(0, indexOf(range(0, 10), current('conditionSlot')))), createObject()), 'matchVariables'), createArray()), 4), createObject())), union(createObject('selector', json('null')), coalesce(tryGet(coalesce(tryGet(coalesce(tryGet(coalesce(tryGet(coalesce(tryGet(coalesce(field('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*]'), createArray()), max(0, indexOf(json(toLower(string(coalesce(field('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*].name'), createArray())))), toLower(if(endsWith(toLower(current('requiredRule').name), 'policyenforced'), current('requiredRule').name, concat(current('requiredRule').name, 'PolicyEnforced')))))), createObject('name', '', 'priority', 0, 'matchConditions', createArray())), 'matchConditions'), createArray()), max(0, indexOf(range(0, 10), current('conditionSlot')))), createObject()), 'matchVariables'), createArray()), 5), createObject())), union(createObject('selector', json('null')), coalesce(tryGet(coalesce(tryGet(coalesce(tryGet(coalesce(tryGet(coalesce(tryGet(coalesce(field('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*]'), createArray()), max(0, indexOf(json(toLower(string(coalesce(field('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*].name'), createArray())))), toLower(if(endsWith(toLower(current('requiredRule').name), 'policyenforced'), current('requiredRule').name, concat(current('requiredRule').name, 'PolicyEnforced')))))), createObject('name', '', 'priority', 0, 'matchConditions', createArray())), 'matchConditions'), createArray()), max(0, indexOf(range(0, 10), current('conditionSlot')))), createObject()), 'matchVariables'), createArray()), 6), createObject())), union(createObject('selector', json('null')), coalesce(tryGet(coalesce(tryGet(coalesce(tryGet(coalesce(tryGet(coalesce(tryGet(coalesce(field('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*]'), createArray()), max(0, indexOf(json(toLower(string(coalesce(field('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*].name'), createArray())))), toLower(if(endsWith(toLower(current('requiredRule').name), 'policyenforced'), current('requiredRule').name, concat(current('requiredRule').name, 'PolicyEnforced')))))), createObject('name', '', 'priority', 0, 'matchConditions', createArray())), 'matchConditions'), createArray()), max(0, indexOf(range(0, 10), current('conditionSlot')))), createObject()), 'matchVariables'), createArray()), 7), createObject())), union(createObject('selector', json('null')), coalesce(tryGet(coalesce(tryGet(coalesce(tryGet(coalesce(tryGet(coalesce(tryGet(coalesce(field('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*]'), createArray()), max(0, indexOf(json(toLower(string(coalesce(field('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*].name'), createArray())))), toLower(if(endsWith(toLower(current('requiredRule').name), 'policyenforced'), current('requiredRule').name, concat(current('requiredRule').name, 'PolicyEnforced')))))), createObject('name', '', 'priority', 0, 'matchConditions', createArray())), 'matchConditions'), createArray()), max(0, indexOf(range(0, 10), current('conditionSlot')))), createObject()), 'matchVariables'), createArray()), 8), createObject())), union(createObject('selector', json('null')), coalesce(tryGet(coalesce(tryGet(coalesce(tryGet(coalesce(tryGet(coalesce(tryGet(coalesce(field('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*]'), createArray()), max(0, indexOf(json(toLower(string(coalesce(field('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*].name'), createArray())))), toLower(if(endsWith(toLower(current('requiredRule').name), 'policyenforced'), current('requiredRule').name, concat(current('requiredRule').name, 'PolicyEnforced')))))), createObject('name', '', 'priority', 0, 'matchConditions', createArray())), 'matchConditions'), createArray()), max(0, indexOf(range(0, 10), current('conditionSlot')))), createObject()), 'matchVariables'), createArray()), 9), createObject()))), length(coalesce(tryGet(coalesce(tryGet(coalesce(tryGet(coalesce(tryGet(coalesce(field('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*]'), createArray()), max(0, indexOf(json(toLower(string(coalesce(field('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*].name'), createArray())))), toLower(if(endsWith(toLower(current('requiredRule').name), 'policyenforced'), current('requiredRule').name, concat(current('requiredRule').name, 'PolicyEnforced')))))), createObject('name', '', 'priority', 0, 'matchConditions', createArray())), 'matchConditions'), createArray()), max(0, indexOf(range(0, 10), current('conditionSlot')))), createObject()), 'matchVariables'), createArray()))))), union(createObject('negationConditon', false(), 'transforms', createArray()), coalesce(tryGet(current('requiredRule').matchConditions, max(0, indexOf(range(0, 10), current('conditionSlot')))), createObject()), createObject('matchVariables', take(createArray(union(createObject('selector', json('null')), coalesce(tryGet(coalesce(tryGet(coalesce(tryGet(current('requiredRule').matchConditions, max(0, indexOf(range(0, 10), current('conditionSlot')))), createObject()), 'matchVariables'), createArray()), 0), createObject())), union(createObject('selector', json('null')), coalesce(tryGet(coalesce(tryGet(coalesce(tryGet(current('requiredRule').matchConditions, max(0, indexOf(range(0, 10), current('conditionSlot')))), createObject()), 'matchVariables'), createArray()), 1), createObject())), union(createObject('selector', json('null')), coalesce(tryGet(coalesce(tryGet(coalesce(tryGet(current('requiredRule').matchConditions, max(0, indexOf(range(0, 10), current('conditionSlot')))), createObject()), 'matchVariables'), createArray()), 2), createObject())), union(createObject('selector', json('null')), coalesce(tryGet(coalesce(tryGet(coalesce(tryGet(current('requiredRule').matchConditions, max(0, indexOf(range(0, 10), current('conditionSlot')))), createObject()), 'matchVariables'), createArray()), 3), createObject())), union(createObject('selector', json('null')), coalesce(tryGet(coalesce(tryGet(coalesce(tryGet(current('requiredRule').matchConditions, max(0, indexOf(range(0, 10), current('conditionSlot')))), createObject()), 'matchVariables'), createArray()), 4), createObject())), union(createObject('selector', json('null')), coalesce(tryGet(coalesce(tryGet(coalesce(tryGet(current('requiredRule').matchConditions, max(0, indexOf(range(0, 10), current('conditionSlot')))), createObject()), 'matchVariables'), createArray()), 5), createObject())), union(createObject('selector', json('null')), coalesce(tryGet(coalesce(tryGet(coalesce(tryGet(current('requiredRule').matchConditions, max(0, indexOf(range(0, 10), current('conditionSlot')))), createObject()), 'matchVariables'), createArray()), 6), createObject())), union(createObject('selector', json('null')), coalesce(tryGet(coalesce(tryGet(coalesce(tryGet(current('requiredRule').matchConditions, max(0, indexOf(range(0, 10), current('conditionSlot')))), createObject()), 'matchVariables'), createArray()), 7), createObject())), union(createObject('selector', json('null')), coalesce(tryGet(coalesce(tryGet(coalesce(tryGet(current('requiredRule').matchConditions, max(0, indexOf(range(0, 10), current('conditionSlot')))), createObject()), 'matchVariables'), createArray()), 8), createObject())), union(createObject('selector', json('null')), coalesce(tryGet(coalesce(tryGet(coalesce(tryGet(current('requiredRule').matchConditions, max(0, indexOf(range(0, 10), current('conditionSlot')))), createObject()), 'matchVariables'), createArray()), 9), createObject()))), length(coalesce(tryGet(coalesce(tryGet(current('requiredRule').matchConditions, max(0, indexOf(range(0, 10), current('conditionSlot')))), createObject()), 'matchVariables'), createArray()))))))]",
+                                        "equals": true
+                                      },
+                                      {
+                                        "value": "[length(coalesce(tryGet(coalesce(tryGet(current('requiredRule').matchConditions, max(0, indexOf(range(0, 10), current('conditionSlot')))), createObject()), 'matchVariables'), createArray()))]",
+                                        "lessOrEquals": 10
+                                      },
+                                      {
+                                        "value": "[or(greaterOrEquals(max(0, indexOf(range(0, 10), current('conditionSlot'))), length(current('requiredRule').matchConditions)), greater(length(coalesce(tryGet(coalesce(tryGet(current('requiredRule').matchConditions, max(0, indexOf(range(0, 10), current('conditionSlot')))), createObject()), 'matchVariables'), createArray())), 0))]",
+                                        "equals": true
+                                      }
+                                    ]
+                                  }
+                                },
+                                "equals": 10
+                              }
+                            ]
+                          },
+                          {
+                            "value": "[current('requiredRule').priority]",
+                            "greaterOrEquals": 1
+                          },
+                          {
+                            "value": "[current('requiredRule').priority]",
+                            "lessOrEquals": 100
+                          },
+                          {
+                            "anyOf": [
+                              {
+                                "value": "[coalesce(tryGet(coalesce(tryGet(coalesce(field('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*]'), createArray()), max(0, indexOf(json(toLower(string(coalesce(field('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*].name'), createArray())))), toLower(if(endsWith(toLower(current('requiredRule').name), 'policyenforced'), current('requiredRule').name, concat(current('requiredRule').name, 'PolicyEnforced')))))), createObject('name', '', 'priority', 0, 'matchConditions', createArray())), 'priority'), 0)]",
+                                "equals": "[current('requiredRule').priority]"
+                              },
+                              {
+                                "allOf": [
+                                  {
+                                    "value": "[coalesce(tryGet(coalesce(tryGet(coalesce(field('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*]'), createArray()), max(0, indexOf(json(toLower(string(coalesce(field('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*].name'), createArray())))), toLower(if(endsWith(toLower(current('requiredRule').name), 'policyenforced'), current('requiredRule').name, concat(current('requiredRule').name, 'PolicyEnforced')))))), createObject('name', '', 'priority', 0, 'matchConditions', createArray())), 'priority'), 0)]",
+                                    "greaterOrEquals": 50
+                                  },
+                                  {
+                                    "value": "[coalesce(tryGet(coalesce(tryGet(coalesce(field('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*]'), createArray()), max(0, indexOf(json(toLower(string(coalesce(field('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*].name'), createArray())))), toLower(if(endsWith(toLower(current('requiredRule').name), 'policyenforced'), current('requiredRule').name, concat(current('requiredRule').name, 'PolicyEnforced')))))), createObject('name', '', 'priority', 0, 'matchConditions', createArray())), 'priority'), 0)]",
+                                    "lessOrEquals": 100
+                                  },
+                                  {
+                                    "count": {
+                                      "field": "Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*]",
+                                      "where": {
+                                        "allOf": [
+                                          {
+                                            "value": "[coalesce(current('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*].priority'), 0)]",
+                                            "equals": "[current('requiredRule').priority]"
+                                          },
+                                          {
+                                            "anyOf": [
+                                              {
+                                                "count": {
+                                                  "value": "[take(parameters('customRules'), 10)]",
+                                                  "name": "requestedOwnerDefinition",
+                                                  "where": {
+                                                    "value": "[if(endsWith(toLower(current('requestedOwnerDefinition').name), 'policyenforced'), current('requestedOwnerDefinition').name, concat(current('requestedOwnerDefinition').name, 'PolicyEnforced'))]",
+                                                    "equals": "[coalesce(current('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*].name'), '')]"
+                                                  }
+                                                },
+                                                "equals": 0
+                                              },
+                                              {
+                                                "count": {
+                                                  "value": "[take(parameters('customRules'), 10)]",
+                                                  "name": "earlierRequestedOwner",
+                                                  "where": {
+                                                    "allOf": [
+                                                      {
+                                                        "value": "[indexOf(parameters('customRules'), current('earlierRequestedOwner'))]",
+                                                        "less": "[indexOf(parameters('customRules'), current('requiredRule'))]"
+                                                      },
+                                                      {
+                                                        "value": "[if(endsWith(toLower(current('earlierRequestedOwner').name), 'policyenforced'), current('earlierRequestedOwner').name, concat(current('earlierRequestedOwner').name, 'PolicyEnforced'))]",
+                                                        "equals": "[coalesce(current('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*].name'), '')]"
+                                                      }
+                                                    ]
+                                                  }
+                                                },
+                                                "greater": 0
+                                              }
+                                            ]
+                                          }
+                                        ]
+                                      }
+                                    },
+                                    "greater": 0
+                                  },
+                                  {
+                                    "count": {
+                                      "field": "Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*]",
+                                      "where": {
+                                        "allOf": [
+                                          {
+                                            "value": "[coalesce(current('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*].priority'), 0)]",
+                                            "greaterOrEquals": 50
+                                          },
+                                          {
+                                            "value": "[coalesce(current('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*].priority'), 0)]",
+                                            "less": "[coalesce(tryGet(coalesce(tryGet(coalesce(field('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*]'), createArray()), max(0, indexOf(json(toLower(string(coalesce(field('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*].name'), createArray())))), toLower(if(endsWith(toLower(current('requiredRule').name), 'policyenforced'), current('requiredRule').name, concat(current('requiredRule').name, 'PolicyEnforced')))))), createObject('name', '', 'priority', 0, 'matchConditions', createArray())), 'priority'), 0)]"
+                                          },
+                                          {
+                                            "anyOf": [
+                                              {
+                                                "count": {
+                                                  "value": "[take(parameters('customRules'), 10)]",
+                                                  "name": "lowerOwnerDefinition",
+                                                  "where": {
+                                                    "value": "[if(endsWith(toLower(current('lowerOwnerDefinition').name), 'policyenforced'), current('lowerOwnerDefinition').name, concat(current('lowerOwnerDefinition').name, 'PolicyEnforced'))]",
+                                                    "equals": "[coalesce(current('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*].name'), '')]"
+                                                  }
+                                                },
+                                                "equals": 0
+                                              },
+                                              {
+                                                "count": {
+                                                  "value": "[take(parameters('customRules'), 10)]",
+                                                  "name": "earlierLowerOwner",
+                                                  "where": {
+                                                    "allOf": [
+                                                      {
+                                                        "value": "[indexOf(parameters('customRules'), current('earlierLowerOwner'))]",
+                                                        "less": "[indexOf(parameters('customRules'), current('requiredRule'))]"
+                                                      },
+                                                      {
+                                                        "value": "[if(endsWith(toLower(current('earlierLowerOwner').name), 'policyenforced'), current('earlierLowerOwner').name, concat(current('earlierLowerOwner').name, 'PolicyEnforced'))]",
+                                                        "equals": "[coalesce(current('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*].name'), '')]"
+                                                      }
+                                                    ]
+                                                  }
+                                                },
+                                                "greater": 0
+                                              }
+                                            ]
+                                          }
+                                        ]
+                                      }
+                                    },
+                                    "equals": "[sub(coalesce(tryGet(coalesce(tryGet(coalesce(field('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*]'), createArray()), max(0, indexOf(json(toLower(string(coalesce(field('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/customRules[*].name'), createArray())))), toLower(if(endsWith(toLower(current('requiredRule').name), 'policyenforced'), current('requiredRule').name, concat(current('requiredRule').name, 'PolicyEnforced')))))), createObject('name', '', 'priority', 0, 'matchConditions', createArray())), 'priority'), 0), 50)]"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "equals": "[length(parameters('customRules'))]"
+              }
+            ]
+          },
+          "deployment": {
+            "properties": {
+              "mode": "Incremental",
+              "parameters": {
+                "policyResourceId": {
+                  "value": "[field('id')]"
+                },
+                "customRules": {
+                  "value": "[parameters('customRules')]"
+                },
+                "ruleAction": {
+                  "value": "[parameters('ruleAction')]"
+                }
+              },
+              "template": {
+                "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                "contentVersion": "1.0.0.0",
+                "parameters": {
+                  "policyResourceId": {
+                    "type": "string"
+                  },
+                  "customRules": {
+                    "type": "array",
+                    "minLength": 1,
+                    "maxLength": 10
+                  },
+                  "ruleAction": {
+                    "type": "string",
+                    "defaultValue": "Log",
+                    "allowedValues": [
+                      "FromRule",
+                      "Allow",
+                      "Block",
+                      "Log",
+                      "JSChallenge"
+                    ]
+                  }
+                },
+                "resources": [
+                  {
+                    "type": "Microsoft.Resources/deployments",
+                    "apiVersion": "2022-09-01",
+                    "name": "[concat('configureWaf-', uniqueString(parameters('policyResourceId'), deployment().name))]",
+                    "properties": {
+                      "mode": "Incremental",
+                      "expressionEvaluationOptions": {
+                        "scope": "inner"
+                      },
+                      "parameters": {
+                        "policyResourceId": {
+                          "value": "[parameters('policyResourceId')]"
+                        },
+                        "currentPolicy": {
+                          "value": "[reference(parameters('policyResourceId'), '2025-03-01', 'Full')]"
+                        },
+                        "customRules": {
+                          "value": "[parameters('customRules')]"
+                        },
+                        "ruleAction": {
+                          "value": "[parameters('ruleAction')]"
+                        },
+                        "invalidRuleCount": {
+                          "value": "[length(filter(parameters('customRules'), lambda('rule', or(less(lambdaVariables('rule').priority, 1), greater(lambdaVariables('rule').priority, 100), empty(lambdaVariables('rule').matchConditions), greater(length(lambdaVariables('rule').matchConditions), 10), not(empty(filter(lambdaVariables('rule').matchConditions, lambda('matchCondition', or(empty(lambdaVariables('matchCondition').matchVariables), greater(length(lambdaVariables('matchCondition').matchVariables), 10))))))))))]"
+                        }
+                      },
+                      "template": {
+                        "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                        "contentVersion": "1.0.0.0",
+                        "parameters": {
+                          "policyResourceId": {
+                            "type": "string"
+                          },
+                          "currentPolicy": {
+                            "type": "object"
+                          },
+                          "customRules": {
+                            "type": "array",
+                            "minLength": 1,
+                            "maxLength": 10
+                          },
+                          "ruleAction": {
+                            "type": "string",
+                            "defaultValue": "Log",
+                            "allowedValues": [
+                              "FromRule",
+                              "Allow",
+                              "Block",
+                              "Log",
+                              "JSChallenge"
+                            ]
+                          },
+                          "invalidRuleCount": {
+                            "type": "int",
+                            "minValue": 0,
+                            "maxValue": 0,
+                            "metadata": {
+                              "description": "Internal validation: must be zero. Each rule needs priority 1-100, 1-10 match conditions, and 1-10 match variables per condition."
+                            }
+                          }
+                        },
+                        "variables": {
+                          "ruleDefaults": {
+                            "state": "Enabled",
+                            "groupByUserSession": []
+                          },
+                          "conditionDefaults": {
+                            "negationConditon": false,
+                            "transforms": []
+                          },
+                          "existingRules": "[coalesce(tryGet(parameters('currentPolicy').properties, 'customRules'), createArray())]",
+                          "suppliedRules": "[map(parameters('customRules'), lambda('rule', union(variables('ruleDefaults'), toObject(filter(items(lambdaVariables('rule')), lambda('property', not(equals(lambdaVariables('property').key, 'etag')))), lambda('property', lambdaVariables('property').key), lambda('property', lambdaVariables('property').value)), createObject('name', if(endsWith(toLower(lambdaVariables('rule').name), 'policyenforced'), lambdaVariables('rule').name, concat(lambdaVariables('rule').name, 'PolicyEnforced')), 'action', if(equals(parameters('ruleAction'), 'FromRule'), lambdaVariables('rule').action, parameters('ruleAction')), 'matchConditions', map(lambdaVariables('rule').matchConditions, lambda('matchCondition', union(variables('conditionDefaults'), lambdaVariables('matchCondition'), createObject('matchVariables', map(lambdaVariables('matchCondition').matchVariables, lambda('matchVariable', union(variables('matchVariableDefaults'), lambdaVariables('matchVariable'))))))))))))]",
+                          "requiredRules": "[reduce(variables('suppliedRules'), createArray(), lambda('rules', 'rule', if(contains(map(lambdaVariables('rules'), lambda('priorRule', toLower(lambdaVariables('priorRule').name))), toLower(lambdaVariables('rule').name)), lambdaVariables('rules'), concat(lambdaVariables('rules'), createArray(lambdaVariables('rule'))))))]",
+                          "requiredNames": "[map(variables('requiredRules'), lambda('rule', toLower(lambdaVariables('rule').name)))]",
+                          "unmanagedRules": "[filter(variables('existingRules'), lambda('rule', not(contains(variables('requiredNames'), toLower(lambdaVariables('rule').name)))))]",
+                          "mergedState": "[reduce(variables('requiredRules'), createObject('rules', createArray(), 'usedPriorities', map(variables('unmanagedRules'), lambda('rule', lambdaVariables('rule').priority))), lambda('state', 'rule', createObject('rules', concat(lambdaVariables('state').rules, createArray(union(lambdaVariables('rule'), createObject('priority', filter(concat(createArray(lambdaVariables('rule').priority), range(50, 51)), lambda('candidatePriority', not(contains(lambdaVariables('state').usedPriorities, lambdaVariables('candidatePriority')))))[0])))), 'usedPriorities', concat(lambdaVariables('state').usedPriorities, createArray(filter(concat(createArray(lambdaVariables('rule').priority), range(50, 51)), lambda('candidatePriority', not(contains(lambdaVariables('state').usedPriorities, lambdaVariables('candidatePriority')))))[0])))))]",
+                          "comparableExistingRules": "[map(variables('existingRules'), lambda('rule', union(variables('ruleDefaults'), toObject(filter(items(lambdaVariables('rule')), lambda('property', not(equals(lambdaVariables('property').key, 'etag')))), lambda('property', lambdaVariables('property').key), lambda('property', lambdaVariables('property').value)), createObject('name', toLower(lambdaVariables('rule').name), 'matchConditions', map(lambdaVariables('rule').matchConditions, lambda('matchCondition', union(variables('conditionDefaults'), lambdaVariables('matchCondition'), createObject('matchVariables', map(lambdaVariables('matchCondition').matchVariables, lambda('matchVariable', union(variables('matchVariableDefaults'), lambdaVariables('matchVariable'))))))))))))]",
+                          "changedRules": "[filter(variables('mergedState').rules, lambda('rule', not(contains(variables('comparableExistingRules'), union(lambdaVariables('rule'), createObject('name', toLower(lambdaVariables('rule').name)))))))]",
+                          "finalRules": "[concat(map(variables('unmanagedRules'), lambda('rule', toObject(filter(items(lambdaVariables('rule')), lambda('property', not(equals(lambdaVariables('property').key, 'etag')))), lambda('property', lambdaVariables('property').key), lambda('property', lambdaVariables('property').value)))), variables('mergedState').rules)]",
+                          "matchVariableDefaults": {
+                            "selector": null
+                          }
+                        },
+                        "resources": [
+                          {
+                            "condition": "[not(empty(variables('changedRules')))]",
+                            "type": "Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies",
+                            "apiVersion": "2025-03-01",
+                            "name": "[last(split(parameters('policyResourceId'), '/'))]",
+                            "location": "[parameters('currentPolicy').location]",
+                            "tags": "[coalesce(tryGet(parameters('currentPolicy'), 'tags'), createObject())]",
+                            "properties": {
+                              "policySettings": "[coalesce(tryGet(parameters('currentPolicy').properties, 'policySettings'), createObject())]",
+                              "managedRules": "[parameters('currentPolicy').properties.managedRules]",
+                              "customRules": "[variables('finalRules')]"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
