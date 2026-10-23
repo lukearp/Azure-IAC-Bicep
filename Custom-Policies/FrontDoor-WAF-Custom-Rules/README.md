@@ -215,24 +215,3 @@ The assignment identity requires **Network Contributor**, which includes WAF wri
 7. Create a new canary WAF policy after assignment. Confirm the supplied rules are added after successful provisioning without a separate remediation task.
 
 No resources are deployed merely by adding these files or building the definition. Disabling or deleting the assignment stops future enforcement but does not remove custom rules already deployed.
-
-## Local Regression Tests
-
-Requires Python 3 and a recent standalone Bicep CLI supporting experimental `local-deploy` (tested with 0.47.16). The runner uses `bicep` on PATH or Azure CLI's installation at `$HOME\.azure\bin\bicep.exe`.
-
-From the repository root:
-
-```powershell
-python .\Custom-Policies\FrontDoor-WAF-Custom-Rules\tests\test_policy.py
-```
-
-The tests extract and decompile the actual remediation expressions, then execute them with Bicep's local ARM evaluator in resource-free temporary templates. They also translate the actual existence condition's counts into equivalent local ARM filters and check that compliance agrees with whether remediation would write. They cover all action choices, full-setting drift, API defaults, suffix ownership, unrelated-rule preservation, all three SKUs, allocation from 100, priority replanning, idempotence, the 10-rule/10-condition boundary, and invalid input. A [sanitized reference fixture](./tests/fixtures/current-policy-reference.json) reproduces the supplied full-reference shape without its subscription identifier and verifies that deployment metadata is ignored. Tests enforce parity between the standalone template and the embedded policy template and build the Bicep definition. No Azure resources are deployed. Local count translation does not run the Azure Policy engine; live alias resolution, policy evaluation limits, and service-side validation still require the canary checks above.
-
-Separate syntax regressions reject `current()` in any `count.value`, prohibit numeric `current()` array indices in compliance expressions, distinguish field-count property aliases from value-count object accessors, verify count-variable scopes, and check authoring/count bounds before relying on local ARM evaluation. They include the formerly invalid nested-count and field-accessor patterns. The local evaluator rejects those patterns before translation, rather than silently treating field counts as object-valued lambda variables. Tests also check that the saved generated management-group deployment template matches a fresh Bicep build. Rebuild it with `az bicep build --file .\Custom-Policies\FrontDoor-WAF-Custom-Rules\frontdoor-waf-custom-rules-policy.bicep` before running the full suite. Syntax checks run without Bicep using `python .\Custom-Policies\FrontDoor-WAF-Custom-Rules\tests\test_policy.py PolicyCountSyntaxTests`. ARM template builds alone do not validate Azure Policy's expression restrictions.
-
-## References
-
-- [Azure Policy DeployIfNotExists behavior](https://learn.microsoft.com/azure/governance/policy/concepts/effect-deploy-if-not-exists)
-- [Front Door WAF resource and custom-rule schema](https://learn.microsoft.com/azure/templates/microsoft.network/2025-03-01/frontdoorwebapplicationfirewallpolicies)
-- [ARM lambda functions used for merging and priority allocation](https://learn.microsoft.com/azure/azure-resource-manager/templates/template-functions-lambda)
-- [Remediate noncompliant resources](https://learn.microsoft.com/azure/governance/policy/how-to/remediate-resources)
