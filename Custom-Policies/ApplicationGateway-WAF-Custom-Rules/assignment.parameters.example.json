@@ -1,0 +1,34 @@
+{
+  "customRules": {
+    "value": [
+      {
+        "name": "LogDocumentationIP",
+        "priority": 1,
+        "state": "Enabled",
+        "ruleType": "MatchRule",
+        "action": "Log",
+        "matchConditions": [
+          {
+            "matchVariables": [
+              {
+                "variableName": "RemoteAddr"
+              }
+            ],
+            "operator": "IPMatch",
+            "negationConditon": false,
+            "matchValues": [
+              "192.0.2.0/24"
+            ],
+            "transforms": []
+          }
+        ]
+      }
+    ]
+  },
+  "ruleAction": {
+    "value": "Log"
+  },
+  "effect": {
+    "value": "AuditIfNotExists"
+  }
+}

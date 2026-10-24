@@ -10,8 +10,6 @@ Managed names end in `PolicyEnforced`. Unrelated rules, policy settings, managed
 - [applicationgateway-waf-custom-rules-policy.bicep](./applicationgateway-waf-custom-rules-policy.bicep): management-group deployment wrapper.
 - [applicationgateway-waf-custom-rules-policy.json](./applicationgateway-waf-custom-rules-policy.json): generated management-group ARM template. Rebuild after changing the source; do not edit manually.
 - [assignment.parameters.example.json](./assignment.parameters.example.json): audit-first parameters using a documentation-only IP range.
-- [deployTemplate.json](./deployTemplate.json): standalone remediation template, identical to the policy's embedded template.
-- [tests/test_policy.py](./tests/test_policy.py): local expression, compliance, build-parity, and schema regressions.
 
 ## Parameters
 
